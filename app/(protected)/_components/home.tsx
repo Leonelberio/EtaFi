@@ -44,52 +44,18 @@ export default function HomeComponent() {
       <section className="flex align-middle justify-center">
         <div className="flex flex-col gap-6 text-center pt-16 pb-4 max-w-3xl">
           <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-          Le bon choix en un 
-            <span className="text-purple-600">clic.</span>
+          EtaFi votre guide
+            <span className="text-purple-600">comptable.</span>
           </h1>
-          <p className="leading-7">Choisissez une catégorie</p>
+          <p className="leading-7">Le guide comptable dont vous avez besoin</p>
+          <Link href="/web">
+          <Button size="lg">Démarrer gratuitement</Button>
+          </Link>
         </div>
       </section>
 
      
-     {/* Centered Cards Section */}
-     <div className="flex justify-center gap-10">
-        {/* Assurances Card */}
-        <Link href="/assurances" passHref>
-          <Card className="cursor-pointer max-w-xs shadow-lg hover:shadow-xl transition">
-            <CardContent className="p-6 flex flex-col items-center">
-              <ShieldCheck size={60} className="text-purple-600 mb-4" />
-              <CardHeader>
-                <CardTitle className="text-xl">Assurances</CardTitle>
-              </CardHeader>
-            </CardContent>
-          </Card>
-        </Link>
-
-        {/* Banques Card */}
-        <Link href="#" passHref>
-          <Card className="cursor-pointer max-w-xs shadow-lg hover:shadow-xl transition">
-            <CardContent className="p-6 flex flex-col items-center">
-              <Banknote size={60} className="text-purple-600 mb-4" />
-              <CardHeader>
-                <CardTitle className="text-xl">Banques</CardTitle>
-              </CardHeader>
-            </CardContent>
-          </Card>
-        </Link>
-
-        {/* Influenceurs Card */}
-        <Link href="#" passHref>
-          <Card className="cursor-pointer max-w-xs shadow-lg hover:shadow-xl transition">
-            <CardContent className="p-6 flex flex-col items-center">
-              <Users size={60} className="text-purple-600 mb-4" />
-              <CardHeader>
-                <CardTitle className="text-xl">Influenceurs</CardTitle>
-              </CardHeader>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
+     
     </div>
   );
 }
