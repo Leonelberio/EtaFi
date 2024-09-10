@@ -1,11 +1,9 @@
-//@ts-nocheck
-
-
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import { join } from "path";
+import cloudinary from "cloudinary";
 import { nanoid } from "nanoid";
-import { db } from "@/lib/db"; // Assuming you have a database module
+import { db } from "@/lib/db"; // Assuming you're using Prisma or similar ORM
+
 
 // Fetch all documents related to a specific company (excluding exercise-specific documents)
 export async function GET(req: NextRequest, { params }: { params: { companyId: string } }) {
@@ -71,11 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: { companyId: s
 // }
 
 
-// @ts-nocheck
-import { NextRequest, NextResponse } from "next/server";
-import cloudinary from "cloudinary";
-import { nanoid } from "nanoid";
-import { db } from "@/lib/db"; // Assuming you're using Prisma or similar ORM
+
 
 // Configure Cloudinary with environment variables
 cloudinary.v2.config({
