@@ -13,7 +13,7 @@ const AdminPage = () => {
     admin()
       .then((data) => {
         if (data.error) {
-          toast.error(data.error);
+          toast(data.error);
         }
 
         if (data.success) {
@@ -28,7 +28,7 @@ const AdminPage = () => {
         if (response.ok) {
           toast.success("Allowed API Route!");
         } else {
-          toast.error("Forbidden API Route!");
+          toast("Forbidden API Route!");
         }
       })
   }

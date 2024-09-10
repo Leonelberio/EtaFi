@@ -97,11 +97,11 @@ export const ComparatorsList = () => {
         showToast.success("Le comparateur a été supprimé avec succès.");
         setComparators(comparators.filter((comparator) => comparator.id !== selectedComparatorId));
       } else {
-        toast.error("Échec de la suppression du comparateur.");
+        toast("Échec de la suppression du comparateur.");
         console.error("Failed to delete comparator");
       }
     } catch (error) {
-      toast.error("Une erreur est survenue lors de la suppression.");
+      toast("Une erreur est survenue lors de la suppression.");
       console.error("Error deleting comparator:", error);
     } finally {
       setIsDialogOpen(false);

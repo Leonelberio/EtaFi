@@ -37,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { toast as showToast } from "react-hot-toast"; // Importing toast
 import Loader from "../dashboard/loading";
@@ -96,16 +97,15 @@ export const CompaniesList = () => {
         showToast.success("L'entreprise a été supprimée avec succès.");
         setCompanies(companies.filter((company) => company.id !== selectedCompanyId));
       } else {
-        toast.error("Échec de la suppression de l'entreprise.");
+        toast("Échec de la suppression de l'entreprise.");
         console.error("Failed to delete company");
       }
     } catch (error) {
-      toast.error("Une erreur est survenue lors de la suppression.");
+      toast("Une erreur est survenue lors de la suppression.");
       console.error("Error deleting company:", error);
     } finally {
       setIsDialogOpen(false);
-      setSelectedCompanyId(null);
-    }
+      setTimeout(() => setSelectedCompanyId(null), 100);    }
   };
 
   const handleRowClick = (companyId: number) => {
@@ -177,7 +177,7 @@ export const CompaniesList = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>
-                            <Link href={`/dashboard/companies/${company.id}/edit`} onClick={(e) => e.stopPropagation()}> {/* Prevent row click */}
+                            <Link href={`/dashboard/companies/${company.id}`} onClick={(e) => e.stopPropagation()}> {/* Prevent row click */}
                               Modifier
                             </Link>
                           </DropdownMenuItem>
@@ -235,7 +235,7 @@ export const CompaniesList = () => {
           <DialogHeader>
             <DialogTitle>Confirmer la suppression</DialogTitle>
           </DialogHeader>
-          <p>Êtes-vous sûr de vouloir supprimer cette entreprise ? Cette action est irréversible.</p>
+          <DialogDescription>Êtes-vous sûr de vouloir supprimer cette entreprise ? Cette action est irréversible.</DialogDescription>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>
               Annuler

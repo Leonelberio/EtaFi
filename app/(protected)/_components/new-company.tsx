@@ -1,15 +1,15 @@
-// @ts-nocheck
-
+//@ts-nocheck
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useSession } from 'next-auth/react'; // Import session hook
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'; // Use Select component for organisation
 
 export default function NewCompany() {
   const { data: session } = useSession(); // Get session data
@@ -18,7 +18,22 @@ export default function NewCompany() {
   const [nif, setNif] = useState('');
   const [contact, setContact] = useState('');
   const [logo, setLogo] = useState<File | null>(null);
+  const [organisationId, setOrganisationId] = useState<string | null>(null); // Selected organisation
+  const [organisations, setOrganisations] = useState([]); // List of user's organisations
   const router = useRouter();
+
+  useEffect(() => {
+    // Fetch user's organisations when the component mounts
+    const fetchOrganisations = async () => {
+      const response = await fetch('/api/organisations'); // API to get user's organisations
+      if (response.ok) {
+        const data = await response.json();
+        setOrganisations(data.organisations);
+      }
+    };
+
+    fetchOrganisations();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +68,7 @@ export default function NewCompany() {
         nif,
         contact,
         logo: logoUrl,
-        userId: session.user.id, // Add userId from session
+        organisationId, // Optional organisationId
       }),
     });
 
@@ -70,9 +85,30 @@ export default function NewCompany() {
         <fieldset className="grid gap-6 rounded-lg border p-4">
           <legend className="-ml-1 px-1 text-sm font-medium">Nouvelle Entreprise</legend>
 
+          {/* Organisation Selection */}
+          <div className="grid gap-3">
+            <Label htmlFor="organisation">Organisation (optionnel)</Label>
+            <Select onValueChange={(value) => setOrganisationId(value)} value={organisationId || ''}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Sélectionnez une organisation (facultatif)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Organisations disponibles</SelectLabel>
+                  <SelectItem value="Aucun">Aucune (indépendant)</SelectItem> {/* Independent option */}
+                  {organisations.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Name Field */}
           <div className="grid gap-3">
-            <Label htmlFor="name">Nom de lentreprise</Label>
+            <Label htmlFor="name">Nom de l&apos;entreprise</Label>
             <Input
               id="name"
               value={name}

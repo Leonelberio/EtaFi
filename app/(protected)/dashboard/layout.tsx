@@ -8,6 +8,7 @@ import {
   Settings,
   Menu,
   Search,
+  Building,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,13 @@ export default async function AuthDashboardLayout({
               >
                 <FileText className="h-4 w-4" />
                 Plan comptable
+              </Link>
+              <Link
+                href="/dashboard/organisations"
+                className="flex items-center gap-3 rounded-lg px-3 py-4 text-muted-foreground transition-all hover:text-primary"
+              >
+                <Building className="h-4 w-4" />
+                Organisations
               </Link>
               <Link
                 href="/dashboard/settings"

@@ -32,6 +32,11 @@ export async function GET(req: NextRequest, { params }: { params: { companyId: s
 // PUT: Update a company's details
 export async function PUT(req: NextRequest, { params }: { params: { companyId: string } }) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
+    }
+
     const { companyId } = params;
     const body = await req.json();
 
@@ -42,17 +47,35 @@ export async function PUT(req: NextRequest, { params }: { params: { companyId: s
     // Check if the company exists before updating
     const existingCompany = await db.company.findUnique({
       where: { id: companyId },
+      include: {
+        organization: {
+          include: {
+            members: true, // Include organisation members to check roles
+          },
+        },
+      },
     });
 
     if (!existingCompany) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
     }
 
+    // Authorization: Check if the user can update the company
+    const isOwner = existingCompany.userId === session.user.id;
+    const isOrganisationAdmin = existingCompany.organization?.members.some(
+      (member) =>
+        member.userId === session.user.id && (member.role === "OWNER" || member.role === "ADMIN")
+    );
+
+    if (!isOwner && !isOrganisationAdmin) {
+      return NextResponse.json({ error: "Not authorized to update this company" }, { status: 403 });
+    }
+
     // Update the company details
     const updatedCompany = await db.company.update({
       where: { id: companyId },
       data: {
-        ...body, // This assumes the body contains the updated company fields
+        ...body, // Assuming body contains the updated fields
       },
     });
 
@@ -63,32 +86,4 @@ export async function PUT(req: NextRequest, { params }: { params: { companyId: s
   }
 }
 
-// DELETE: Delete a company by its string ID
-export async function DELETE(req: NextRequest, { params }: { params: { companyId: string } }) {
-  try {
-    const { companyId } = params;
 
-    if (!companyId) {
-      return NextResponse.json({ error: "Company ID is required" }, { status: 400 });
-    }
-
-    // Check if the company exists before deleting
-    const existingCompany = await db.company.findUnique({
-      where: { id: companyId },
-    });
-
-    if (!existingCompany) {
-      return NextResponse.json({ error: "Company not found" }, { status: 404 });
-    }
-
-    // Delete the company
-    await db.company.delete({
-      where: { id: companyId },
-    });
-
-    return NextResponse.json({ message: "Company deleted successfully" }, { status: 200 });
-  } catch (error) {
-    console.error("Error deleting company:", error);
-    return NextResponse.json({ error: "Failed to delete company" }, { status: 500 });
-  }
-}
