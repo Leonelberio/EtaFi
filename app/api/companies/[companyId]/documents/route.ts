@@ -100,6 +100,7 @@ export async function POST(req: NextRequest, { params }: { params: { companyId: 
     const result = await cloudinary.v2.uploader.upload(base64, {
       folder: `companies/${params.companyId}`, // Folder to organize uploads by company
       public_id: filename, // Set the unique filename
+      type: "upload"
     });
 
     // Store document details in the database
