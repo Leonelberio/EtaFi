@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+// @ts-nocheck
 
 
 "use client";
@@ -6,7 +7,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { DataComparator } from "@/app/(protected)/_components/data-comparator";
-import Loader from "../web/comparators/loading";
+import Loader from "../dashboard/comparators/loading";
 
 const ComparatorView = () => {
   const { comparatorId } = useParams();

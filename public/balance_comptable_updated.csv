@@ -1,0 +1,89 @@
+Numéro de compte,Libellé du compte,Débit,Crédit,Solde
+101,Capital,50000,,50000
+106,Réserves,20000,,20000
+211,"Brevets, licences, logiciels",25000,,25000
+218,Matériel de transport,30000,,30000
+231,Titres de participation,15000,,15000
+401,Fournisseurs,,25000,-25000
+411,Clients,30000,,30000
+512,Banque,20000,,20000
+601,Achats de marchandises,40000,,40000
+602,Achats de matières premières,25000,,25000
+603,Achats d'équipements,15000,,15000
+604,Achats de services,5000,,5000
+605,Achats divers,6000,,6000
+645,Charges de personnel,35000,,35000
+707,Ventes de produits finis,,60000,60000
+708,Ventes de services,,15000,15000
+709,Ventes diverses,,10000,10000
+610,Frais de publicité,8000,,8000
+611,Frais de transport,7000,,7000
+612,Frais d'assurance,9000,,9000
+613,Frais financiers,5000,,5000
+614,Frais de conseil,4000,,4000
+615,Frais de maintenance,6000,,6000
+701,Produits d'exploitation,,25000,25000
+702,Produits financiers,,10000,10000
+703,Produits exceptionnels,,8000,8000
+631,Charges d'intérêts,4000,,4000
+632,Charges exceptionnelles,2000,,2000
+7011,Revenus d'investissements,,3000,3000
+7021,Produits de placements,,4000,4000
+641,Charges sociales,12000,,12000
+7022,Droits de licences,,5000,5000
+7023,Redevances,,3500,3500
+431,Caisse,8000,,8000
+514,Chèques postaux,6000,,6000
+521,Effets à recevoir,3000,,3000
+5211,Effets escomptés non échus,,2000,-2000
+6012,Achat de matières premières,22000,,22000
+6061,Achat d'emballages,4000,,4000
+651,Impôts et taxes,12000,,12000
+661,Frais bancaires,3000,,3000
+666,Pertes sur créances,,1500,-1500
+7015,Revenus locatifs,,7000,7000
+7071,Port et emballages,,2000,2000
+7072,Commissions,,2500,2500
+7073,Locations,,3000,3000
+7074,Bonis sur reprises et cessions d'emballages,,1000,1000
+7075,Mise à disposition de personnel,,1500,1500
+7076,Redevances sur brevets,,4000,4000
+7077,Services exploités,,5000,5000
+7078,Autres produits accessoires,,3500,3500
+7081,Ventes promotionnelles,,4500,4500
+6041,Achat de fournitures de bureau,1000,,1000
+6062,Entretien des locaux,1200,,1200
+6152,Frais de réparation et maintenance,600,,600
+6312,Intérêts sur emprunts,5000,,5000
+6512,Taxes locales,2000,,2000
+672,Pertes exceptionnelles,,1000,-1000
+681,Dotations aux amortissements,12000,,12000
+7019,Ventes exceptionnelles,,5000,5000
+7029,Autres produits exceptionnels,,4000,4000
+7023,Revenus sur placements,,5000,5000
+7079,Autres ventes accessoires,,3500,3500
+5121,Courant bancaire,5000,,5000
+6615,Intérêts bancaires,3000,,3000
+6621,Pertes de change,,2500,-2500
+663,Frais de garantie,1500,,1500
+665,Autres charges exceptionnelles,,2000,-2000
+7075,Services spécifiques,,4500,4500
+7076,Concessions,,3000,3000
+607,Matériel de production,17000,,17000
+7028,Divers produits financiers,,2000,2000
+6144,Honoraires,6000,,6000
+7072,Consultants,,5500,5500
+7016,Ventes d'immobilisations,,8000,8000
+608,Matériel de bureau,7000,,7000
+7021,Dividendes reçus,,9000,9000
+613,Contrats d'assurance,4000,,4000
+6041,Achat de carburant,2500,,2500
+6021,Fournitures industrielles,18000,,18000
+704,Transferts exceptionnels,,7000,7000
+7041,Subventions reçues,,8000,8000
+4312,Fonds de caisse,2500,,2500
+4313,Caisse secondaire,1000,,1000
+5122,Dépôts à terme,7000,,7000
+6811,Dépréciations sur créances,3000,,3000
+6112,Frais de communication,1500,,1500
+6141,Frais juridiques,4000,,4000

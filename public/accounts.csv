@@ -1,0 +1,10 @@
+accountCode,accountName,type,balance
+1001,Caisse,Actif,5000.00
+2001,Fournisseurs,Passif,3000.00
+3001,Produits des Ventes,Produits,12000.00
+4001,Charges de Personnel,Charges,7000.00
+5001,Banques,Actif,15000.00
+6001,Clients,Actif,8000.00
+7001,Emprunts,Passif,10000.00
+8001,Frais Généraux,Charges,2000.00
+9001,Capital Social,Passif,50000.00

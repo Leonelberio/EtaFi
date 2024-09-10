@@ -40,7 +40,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast as showToast } from "react-hot-toast"; // Importing toast
-import Loader from "../web/loading";
+import Loader from "../dashboard/loading";
 import { useToast } from "@/components/hooks/use-toast";
 
 const ITEMS_PER_PAGE = 10;
@@ -110,7 +110,7 @@ export const ComparatorsList = () => {
   };
 
   const handleRowClick = (comparatorId: number) => {
-    router.push(`/web/comparators/${comparatorId}/views?v=compare`);
+    router.push(`/dashboard/comparators/${comparatorId}/views?v=compare`);
   };
 
   return (
@@ -121,7 +121,7 @@ export const ComparatorsList = () => {
             <CardTitle>Comparateurs</CardTitle>
             <CardDescription>Gérez vos comparateurs et consultez leurs détails.</CardDescription>
           </div>
-          <Link href="/web/comparators/new">
+          <Link href="/dashboard/comparators/new">
             <Button>Créer un comparateur</Button>
           </Link>
         </div>
@@ -143,7 +143,7 @@ export const ComparatorsList = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {comparators.length > 0 ? (
+              {comparators?.length > 0 ? (
                 comparators.map((comparator) => (
                   <TableRow
                     key={comparator.id}
@@ -151,7 +151,7 @@ export const ComparatorsList = () => {
                     onClick={() => handleRowClick(comparator.id)} // Navigate to views/compare page on row click
                   >
                     <TableCell className="hidden sm:table-cell">
-                      <Link href={`/web/comparators/${comparator.id}`}>
+                      <Link href={`/dashboard/comparators/${comparator.id}`}>
                         <ImageWithFallback
                           alt={`Logo de ${comparator.name}`}
                           className="aspect-square rounded-md object-contain"
@@ -180,7 +180,7 @@ export const ComparatorsList = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>
-                            <Link href={`/web/comparators/${comparator.id}/edit`} onClick={(e) => e.stopPropagation()}> {/* Prevent row click */}
+                            <Link href={`/dashboard/comparators/${comparator.id}/edit`} onClick={(e) => e.stopPropagation()}> {/* Prevent row click */}
                               Modifier
                             </Link>
                           </DropdownMenuItem>

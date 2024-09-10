@@ -27,7 +27,7 @@ export default function HeaderFront() {
 
 
   const handleCreateComparator = () => {
-    router.push("/web/comparators/new");
+    router.push("/dashboard/comparators/new");
   };
 
 
@@ -38,19 +38,11 @@ export default function HeaderFront() {
       <header className="flex flex-col gap-4 md:flex-row justify-between items-center">
         <div className="flex items-center space-x-4">
             <Link href="/">
-          <Image src="/logo_comparateur_africa.png" alt="Logo" width={140} height={40} />
+          <Image src="/logo_etafi.png" alt="Logo" width={140} height={40} />
             </Link>
         </div>
         {session ? (
-        //   <div className="flex flex-row gap-2">
-        //   <LogoutButton asChild>
-        //     <Button size="lg">Se déconnecter</Button>
-        //   </LogoutButton>
-        //   <Link href="/web">
-          
-        //   <Button size="lg" variant="outline">Tableau de Bord</Button>
-        //   </Link>
-        //   </div>
+
         <UserButton/>
         ) : (
           <LoginButton asChild>

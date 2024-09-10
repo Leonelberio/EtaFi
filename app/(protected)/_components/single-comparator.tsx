@@ -153,7 +153,7 @@ export function ComparatorDetailPage({ comparator }) {
     <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
       <div className="mx-auto grid max-w-[59rem] flex-1 auto-rows-max gap-4">
         <div className="flex items-center gap-4">
-          <Link href="/web/comparators">
+          <Link href="/dashboard/comparators">
             <Button variant="outline" size="icon" className="h-7 w-7">
               <ChevronLeft className="h-4 w-4" />
               <span className="sr-only">Back</span>
@@ -166,7 +166,7 @@ export function ComparatorDetailPage({ comparator }) {
               {name}
             </h1>
              {/* New Link to open the comparator view in a new tab */}
-             <Link href={`/web/comparators/${comparator.id}/views?v=compare`} target="_blank" className="text-purple-600">
+             <Link href={`/dashboard/comparators/${comparator.id}/views?v=compare`} target="_blank" className="text-purple-600">
               <Button variant="ghost" size="sm" className="flex items-center gap-1">
                 Voir le comparateur
                 <ExternalLink className="h-4 w-4" />

@@ -1,3 +1,6 @@
+// @ts-nocheck
+
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -18,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Loader from "../web/comparators/loading";
+import Loader from "../dashboard/comparators/loading";
 
 export default function ListView() {
   const { comparatorId } = useParams();

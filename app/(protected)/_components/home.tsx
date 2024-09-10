@@ -29,7 +29,7 @@ export default function HomeComponent() {
 
 
   const handleCreateComparator = () => {
-    router.push("/web/comparators/new");
+    router.push("/dashboard/comparators/new");
   };
 
 
@@ -48,7 +48,7 @@ export default function HomeComponent() {
             <span className="text-purple-600">comptable.</span>
           </h1>
           <p className="leading-7">Le guide comptable dont vous avez besoin</p>
-          <Link href="/web">
+          <Link href="/dashboard">
           <Button size="lg">Démarrer gratuitement</Button>
           </Link>
         </div>

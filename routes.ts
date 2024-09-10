@@ -5,9 +5,7 @@
  */
 export const publicRoutes = [
   "/",
-  "/assurances",
   "/auth/new-verification",
-  '/api/comparators/all'
 ];
 
 /**
@@ -34,4 +32,4 @@ export const apiAuthPrefix = "/api/auth";
  * The default redirect path after logging in
  * @type {string}
  */
-export const DEFAULT_LOGIN_REDIRECT = "/web";
+export const DEFAULT_LOGIN_REDIRECT = "/dashboard";

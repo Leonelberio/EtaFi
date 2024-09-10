@@ -1,3 +1,6 @@
+// @ts-nocheck
+
+
 "use client";
 
 import Link from "next/link";
@@ -16,7 +19,7 @@ export const Navbar = () => {
           asChild
           variant={pathname === "/server" ? "default" : "outline"}
         >
-          <Link href="/web/server">
+          <Link href="/dashboard/server">
             Server
           </Link>
         </Button>
@@ -24,7 +27,7 @@ export const Navbar = () => {
           asChild
           variant={pathname === "/client" ? "default" : "outline"}
         >
-          <Link href="/web/client">
+          <Link href="/dashboard/client">
             Client
           </Link>
         </Button>
@@ -32,7 +35,7 @@ export const Navbar = () => {
           asChild
           variant={pathname === "/admin" ? "default" : "outline"}
         >
-          <Link href="/web/admin">
+          <Link href="/dashboard/admin">
             Admin
           </Link>
         </Button>
@@ -40,7 +43,7 @@ export const Navbar = () => {
           asChild
           variant={pathname === "/settings" ? "default" : "outline"}
         >
-          <Link href="/web/settings">
+          <Link href="/dashboard/settings">
             Settings
           </Link>
         </Button>

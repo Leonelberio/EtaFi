@@ -25,7 +25,11 @@ model User {
   twoFactorConfirmation TwoFactorConfirmation?
 
   accounts    Account[]
-  comparators Comparator[]
+
+
+  Company Company[]
+
+  Reminder Reminder[]
 }
 
 model Account {
@@ -45,6 +49,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -82,74 +87,118 @@ model TwoFactorConfirmation {
   @@unique([userId])
 }
 
-model Comparator {
-  id          Int        @id @default(autoincrement())
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  ownerId     String     // Foreign key to User
-  name        String
-  description String
-  logo        String
-  color       String
-  toolType    String
+model FinancialAccount {
+  id          String    @id @default(cuid())
+  accountCode String
+  accountName String
+  type        String
+  balance     Float     @default(0.0)
+  exerciceId  String
+  exercice    Exercice  @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
 
-  owner       User       @relation(fields: [ownerId], references: [id]) // Relationship to User
-  dataSource  DataSource? @relation(fields: [dataSourceId], references: [id]) // A Comparator has only one DataSource
-  dataSourceId String?   // Foreign key to DataSource
+  createdAt DateTime  @default(now()) // Automatically set to current time on creation
+  updatedAt DateTime  @updatedAt      // Automatically updated to current time on every update
 
-  @@index([ownerId])
-  @@unique([dataSourceId]) // Ensure uniqueness
+  @@index([exerciceId])
 }
 
-model DataSource {
-  id              String           @id @default(cuid())
-  userId          String           // Foreign key to User
-  comparatorId    Int              @unique // A DataSource belongs to one Comparator
-  authKey         String?          // Can be nullable for some data sources
-  type            DataSourceType   // Enum to define the type of data source (GoogleSheets, Notion, Airtable, etc.)
-  sheetId         String?          // For Google Sheets, Airtable, etc.
-  notionPageId    String?          // For Notion
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+model Transaction {
+  id           String    @id @default(cuid())
+  date         DateTime
+  description  String?
+  debitAmount  Float     @default(0.0)
+  creditAmount Float     @default(0.0)
+  exerciceId   String
+  exercice     Exercice  @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
 
-  selectedColumns SelectedColumn[] // A DataSource can have multiple SelectedColumns
-  selectedRows    SelectedRow[]    // A DataSource can have multiple SelectedRows
-  tabName      String?
+  createdAt DateTime  @default(now()) // Automatically set to current time on creation
+  updatedAt DateTime  @updatedAt      // Automatically updated to current time on every update
 
-  @@index([comparatorId])
+  @@index([exerciceId])
+}
+
+model AccountPlan {
+  id             String   @id @default(cuid())
+  numero_compte  String   @unique
+  libelle_compte String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Balance {
+  id             String   @id @default(cuid())
+  exerciceId     String   @unique  // One-to-one relation with Exercice
+  exercice       Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
+  data           Json     // JSON to store the balance sheet data (can store account numbers, debits, credits, etc.)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+
+
+model Company {
+  id        String    @id @default(cuid())
+  name      String
+  address   String
+  nif       String    // Numéro d'Identification Fiscale
+  contact   String
+  logo      String?
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercices Exercice[] // One company can have many exercices
+  documents Document[] // One company can have many documents
+  createdAt DateTime  @default(now()) // Automatically set to current time on creation
+  updatedAt DateTime  @updatedAt      // Automatically updated to current time on every update
+
+  @@unique([userId, name]) // Ensure a user can't create two companies with the same name
+}
+
+model Exercice {
+  id           String    @id @default(cuid())
+  name         Int
+  startDate    DateTime
+  endDate      DateTime
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  documents    Document[] // One exercice can have many documents
+  financialAccounts FinancialAccount[] // One exercise can have many accounts
+  transactions Transaction[] // One exercise can have many transactions
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  Balance Balance[]
+
+  Reminder Reminder[]
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  fileUrl     String   // URL where the document is stored
+  fileName    String   // Original file name
+  type        String   // Type of document (PDF, Excel, Word, etc.)
+  companyId   String?  // Optional relation with company
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  exerciceId  String?  // Optional relation with exercise
+  exercice    Exercice? @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([exerciceId])
+}
+
+
+model Reminder {
+  id          String    @id @default(cuid())
+  type        String    // Type de rappel (ex. "impôts", "frais", etc.)
+  exerciceId  String    // L'exercice auquel ce rappel est lié
+  exercice    Exercice   @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
+  userId      String    // L'utilisateur qui a créé ce rappel
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alerts      Json      // Détails des alertes (dates et montants pour chaque tranche)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([exerciceId])
   @@index([userId])
-  Comparator Comparator[]
-}
-
-enum DataSourceType {
-  GoogleSheets
-  Notion
-  Airtable
-  Other
-}
-
-model SelectedColumn {
-  id           String     @id @default(cuid())
-  dataSourceId String     // Foreign key to DataSource
-  tabName      String?    // Optional, useful for sources like Google Sheets
-  columnName   String     // The name of the column
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  dataSource   DataSource @relation(fields: [dataSourceId], references: [id])
-
-  @@index([dataSourceId])
-}
-
-model SelectedRow {
-  id           String     @id @default(cuid())
-  dataSourceId String     // Foreign key to DataSource
-  tabName      String?    // Optional, useful for sources like Google Sheets
-  rowName      String     // The identifier of the row (could be a string or a number)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  dataSource   DataSource @relation(fields: [dataSourceId], references: [id])
-
-  @@index([dataSourceId])
 }

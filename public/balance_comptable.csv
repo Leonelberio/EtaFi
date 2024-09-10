@@ -1,0 +1,11 @@
+Numéro de compte,Libellé du compte,Débit,Crédit,Solde
+101,Capital,0,50000,-50000
+106,Réserves,0,10000,-10000
+211,"Brevets, licences, logiciels",25000,0,25000
+218,Matériel de transport,30000,0,30000
+31,Marchandises,10000,0,10000
+411,Clients,15000,0,15000
+401,Fournisseurs,0,12000,-12000
+512,Banque,8000,0,8000
+601,Achats de marchandises,12000,0,12000
+645,Charges de personnel,5000,0,5000
