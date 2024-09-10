@@ -36,7 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: { companyId: s
       return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
     }
 
-    // Check if the user has access to the company either through the organisation or as the company creator
+    // Check if the user has access to the company either through the organization or as the company creator
     const company = await db.company.findFirst({
       where: {
         id: params.companyId,
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest, { params }: { params: { companyId: s
             organization: {
               members: {
                 some: {
-                  userId: session.user.id, // If the user is part of the organisation that owns the company
+                  userId: session.user.id, // If the user is part of the organization that owns the company
                 },
               },
             },

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const { name, description } = await req.json();
 
   try {
-    const newOrganisation = await db.organization.create({
+    const neworganization = await db.organization.create({
       data: {
         name,
         description,
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
         },
       },
     });
-    return NextResponse.json(newOrganisation);
+    return NextResponse.json(neworganization);
   } catch (error) {
     console.error("Error creating organization:", error);
     return NextResponse.json({ error: "Failed to create organization" }, { status: 500 });
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const organisations = await db.organization.findMany({
+    const organizations = await db.organization.findMany({
       where: {
         members: {
           some: {
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
         companies: true,  // Optionally include companies linked to the organization
       },
     });
-    return NextResponse.json({ organisations });
+    return NextResponse.json({ organizations });
   } catch (error) {
     console.error("Error fetching organizations:", error);
     return NextResponse.json({ error: "Failed to fetch organizations" }, { status: 500 });

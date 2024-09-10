@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 // POST: Add a member to an organization
 export async function POST(req: NextRequest, { params }) {
   const session = await auth();
-  const { organisationId } = params;
+  const { organizationId } = params;
   
   if (!session?.user?.id) {
     return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, { params }) {
   const membership = await db.organizationMembership.findFirst({
     where: {
       userId: session.user.id,
-      organizationId: organisationId,
+      organizationId: organizationId,
       role: { in: ['ADMIN', 'OWNER'] },  // Only ADMIN/OWNER can add members
     },
   });
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }) {
     const newMember = await db.organizationMembership.create({
       data: {
         userId: userToAdd.id,
-        organizationId: organisationId,
+        organizationId: organizationId,
         role: role || 'MEMBER',  // Default to MEMBER if no role is provided
       },
     });
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest, { params }) {
 // GET: Fetch all members of an organization
 export async function GET(req: NextRequest, { params }) {
     const session = await auth();
-    const { organisationId } = params;
+    const { organizationId } = params;
   
     if (!session?.user?.id) {
       return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest, { params }) {
     const membership = await db.organizationMembership.findFirst({
       where: {
         userId: session.user.id,
-        organizationId: organisationId,
+        organizationId: organizationId,
       },
     });
   
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest, { params }) {
   
     try {
       const members = await db.organizationMembership.findMany({
-        where: { organizationId: organisationId },
+        where: { organizationId: organizationId },
         include: {
           user: {
             select: {

@@ -1,6 +1,5 @@
 // @ts-nocheck
 
-
 'use client';
 
 import { useState, useEffect } from "react";
@@ -10,7 +9,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { useSession } from "next-auth/react"; // Import useSession for authentication
 import { BalanceSheetTable } from "@/app/(protected)/_components/balance-sheet";
 import DocumentsList from "@/app/(protected)/_components/documents-list";
@@ -19,6 +17,7 @@ import ReminderTable from "@/app/(protected)/_components/reminders-table";
 export default function ExerciceDetailPage() {
   const { exerciceId, companyId } = useParams();
   const { data: session } = useSession(); // Get current session and user data
+  const [company, setCompany] = useState(null); // State for company details
   const [exercice, setExercice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,16 +25,25 @@ export default function ExerciceDetailPage() {
   const [documents, setDocuments] = useState([]); // State for documents
   const [reminders, setReminders] = useState([]);  // State for reminders (initially empty)
 
-  // Fetch exercice details, balance sheet, documents, and reminders
+  // Fetch exercice details, balance sheet, documents, reminders, and company details
   useEffect(() => {
-    const fetchExercice = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`/api/companies/${companyId}/exercice/${exerciceId}`);
-        if (!response.ok) {
+        // Fetch company details
+        const companyResponse = await fetch(`/api/companies/${companyId}`);
+        if (!companyResponse.ok) {
+          throw new Error("Failed to fetch company details");
+        }
+        const companyData = await companyResponse.json();
+        setCompany(companyData); // Set company details
+
+        // Fetch exercice details
+        const exerciceResponse = await fetch(`/api/companies/${companyId}/exercice/${exerciceId}`);
+        if (!exerciceResponse.ok) {
           throw new Error("Failed to fetch exercice details");
         }
-        const data = await response.json();
-        setExercice(data);
+        const exerciceData = await exerciceResponse.json();
+        setExercice(exerciceData);
 
         // Fetch balance sheet
         const balanceResponse = await fetch(`/api/companies/${companyId}/exercice/${exerciceId}/balance`);
@@ -75,7 +83,7 @@ export default function ExerciceDetailPage() {
     };
 
     if (exerciceId) {
-      fetchExercice();
+      fetchData();
     }
   }, [exerciceId, companyId]);
 
@@ -201,6 +209,8 @@ export default function ExerciceDetailPage() {
         </h1>
       </div>
 
+      <h2 className="text-xl font-semibold mb-4">Société: {company?.name}</h2>
+
       {/* Balance Sheet Section */}
       <Card className="w-full mt-8">
         <CardHeader>
@@ -245,6 +255,7 @@ export default function ExerciceDetailPage() {
             reminders={reminders}
             onSaveReminder={handleSaveReminder} // Pass the save handler
             onDeleteReminder={handleDeleteReminder} // Pass the delete handler
+            companyName={company?.name}
           />
         </CardContent>
       </Card>

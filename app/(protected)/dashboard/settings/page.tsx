@@ -37,9 +37,9 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import { UserRole } from "@prisma/client";
+import Organizations from "../../_components/organizations";
 
-// Assuming you have an Organisation component to display the user's organization info.
-import OrganisationsPage from "../../_components/organisations";
+// Assuming you have an organization component to display the user's organization info.
 
 const SettingsPage = () => {
   const user = useCurrentUser();
@@ -235,14 +235,14 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Organisation Section */}
+      {/* organization Section */}
       <Card className="w-full max-w-4xl mx-auto p-6">
        
         <CardHeader>
           <p className="text-2xl font-semibold text-center">
-          🏢 Organisation          </p>
+          🏢 organization          </p>
         </CardHeader>
-        <OrganisationsPage />
+        <Organizations />
       </Card>
     </div>
   );

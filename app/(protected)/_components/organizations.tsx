@@ -1,5 +1,4 @@
 //@ts-nocheck
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
-export default function OrganisationsPage() {
-  const [organisations, setOrganisations] = useState([]);
+export default function Organizations() {
+  const [organizations, setorganizations] = useState([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -18,22 +17,22 @@ export default function OrganisationsPage() {
 
   // Fetch user's organizations
   useEffect(() => {
-    const fetchOrganisations = async () => {
-      const response = await fetch('/api/organisations');
+    const fetchorganizations = async () => {
+      const response = await fetch('/api/organizations');
       if (response.ok) {
         const data = await response.json();
-        setOrganisations(data.organisations);
+        setorganizations(data.organizations);
       }
     };
-    fetchOrganisations();
+    fetchorganizations();
   }, []);
 
   // Create a new organization
-  const handleCreateOrganisation = async (e: React.FormEvent) => {
+  const handleCreateorganization = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreating(true);
 
-    const response = await fetch('/api/organisations', {
+    const response = await fetch('/api/organizations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +45,7 @@ export default function OrganisationsPage() {
 
     if (response.ok) {
       const newOrg = await response.json();
-      setOrganisations([...organisations, newOrg]);
+      setorganizations([...organizations, newOrg]);
       setName('');
       setDescription('');
     }
@@ -56,32 +55,32 @@ export default function OrganisationsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Organisations</h1>
+      <h1 className="text-2xl font-semibold">organizations</h1>
 
-      {/* List of organisations */}
+      {/* List of organizations */}
       <div>
-        <h2 className="text-lg font-semibold">Mes organisations</h2>
-        {organisations.length > 0 ? (
+        <h2 className="text-lg font-semibold">Mes organizations</h2>
+        {organizations.length > 0 ? (
           <ul className="space-y-4">
-            {organisations.map((org) => (
+            {organizations.map((org) => (
               <li key={org.id} className="border p-4">
                 <h3 className="text-xl">{org.name}</h3>
                 <p>{org.description}</p>
-                <Button onClick={() => router.push(`/dashboard/organisations/${org.id}`)}>
+                <Button onClick={() => router.push(`/dashboard/organizations/${org.id}`)}>
                   Gérer
                 </Button>
               </li>
             ))}
           </ul>
         ) : (
-          <p>Vous n&apos;êtes membre d&apos;aucune organisation.</p>
+          <p>Vous n&apos;êtes membre d&apos;aucune organization.</p>
         )}
       </div>
 
       {/* Create new organization */}
-      <form onSubmit={handleCreateOrganisation}>
+      <form onSubmit={handleCreateorganization}>
         <fieldset className="space-y-4">
-          <legend className="text-lg font-semibold">Créer une nouvelle organisation</legend>
+          <legend className="text-lg font-semibold">Créer une nouvelle organization</legend>
 
           <div>
             <Label htmlFor="name">Nom</Label>
@@ -103,7 +102,7 @@ export default function OrganisationsPage() {
           </div>
 
           <Button type="submit" disabled={isCreating}>
-            {isCreating ? 'Création...' : 'Créer l\'organisation'}
+            {isCreating ? 'Création...' : 'Créer l\'organization'}
           </Button>
         </fieldset>
       </form>

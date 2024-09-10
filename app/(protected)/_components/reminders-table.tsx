@@ -1,5 +1,4 @@
-// @ts-nocheck
-
+//@ts-nocheck
 
 'use client';
 
@@ -13,7 +12,7 @@ import ReminderForm from './new-reminder';
 import { useToast } from '@/components/hooks/use-toast'; // Import the useToast hook
 import { formatNumber } from '@/lib/utils';
 
-export default function ReminderTable({ reminders, onSaveReminder, onDeleteReminder }) {
+export default function ReminderTable({ reminders, onSaveReminder, onDeleteReminder, companyName }) { // Pass companyName as a prop
   const { toast } = useToast(); // Use custom useToast hook
   const [selectedReminderId, setSelectedReminderId] = useState(null); // Track which reminder is selected for delete
   const [showConfirmDelete, setShowConfirmDelete] = useState(false); // Control delete confirmation modal
@@ -93,7 +92,7 @@ export default function ReminderTable({ reminders, onSaveReminder, onDeleteRemin
 
   // Manual trigger for notifications
   const handleManualNotification = (reminder) => {
-    triggerManualNotification('Nom de la Société', reminder, toast); // Trigger toast with remaining days for the next payment
+    triggerManualNotification(companyName, reminder, toast); // Pass the actual company name here
   };
 
   return (
@@ -165,14 +164,14 @@ export default function ReminderTable({ reminders, onSaveReminder, onDeleteRemin
                   Rappeler
                 </Button>
 
-<div className='flex align-middle justify-center gap-4'>
+                <div className='flex align-middle justify-center gap-4'>
 
                 {/* Edit Button */}
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => handleEditReminder(reminder)}
-                  >
+                >
                   Modifier
                 </Button>
 
@@ -182,10 +181,10 @@ export default function ReminderTable({ reminders, onSaveReminder, onDeleteRemin
                   size="icon"
                   className="text-red-600"
                   onClick={() => handleDeleteClick(reminder.id)} // Trigger the delete confirmation
-                  >
+                >
                   <Trash2 className="w-5 h-5" />
                 </Button>
-                  </div>
+                </div>
               </CardContent>
             </div>
           );

@@ -33,7 +33,7 @@ export default function OrganizationMembers() {
   const [loading, setLoading] = useState(true); // Loading state for fetching members
   const [inviteLoading, setInviteLoading] = useState(false); // Loading state for invite
   const [error, setError] = useState(null); // Error state
-  const { organisationId } = useParams(); 
+  const { organizationId } = useParams(); 
   const router = useRouter();
 
   // Fetch members of the organization
@@ -41,7 +41,7 @@ export default function OrganizationMembers() {
     const fetchMembers = async () => {
       try {
         setLoading(true); // Set loading state
-        const response = await fetch(`/api/organisations/${organisationId}/members`);
+        const response = await fetch(`/api/organizations/${organizationId}/members`);
         if (response.ok) {
           const data = await response.json();
           setMembers(data.members);
@@ -55,7 +55,7 @@ export default function OrganizationMembers() {
       }
     };
     fetchMembers();
-  }, [organisationId]);
+  }, [organizationId]);
 
   // Handle inviting a member
   const handleInviteMember = async (e: React.FormEvent) => {
@@ -64,7 +64,7 @@ export default function OrganizationMembers() {
     setError(null); // Clear any previous errors
 
     try {
-      const response = await fetch(`/api/organisations/${organisationId}/members`, {
+      const response = await fetch(`/api/organizations/${organizationId}/members`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export default function OrganizationMembers() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">Organisation Members</h1>
+      <h1 className="text-2xl font-semibold">organization Members</h1>
 
       {/* Show error message if there's an error */}
       {error && <p className="text-red-500 mb-4">{error}</p>}

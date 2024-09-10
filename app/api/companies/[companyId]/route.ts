@@ -50,7 +50,7 @@ export async function PUT(req: NextRequest, { params }: { params: { companyId: s
       include: {
         organization: {
           include: {
-            members: true, // Include organisation members to check roles
+            members: true, // Include organization members to check roles
           },
         },
       },
@@ -62,12 +62,12 @@ export async function PUT(req: NextRequest, { params }: { params: { companyId: s
 
     // Authorization: Check if the user can update the company
     const isOwner = existingCompany.userId === session.user.id;
-    const isOrganisationAdmin = existingCompany.organization?.members.some(
+    const isorganizationAdmin = existingCompany.organization?.members.some(
       (member) =>
         member.userId === session.user.id && (member.role === "OWNER" || member.role === "ADMIN")
     );
 
-    if (!isOwner && !isOrganisationAdmin) {
+    if (!isOwner && !isorganizationAdmin) {
       return NextResponse.json({ error: "Not authorized to update this company" }, { status: 403 });
     }
 

@@ -175,8 +175,8 @@ model Company {
   nif            String                // Numéro d'Identification Fiscale
   contact        String
   logo           String?
-  userId         String?               // User who created the company (optional if associated with organisation)
-  organizationId String?               // Link to the organisation (optional if user-created)
+  userId         String?               // User who created the company (optional if associated with organization)
+  organizationId String?               // Link to the organization (optional if user-created)
   user           User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization   Organization?         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   exercices      Exercice[]            // One company can have many exercices
@@ -184,7 +184,7 @@ model Company {
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
 
-  @@unique([organizationId, name])     // Ensure no duplicate company names within the same organisation
+  @@unique([organizationId, name])     // Ensure no duplicate company names within the same organization
   @@index([userId])
 }
 

@@ -21,10 +21,10 @@ export async function POST(req: NextRequest) {
       contact,
       logo,
       userId: session.user.id, // Always associate with the authenticated user
-      organizationId: null,
+      organizationId,
     };
 
-    // If organisationId is provided, check if the user belongs to that organisation
+    // If organizationId is provided, check if the user belongs to that organization
     if (organizationId) {
       const membership = await db.organizationMembership.findFirst({
         where: {
@@ -34,14 +34,14 @@ export async function POST(req: NextRequest) {
       });
 
       if (!membership) {
-        return NextResponse.json({ error: "User is not authorized to add a company to this organisation" }, { status: 403 });
+        return NextResponse.json({ error: "User is not authorized to add a company to this organization" }, { status: 403 });
       }
 
-      // If authorized, add organisation to the company data
+      // If authorized, add organization to the company data
       companyData.organizationId = organizationId;
     }
 
-    // Create a new company linked to the user and optionally the organisation
+    // Create a new company linked to the user and optionally the organization
     const newCompany = await db.company.create({
       data: companyData,
     });
@@ -143,7 +143,7 @@ export async function DELETE(req: NextRequest) {
       include: {
         organization: {
           include: {
-            members: true, // Include organisation members to check roles
+            members: true, // Include organization members to check roles
           },
         },
       },
@@ -156,12 +156,12 @@ export async function DELETE(req: NextRequest) {
 
     // Authorization: Check if the user can delete the company
     const isOwner = existingCompany.userId === session.user.id;
-    const isOrganisationAdmin = existingCompany.organization?.members.some(
+    const isorganizationAdmin = existingCompany.organization?.members.some(
       (member) =>
         member.userId === session.user.id && (member.role === "OWNER" || member.role === "ADMIN")
     );
 
-    if (!isOwner && !isOrganisationAdmin) {
+    if (!isOwner && !isorganizationAdmin) {
       return NextResponse.json({ error: "Not authorized to delete this company" }, { status: 403 });
     }
 

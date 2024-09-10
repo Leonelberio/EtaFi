@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useSession } from 'next-auth/react'; // Import session hook
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'; // Use Select component for organisation
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'; // Use Select component for organization
 
 export default function NewCompany() {
   const { data: session } = useSession(); // Get session data
@@ -18,21 +18,21 @@ export default function NewCompany() {
   const [nif, setNif] = useState('');
   const [contact, setContact] = useState('');
   const [logo, setLogo] = useState<File | null>(null);
-  const [organisationId, setOrganisationId] = useState<string | null>(null); // Selected organisation
-  const [organisations, setOrganisations] = useState([]); // List of user's organisations
+  const [organizationId, setorganizationId] = useState<string | null>(null); // Selected organization
+  const [organizations, setorganizations] = useState([]); // List of user's organizations
   const router = useRouter();
 
   useEffect(() => {
-    // Fetch user's organisations when the component mounts
-    const fetchOrganisations = async () => {
-      const response = await fetch('/api/organisations'); // API to get user's organisations
+    // Fetch user's organizations when the component mounts
+    const fetchorganizations = async () => {
+      const response = await fetch('/api/organizations'); // API to get user's organizations
       if (response.ok) {
         const data = await response.json();
-        setOrganisations(data.organisations);
+        setorganizations(data.organizations);
       }
     };
 
-    fetchOrganisations();
+    fetchorganizations();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +68,7 @@ export default function NewCompany() {
         nif,
         contact,
         logo: logoUrl,
-        organisationId, // Optional organisationId
+        organizationId: organizationId, // Optional organizationId
       }),
     });
 
@@ -85,18 +85,18 @@ export default function NewCompany() {
         <fieldset className="grid gap-6 rounded-lg border p-4">
           <legend className="-ml-1 px-1 text-sm font-medium">Nouvelle Entreprise</legend>
 
-          {/* Organisation Selection */}
+          {/* organization Selection */}
           <div className="grid gap-3">
-            <Label htmlFor="organisation">Organisation (optionnel)</Label>
-            <Select onValueChange={(value) => setOrganisationId(value)} value={organisationId || ''}>
+            <Label htmlFor="organization">organization (optionnel)</Label>
+            <Select onValueChange={(value) => setorganizationId(value)} value={organizationId || ''}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sélectionnez une organisation (facultatif)" />
+                <SelectValue placeholder="Sélectionnez une organization (facultatif)" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>Organisations disponibles</SelectLabel>
+                  <SelectLabel>organizations disponibles</SelectLabel>
                   <SelectItem value="Aucun">Aucune (indépendant)</SelectItem> {/* Independent option */}
-                  {organisations.map((org) => (
+                  {organizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
                       {org.name}
                     </SelectItem>

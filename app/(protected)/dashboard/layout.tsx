@@ -68,11 +68,11 @@ export default async function AuthDashboardLayout({
                 Plan comptable
               </Link>
               <Link
-                href="/dashboard/organisations"
+                href="/dashboard/organizations"
                 className="flex items-center gap-3 rounded-lg px-3 py-4 text-muted-foreground transition-all hover:text-primary"
               >
                 <Building className="h-4 w-4" />
-                Organisations
+                organizations
               </Link>
               <Link
                 href="/dashboard/settings"
