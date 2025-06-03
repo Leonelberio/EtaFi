@@ -367,156 +367,130 @@ export default function BilanActif() {
     companyId: string;
   };
 
-  // Map balance to Bilan Actif - now using global store data
+  // Map balance to Bilan Actif - using correct aggregation at section level
   const mapBalanceToBilanActif = () => {
     if (!balanceData || balanceData.length === 0) return;
 
+    // Helper function to get total for account class prefixes - same as balance store
+    const getAccountClassTotal = (prefixes: string[]): number => {
+      return balanceData
+        .filter((acc) =>
+          prefixes.some((prefix) => acc.accountNumber.startsWith(prefix))
+        )
+        .reduce((total, acc) => {
+          const solde = parseFloat(acc.solde.replace(/[^0-9.-]/g, "")) || 0;
+          return total + Math.abs(solde);
+        }, 0);
+    };
+
     const updatedBilan = bilanData.map((section) => {
-      const updatedAccounts = section.accounts.map((account) => {
-        let brut = 0;
-        let amort = 0;
-        let net = 0;
+      if (section.ref === "AD") {
+        // IMMOBILISATIONS INCORPORELLES - show as section total
+        const total = getAccountClassTotal(["21"]);
+        const amort = getAccountClassTotal(["281"]);
+        section.accounts = [
+          {
+            ref: "AD",
+            accountNumber: "21",
+            libelle: "Immobilisations incorporelles",
+            brut: Math.round(total),
+            amort: Math.round(amort),
+            net: Math.round(total - amort),
+          },
+        ];
+      } else if (section.ref === "AI") {
+        // IMMOBILISATIONS CORPORELLES - show as section total
+        const total = getAccountClassTotal(["22", "23", "24", "245"]);
+        const amort = getAccountClassTotal(["282", "283", "284"]);
+        section.accounts = [
+          {
+            ref: "AI",
+            accountNumber: "22-24",
+            libelle: "Immobilisations corporelles",
+            brut: Math.round(total),
+            amort: Math.round(amort),
+            net: Math.round(total - amort),
+          },
+        ];
+      } else if (section.ref === "AQ") {
+        // IMMOBILISATIONS FINANCIÈRES - show as section total
+        const total = getAccountClassTotal(["26", "27"]);
+        section.accounts = [
+          {
+            ref: "AQ",
+            accountNumber: "26-27",
+            libelle: "Immobilisations financières",
+            brut: Math.round(total),
+            amort: 0,
+            net: Math.round(total),
+          },
+        ];
+      } else if (section.ref === "BB") {
+        // STOCKS ET EN-COURS - show as section total
+        const total = getAccountClassTotal(["3"]);
+        const amort = getAccountClassTotal(["39"]);
+        section.accounts = [
+          {
+            ref: "BB",
+            accountNumber: "3",
+            libelle: "Stocks et en-cours",
+            brut: Math.round(total),
+            amort: Math.round(amort),
+            net: Math.round(total - amort),
+          },
+        ];
+      } else if (section.ref === "BG") {
+        // CRÉANCES ET EMPLOIS ASSIMILÉS - show as section total
+        const total = getAccountClassTotal([
+          "41",
+          "42",
+          "43",
+          "44",
+          "45",
+          "46",
+          "47",
+          "48",
+        ]);
+        const provisions = getAccountClassTotal(["491"]);
+        section.accounts = [
+          {
+            ref: "BG",
+            accountNumber: "41-48",
+            libelle: "Créances et emplois assimilés",
+            brut: Math.round(total),
+            amort: Math.round(provisions),
+            net: Math.round(total - provisions),
+          },
+        ];
+      } else if (section.ref === "BT") {
+        // TRÉSORERIE ACTIF - show as section total
+        const total = getAccountClassTotal(["51", "52", "53", "58"]);
+        section.accounts = [
+          {
+            ref: "BT",
+            accountNumber: "51-53",
+            libelle: "Trésorerie actif",
+            brut: Math.round(total),
+            amort: 0,
+            net: Math.round(total),
+          },
+        ];
+      } else if (section.ref === "BU") {
+        // ÉCART DE CONVERSION ACTIF - show as section total
+        const total = getAccountClassTotal(["47"]);
+        section.accounts = [
+          {
+            ref: "BU",
+            accountNumber: "47",
+            libelle: "Écart de conversion actif",
+            brut: Math.round(total),
+            amort: 0,
+            net: Math.round(total),
+          },
+        ];
+      }
 
-        // Map accounts based on SYSCOHADA account class ranges
-        if (
-          account.accountNumber === "211" ||
-          account.accountNumber === "212" ||
-          account.accountNumber === "213" ||
-          account.accountNumber === "214"
-        ) {
-          // Immobilisations incorporelles (211-214)
-          const matchingAccounts = balanceData.filter(
-            (bal) =>
-              bal.accountNumber.startsWith("21") &&
-              !bal.accountNumber.startsWith("28")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "22" ||
-          account.accountNumber === "23" ||
-          account.accountNumber === "24" ||
-          account.accountNumber === "218"
-        ) {
-          // Immobilisations corporelles (22-24)
-          const accountPrefix =
-            account.accountNumber === "218" ? "245" : account.accountNumber;
-          const matchingAccounts = balanceData.filter(
-            (bal) =>
-              bal.accountNumber.startsWith(accountPrefix) &&
-              !bal.accountNumber.startsWith("28")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-
-          // Add amortization for corporelles
-          const amortAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("28" + accountPrefix.substring(0, 1))
-          );
-          amortAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            amort += Math.abs(solde);
-          });
-          net = brut - amort;
-        } else if (
-          account.accountNumber === "231" ||
-          account.accountNumber === "27"
-        ) {
-          // Immobilisations financières (26-27)
-          const prefix = account.accountNumber === "231" ? "26" : "27";
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith(prefix)
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "31" ||
-          account.accountNumber === "32"
-        ) {
-          // Stocks (31-37)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("3")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "411" ||
-          account.accountNumber === "416"
-        ) {
-          // Créances (41-48)
-          const matchingAccounts = balanceData.filter(
-            (bal) =>
-              bal.accountNumber.startsWith("4") &&
-              (bal.accountNumber.startsWith("41") ||
-                bal.accountNumber.startsWith("42") ||
-                bal.accountNumber.startsWith("43") ||
-                bal.accountNumber.startsWith("44") ||
-                bal.accountNumber.startsWith("45") ||
-                bal.accountNumber.startsWith("46") ||
-                bal.accountNumber.startsWith("47") ||
-                bal.accountNumber.startsWith("48"))
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (account.accountNumber === "512") {
-          // Trésorerie actif (51-53)
-          const matchingAccounts = balanceData.filter(
-            (bal) =>
-              bal.accountNumber.startsWith("51") ||
-              bal.accountNumber.startsWith("52") ||
-              bal.accountNumber.startsWith("53")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else {
-          // Exact match fallback
-          const matchingAccount = balanceData.find(
-            (bal) => bal.accountNumber === account.accountNumber
-          );
-          if (matchingAccount) {
-            const solde =
-              parseFloat(
-                matchingAccount.solde.replace(/\s/g, "").replace(",", ".")
-              ) || 0;
-            brut = Math.abs(solde);
-            net = Math.abs(solde);
-          }
-        }
-
-        return {
-          ...account,
-          brut,
-          amort,
-          net,
-        };
-      });
-
-      return { ...section, accounts: updatedAccounts };
+      return section;
     });
 
     // Update section totals

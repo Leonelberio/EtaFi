@@ -316,271 +316,88 @@ export default function BilanPassif() {
     companyId: string;
   };
 
-  // Map balance to Bilan Passif - now using global store data
+  // Map balance to Bilan Passif - using correct aggregation at section level
   const mapBalanceToBilanPassif = () => {
     if (!balanceData || balanceData.length === 0) return;
 
+    // Helper function to get total for account class prefixes - same as balance store
+    const getAccountClassTotal = (prefixes: string[]): number => {
+      return balanceData
+        .filter((acc) =>
+          prefixes.some((prefix) => acc.accountNumber.startsWith(prefix))
+        )
+        .reduce((total, acc) => {
+          const solde = parseFloat(acc.solde.replace(/[^0-9.-]/g, "")) || 0;
+          return total + Math.abs(solde);
+        }, 0);
+    };
+
     const updatedPassif = passifData.map((section) => {
-      const updatedAccounts = section.accounts.map((account) => {
-        let brut = 0;
-        let amort = 0;
-        let net = 0;
+      if (section.ref === "CP") {
+        // CAPITAUX PROPRES - show as section total
+        const total = getAccountClassTotal(["10", "11", "12", "13"]);
+        section.accounts = [
+          {
+            ref: "CP",
+            accountNumber: "10-13",
+            libelle: "Capitaux propres",
+            brut: Math.round(total),
+            amort: 0,
+            net: Math.round(total),
+          },
+        ];
+      } else if (section.ref === "DD") {
+        // DETTES FINANCIÈRES ET PROVISIONS - show as section total
+        const dettes = getAccountClassTotal(["16", "17"]);
+        const provisions = getAccountClassTotal(["15"]);
+        const total = dettes + provisions;
+        section.accounts = [
+          {
+            ref: "DD",
+            accountNumber: "15-17",
+            libelle: "Dettes financières et provisions",
+            brut: Math.round(total),
+            amort: 0,
+            net: Math.round(total),
+          },
+        ];
+      } else if (section.ref === "DP") {
+        // PASSIF CIRCULANT - show as section total
+        const total = getAccountClassTotal([
+          "40",
+          "42",
+          "43",
+          "44",
+          "46",
+          "47",
+          "49",
+        ]);
+        section.accounts = [
+          {
+            ref: "DP",
+            accountNumber: "40-49",
+            libelle: "Passif circulant",
+            brut: Math.round(total),
+            amort: 0,
+            net: Math.round(total),
+          },
+        ];
+      } else if (section.ref === "DT") {
+        // TRÉSORERIE PASSIF - show as section total
+        const total = getAccountClassTotal(["55", "56", "57"]);
+        section.accounts = [
+          {
+            ref: "DT",
+            accountNumber: "55-57",
+            libelle: "Trésorerie passif",
+            brut: Math.round(total),
+            amort: 0,
+            net: Math.round(total),
+          },
+        ];
+      }
 
-        // Map accounts based on SYSCOHADA account class ranges
-        if (
-          account.accountNumber === "101" ||
-          account.accountNumber === "102" ||
-          account.accountNumber === "104" ||
-          account.accountNumber === "105"
-        ) {
-          // Capital and equity (10x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("10")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "1061" ||
-          account.accountNumber === "1068"
-        ) {
-          // Réserves (106x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("106")
-          );
-          const totalReserves = matchingAccounts.reduce((sum, bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            return sum + Math.abs(solde);
-          }, 0);
-
-          // Split reserves between indisponibles (25%) and libres (75%)
-          if (account.accountNumber === "1061") {
-            brut = totalReserves * 0.25;
-            net = totalReserves * 0.25;
-          } else if (account.accountNumber === "1068") {
-            brut = totalReserves * 0.75;
-            net = totalReserves * 0.75;
-          }
-        } else if (account.accountNumber === "110") {
-          // Report à nouveau (11x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("11")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (account.accountNumber === "12") {
-          // Résultat de l'exercice (12x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("12")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (account.accountNumber === "131") {
-          // Subventions d'investissement (13x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("13")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (account.accountNumber === "14") {
-          // Provisions réglementées (14x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("14")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "15" ||
-          account.accountNumber === "151"
-        ) {
-          // Provisions pour risques (15x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("15")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "16" ||
-          account.accountNumber.startsWith("16")
-        ) {
-          // Emprunts et dettes financières (16x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("16")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (account.accountNumber === "17") {
-          // Dettes de crédit-bail et contrats assimilés (17x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("17")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (account.accountNumber === "18") {
-          // Dettes liées à des participations (18x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("18")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "40" ||
-          account.accountNumber.startsWith("40")
-        ) {
-          // Fournisseurs et comptes rattachés (40x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("40")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "42" ||
-          account.accountNumber.startsWith("42")
-        ) {
-          // Personnel et comptes rattachés (42x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("42")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "43" ||
-          account.accountNumber.startsWith("43")
-        ) {
-          // Organismes sociaux (43x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("43")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "44" ||
-          account.accountNumber.startsWith("44")
-        ) {
-          // État et collectivités publiques (44x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("44")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (account.accountNumber === "49") {
-          // Provisions pour dépréciation des comptes de tiers (49x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("49")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "50" ||
-          account.accountNumber.startsWith("50")
-        ) {
-          // Provisions pour risques à court terme (50x)
-          const matchingAccounts = balanceData.filter((bal) =>
-            bal.accountNumber.startsWith("50")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else if (
-          account.accountNumber === "5124" ||
-          account.accountNumber === "5123"
-        ) {
-          // Trésorerie passif (56x)
-          const matchingAccounts = balanceData.filter(
-            (bal) =>
-              bal.accountNumber.startsWith("56") ||
-              bal.accountNumber.startsWith("55") ||
-              bal.accountNumber.startsWith("57")
-          );
-          matchingAccounts.forEach((bal) => {
-            const solde =
-              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
-            brut += Math.abs(solde);
-            net += Math.abs(solde);
-          });
-        } else {
-          // Exact match fallback
-          const matchingAccount = balanceData.find(
-            (bal) => bal.accountNumber === account.accountNumber
-          );
-          if (matchingAccount) {
-            const solde =
-              parseFloat(
-                matchingAccount.solde.replace(/\s/g, "").replace(",", ".")
-              ) || 0;
-            brut = Math.abs(solde);
-            net = Math.abs(solde);
-          }
-        }
-
-        return {
-          ...account,
-          brut,
-          amort,
-          net,
-        };
-      });
-
-      return { ...section, accounts: updatedAccounts };
+      return section;
     });
 
     // Update section totals

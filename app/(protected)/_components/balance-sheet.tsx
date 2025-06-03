@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useParams } from "next/navigation";
-import { Edit, Save, X, Check, Plus } from "lucide-react";
+import { Edit, Save, X, Check, Plus, Upload, Download } from "lucide-react";
 import {
   useBalanceStore,
   type BalanceData,
@@ -28,12 +28,19 @@ export default function BalanceSheet() {
   };
 
   // Global state
-  const { balance, updateBalanceRow, setLoading, lastUpdated } =
-    useBalanceStore();
-  const isSaving = useBalanceIsSaving();
-
-  // Add sample data function
-  const { addSampleData } = useBalanceStore();
+  const {
+    balance,
+    isLoading,
+    isSaving,
+    setLoading,
+    setSaving,
+    setBalance,
+    updateBalanceRow,
+    getTotalActif,
+    getTotalPassif,
+    getResultatNet,
+    lastUpdated,
+  } = useBalanceStore();
 
   // Local editing state
   const [editingRow, setEditingRow] = useState<string | null>(null);
@@ -111,6 +118,75 @@ export default function BalanceSheet() {
 
   const totals = calculateTotals();
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const csv = event.target?.result as string;
+      const lines = csv.split("\n");
+
+      // Skip header row and parse data
+      const data = lines
+        .slice(1)
+        .filter((line) => line.trim())
+        .map((line) => {
+          const values = line.split(",");
+          return {
+            accountNumber: values[0]?.trim() || "",
+            account: values[1]?.trim() || "",
+            debits: values[2]?.trim() || "0",
+            credits: values[3]?.trim() || "0",
+            solde: values[4]?.trim() || "0",
+          };
+        });
+
+      if (data.length > 0) {
+        setBalance(data);
+        alert(`✅ Import réussi! ${data.length} comptes importés.`);
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset file input
+    e.target.value = "";
+  };
+
+  const handleExportCSV = () => {
+    if (balance.length === 0) {
+      alert("Aucune donnée à exporter");
+      return;
+    }
+
+    const headers = ["numero_compte", "intitule", "debits", "credits", "solde"];
+    const csvContent = [
+      headers.join(","),
+      ...balance.map((row) =>
+        [
+          row.accountNumber,
+          `"${row.account}"`,
+          row.debits,
+          row.credits,
+          row.solde,
+        ].join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `balance_${exerciceId}_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* Real-time Financial Summary */}
@@ -157,17 +233,26 @@ export default function BalanceSheet() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              {balance.length === 0 && (
-                <Button
-                  onClick={addSampleData}
-                  variant="outline"
-                  size="sm"
-                  className="border-rose-200 text-rose-600 hover:bg-rose-50"
+              <div className="flex gap-2">
+                <label className="btn btn-outline btn-sm">
+                  <Upload className="h-4 w-4" />
+                  Importer CSV
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+
+                <button
+                  onClick={handleExportCSV}
+                  className="btn btn-ghost btn-sm"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Charger données d&apos;exemple
-                </Button>
-              )}
+                  <Download className="h-4 w-4" />
+                  Exporter CSV
+                </button>
+              </div>
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 Dernière mise à jour:{" "}

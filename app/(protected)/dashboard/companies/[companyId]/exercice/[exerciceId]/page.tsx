@@ -118,7 +118,7 @@ export default function ExerciceDetailPage() {
     companyId: string;
   };
   const { data: session } = useSession();
-  const { setBalance, addSampleData } = useBalanceStore();
+  const { setBalance } = useBalanceStore();
   const financialTotals = useFinancialTotals();
   const balanceData = useBalanceData();
   const [company, setCompany] = useState<Company | null>(null);
@@ -137,146 +137,37 @@ export default function ExerciceDetailPage() {
     localStorage.setItem("currentExerciceId", exerciceId);
   }, [exerciceId]);
 
-  // Wrapper function to add sample data and update local state
-  const handleAddSampleData = () => {
-    addSampleData();
-    // Get the sample data from the store after it's added
-    setTimeout(() => {
-      const sampleData = useBalanceStore.getState().balance;
-      setBalanceSheetData(sampleData);
-    }, 100);
+  // Handle balance import
+  const handleImportBalance = () => {
+    // Trigger the file input click
+    const fileInput = document.getElementById(
+      "balance-upload"
+    ) as HTMLInputElement;
+    fileInput?.click();
   };
 
-  // Handle balance import
-  const handleImportBalance = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleBalanceUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setIsImporting(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const csv = e.target?.result as string;
+      const lines = csv.split("\n");
 
-    try {
-      const text = await file.text();
-      let importedData: BalanceSheetRow[] = [];
-
-      if (file.name.endsWith(".csv")) {
-        // Parse CSV file
-        const lines = text.split("\n").filter((line) => line.trim());
-
-        if (lines.length < 2) {
-          throw new Error(
-            "Le fichier CSV doit contenir au minimum un en-tête et une ligne de données."
-          );
-        }
-
-        const headers = lines[0]
-          .split(",")
-          .map((h) => h.trim().replace(/"/g, "").toLowerCase());
-
-        // Expected headers: accountNumber, account, debits, credits, solde
-        // Or French equivalents: numero_compte, intitule, debits, credits, solde
-        const headerMap = {
-          accountNumber: headers.findIndex(
-            (h) =>
-              h.includes("numero") ||
-              h.includes("account") ||
-              h.includes("compte") ||
-              h.includes("number")
-          ),
-          account: headers.findIndex(
-            (h) =>
-              h.includes("intitule") ||
-              h.includes("nom") ||
-              h.includes("libelle") ||
-              h.includes("account") ||
-              h.includes("name") ||
-              h.includes("description")
-          ),
-          debits: headers.findIndex(
-            (h) => h.includes("debit") || h.includes("doit")
-          ),
-          credits: headers.findIndex(
-            (h) => h.includes("credit") || h.includes("avoir")
-          ),
-          solde: headers.findIndex(
-            (h) => h.includes("solde") || h.includes("balance")
-          ),
+      const data = lines.slice(1).map((line) => {
+        const values = line.split(",");
+        return {
+          accountNumber: values[0] || "",
+          account: values[1] || "",
+          debits: values[2] || "0",
+          credits: values[3] || "0",
+          solde: values[4] || "0",
         };
-
-        // Validate required columns
-        if (headerMap.accountNumber === -1 || headerMap.account === -1) {
-          throw new Error(
-            "Le fichier doit contenir au minimum les colonnes 'numero_compte' et 'intitule'. Colonnes trouvées: " +
-              headers.join(", ")
-          );
-        }
-
-        // Parse data rows
-        for (let i = 1; i < lines.length; i++) {
-          const row = lines[i]
-            .split(",")
-            .map((cell) => cell.trim().replace(/"/g, ""));
-
-          if (row.length > 1 && row[headerMap.accountNumber]) {
-            const accountNumber = row[headerMap.accountNumber].trim();
-            const account = row[headerMap.account].trim();
-
-            // Skip empty rows
-            if (!accountNumber || !account) continue;
-
-            const debits =
-              headerMap.debits !== -1 ? row[headerMap.debits] || "0" : "0";
-            const credits =
-              headerMap.credits !== -1 ? row[headerMap.credits] || "0" : "0";
-
-            // Calculate solde if not provided
-            let solde =
-              headerMap.solde !== -1 ? row[headerMap.solde] || "" : "";
-            if (!solde) {
-              const debitValue =
-                parseFloat(debits.replace(/[^0-9.-]/g, "")) || 0;
-              const creditValue =
-                parseFloat(credits.replace(/[^0-9.-]/g, "")) || 0;
-              solde = (debitValue - creditValue).toString();
-            }
-
-            importedData.push({
-              accountNumber: accountNumber,
-              account: account,
-              debits: debits,
-              credits: credits,
-              solde: solde,
-            });
-          }
-        }
-      } else {
-        throw new Error(
-          "Format de fichier non supporté. Veuillez utiliser un fichier CSV."
-        );
-      }
-
-      if (importedData.length === 0) {
-        throw new Error("Aucune donnée valide trouvée dans le fichier.");
-      }
-
-      // Update the balance store with imported data
-      setBalance(importedData);
-      setBalanceSheetData(importedData);
-
-      alert(`✅ Import réussi! ${importedData.length} comptes importés.`);
-    } catch (error) {
-      console.error("Error importing balance:", error);
-      alert(
-        `❌ Erreur lors de l'import: ${
-          error instanceof Error ? error.message : "Erreur inconnue"
-        }`
-      );
-    } finally {
-      setIsImporting(false);
-      // Reset file input
-      event.target.value = "";
-    }
+      });
+      setBalance(data);
+    };
+    reader.readAsText(file);
   };
 
   // Download CSV template for import
@@ -963,16 +854,14 @@ export default function ExerciceDetailPage() {
                     <input
                       type="file"
                       accept=".csv"
-                      onChange={handleImportBalance}
+                      onChange={handleBalanceUpload}
                       style={{ display: "none" }}
-                      id="balance-import-input"
+                      id="balance-upload"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        document.getElementById("balance-import-input")?.click()
-                      }
+                      onClick={handleImportBalance}
                       disabled={isImporting}
                     >
                       <Upload className="h-4 w-4 mr-2" />
@@ -1035,7 +924,7 @@ export default function ExerciceDetailPage() {
                         financiers en action
                       </p>
                       <Button
-                        onClick={handleAddSampleData}
+                        onClick={handleImportBalance}
                         className="bg-rose-600 hover:bg-rose-700 text-white"
                       >
                         <Plus className="h-4 w-4 mr-2" />

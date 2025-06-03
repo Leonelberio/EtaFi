@@ -1,0 +1,13 @@
+numero_compte,intitule,debits,credits,solde
+101300,Capital souscrit-appelé versé,22000,44000,-22000
+106110,Réserve légale,1300,2600,-1300
+110000,Report à nouveau créditeur,15753.52,15753.52,0
+119000,Report à nouveau débiteur,52339.85,7876.76,44463.09
+129000,Résultat de l'exercice perte,52339.85,52339.85,0
+205000,Concessions & droits similaires,16650,8325,8325
+208100,Logiciels d'application,3380,1690,1690
+218300,Matériel de bureau,5488.90,2744.45,2744.45
+218320,Matériel informatique,3377.98,1688.99,1688.99
+275000,Dépôt et cautionnements,4186,2093,2093
+280500,Amorts. conc. brevets,8325,16650,-8325
+280810,Amortisst logiciel application,1690,3380,-1690 
