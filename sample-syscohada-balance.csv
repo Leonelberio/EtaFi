@@ -1,0 +1,26 @@
+Numéro de compte,Libellé du compte,Débit,Crédit,Solde
+211,Frais de développement et de prospection,50000,0,50000
+212,Brevets licences logiciels,120000,20000,100000
+22,Terrains,500000,0,500000
+23,Bâtiments,800000,100000,700000
+24,Aménagements agencements,200000,50000,150000
+25,Matériel de transport,150000,30000,120000
+31,Stocks de matières premières,80000,0,80000
+32,En-cours de production,45000,0,45000
+411,Clients,150000,5000,145000
+416,Autres créances,25000,0,25000
+512,Banques chèques postaux,75000,0,75000
+47,Écarts de conversion,5000,0,5000
+101,Capital social,0,1000000,-1000000
+106,Réserves,0,200000,-200000
+12,Résultat de l'exercice,0,50000,-50000
+161,Emprunts et dettes,0,300000,-300000
+401,Fournisseurs,0,80000,-80000
+43,Dettes fiscales et sociales,0,45000,-45000
+701,Ventes de marchandises,0,800000,-800000
+601,Achats de marchandises,400000,0,400000
+645,Charges de personnel,180000,0,180000
+61,Services extérieurs,120000,0,120000
+681,Dotations aux amortissements,50000,0,50000
+76,Produits financiers,0,15000,-15000
+67,Charges financières,8000,0,8000 

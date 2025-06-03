@@ -1,6 +1,6 @@
 datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
@@ -20,19 +20,19 @@ enum OrganizationRole {
 }
 
 model User {
- id                    String    @id @default(cuid())
+  id                    String                 @id @default(cuid())
   name                  String?
-  email                 String?   @unique
+  email                 String?                @unique
   emailVerified         DateTime?
   image                 String?
   password              String?
-  role                  UserRole  @default(USER)
-  isTwoFactorEnabled    Boolean   @default(false)
+  role                  UserRole               @default(USER)
+  isTwoFactorEnabled    Boolean                @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
 
-  accounts              Account[]
-  organizations         OrganizationMembership[]  // Memberships to organizations
-  reminders             Reminder[]
+  accounts      Account[]
+  organizations OrganizationMembership[] // Memberships to organizations
+  reminders     Reminder[]
 
   Organization Organization[]
 
@@ -40,18 +40,18 @@ model User {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -87,39 +87,39 @@ model TwoFactorToken {
 }
 
 model TwoFactorConfirmation {
-  id      String   @id @default(cuid())
-  userId  String
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId])
 }
 
 model FinancialAccount {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   accountCode String
   accountName String
   type        String
-  balance     Float     @default(0.0)
+  balance     Float    @default(0.0)
   exerciceId  String
-  exercice    Exercice  @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
+  exercice    Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime  @default(now()) // Automatically set to current time on creation
-  updatedAt DateTime  @updatedAt      // Automatically updated to current time on every update
+  createdAt DateTime @default(now()) // Automatically set to current time on creation
+  updatedAt DateTime @updatedAt // Automatically updated to current time on every update
 
   @@index([exerciceId])
 }
 
 model Transaction {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   date         DateTime
   description  String?
-  debitAmount  Float     @default(0.0)
-  creditAmount Float     @default(0.0)
+  debitAmount  Float    @default(0.0)
+  creditAmount Float    @default(0.0)
   exerciceId   String
-  exercice     Exercice  @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
+  exercice     Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime  @default(now()) // Automatically set to current time on creation
-  updatedAt DateTime  @updatedAt      // Automatically updated to current time on every update
+  createdAt DateTime @default(now()) // Automatically set to current time on creation
+  updatedAt DateTime @updatedAt // Automatically updated to current time on every update
 
   @@index([exerciceId])
 }
@@ -133,75 +133,74 @@ model AccountPlan {
 }
 
 model Balance {
-  id             String   @id @default(cuid())
-  exerciceId     String   @unique  // One-to-one relation with Exercice
-  exercice       Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
-  data           Json     // JSON to store the balance sheet data (can store account numbers, debits, credits, etc.)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id         String   @id @default(cuid())
+  exerciceId String   @unique // One-to-one relation with Exercice
+  exercice   Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
+  data       Json // JSON to store the balance sheet data (can store account numbers, debits, credits, etc.)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
-
 model Organization {
-  id           String                @id @default(cuid())
-  description  String?
-  name         String
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  ownerId      String                 // Owner of the organization (user who created it)
-  owner        User                   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  members      OrganizationMembership[] // Users that belong to this organization
-  companies    Company[]              // Companies that belong to this organization
+  id          String                   @id @default(cuid())
+  description String?
+  name        String
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  ownerId     String // Owner of the organization (user who created it)
+  owner       User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members     OrganizationMembership[] // Users that belong to this organization
+  companies   Company[] // Companies that belong to this organization
 
-  @@unique([ownerId, name])           // Ensure no duplicate organization names for the same owner
+  @@unique([ownerId, name]) // Ensure no duplicate organization names for the same owner
 }
 
 model OrganizationMembership {
-  id              String              @id @default(cuid())
-  userId          String              // The user who is a member of the organization
-  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organizationId  String              // The organization the user belongs to
-  organization    Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  role            OrganizationRole    @default(MEMBER)  // Role in the organization
-  joinedAt        DateTime            @default(now())
+  id             String           @id @default(cuid())
+  userId         String // The user who is a member of the organization
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String // The organization the user belongs to
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           OrganizationRole @default(MEMBER) // Role in the organization
+  joinedAt       DateTime         @default(now())
 
-  @@unique([userId, organizationId])  // Ensure a user can't be a member of the same organization multiple times
+  @@unique([userId, organizationId]) // Ensure a user can't be a member of the same organization multiple times
   @@index([organizationId])
 }
+
 model Company {
-  id             String                @id @default(cuid())
+  id             String        @id @default(cuid())
   name           String
   address        String
-  nif            String                // Numéro d'Identification Fiscale
+  nif            String // Numéro d'Identification Fiscale
   contact        String
   logo           String?
-  userId         String?               // User who created the company (optional if associated with organization)
-  organizationId String?               // Link to the organization (optional if user-created)
-  user           User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization   Organization?         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  exercices      Exercice[]            // One company can have many exercices
-  documents      Document[]            // One company can have many documents
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
+  userId         String? // User who created the company (optional if associated with organization)
+  organizationId String? // Link to the organization (optional if user-created)
+  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  exercices      Exercice[] // One company can have many exercices
+  documents      Document[] // One company can have many documents
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  @@unique([organizationId, name])     // Ensure no duplicate company names within the same organization
+  @@unique([organizationId, name]) // Ensure no duplicate company names within the same organization
   @@index([userId])
 }
 
-
 model Exercice {
-  id             String                @id @default(cuid())
-  name           Int
-  startDate      DateTime
-  endDate        DateTime
-  companyId      String                // Link to the company
-  company        Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  documents      Document[]            // One exercice can have many documents
+  id                String             @id @default(cuid())
+  name              Int
+  startDate         DateTime
+  endDate           DateTime
+  companyId         String // Link to the company
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  documents         Document[] // One exercice can have many documents
   financialAccounts FinancialAccount[] // One exercise can have many accounts
-  transactions   Transaction[]         // One exercise can have many transactions
-  reminders      Reminder[]            // Reminders related to this exercise
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
+  transactions      Transaction[] // One exercise can have many transactions
+  reminders         Reminder[] // Reminders related to this exercise
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   Balance Balance[]
 
@@ -209,31 +208,31 @@ model Exercice {
 }
 
 model Document {
-  id            String      @id @default(cuid())
-  fileUrl       String      // URL where the document is stored
-  fileName      String      // Original file name
-  type          String      // Type of document (PDF, Excel, Word, etc.)
-  companyId     String?     // Optional relation with company
-  company       Company?    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  exerciceId    String?     // Optional relation with exercise
-  exercice      Exercice?   @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id         String    @id @default(cuid())
+  fileUrl    String // URL where the document is stored
+  fileName   String // Original file name
+  type       String // Type of document (PDF, Excel, Word, etc.)
+  companyId  String? // Optional relation with company
+  company    Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  exerciceId String? // Optional relation with exercise
+  exercice   Exercice? @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@index([companyId])
   @@index([exerciceId])
 }
 
 model Reminder {
-  id          String    @id @default(cuid())
-  type        String    // Type de rappel (ex. "impôts", "frais", etc.)
-  exerciceId  String    // L'exercice auquel ce rappel est lié
-  exercice    Exercice  @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
-  userId      String    // L'utilisateur qui a créé ce rappel
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  alerts      Json      // Détails des alertes (dates et montants pour chaque tranche)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String   @id @default(cuid())
+  type       String // Type de rappel (ex. "impôts", "frais", etc.)
+  exerciceId String // L'exercice auquel ce rappel est lié
+  exercice   Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
+  userId     String // L'utilisateur qui a créé ce rappel
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alerts     Json // Détails des alertes (dates et montants pour chaque tranche)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([exerciceId])
   @@index([userId])

@@ -3,43 +3,55 @@ import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST - Create a new exercise for a company
-export async function POST(req: NextRequest, { params }: { params: { companyId: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
-  }
-
-  const { name, startDate, endDate } = await req.json();
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ companyId: string }> }
+) {
+  const { companyId } = await params;
 
   try {
-    const exercise = await db.exercice.create({
+    const { name, startDate, endDate } = await req.json();
+
+    const newExercice = await db.exercice.create({
       data: {
         name,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
-        companyId: params.companyId,
+        companyId,
       },
     });
-    return NextResponse.json(exercise);
+
+    return NextResponse.json(newExercice, { status: 201 });
   } catch (error) {
-    console.error("Error creating exercise:", error);
-    return NextResponse.json({ error: "Failed to create exercise" }, { status: 500 });
+    console.error("Error creating exercice:", error);
+    return NextResponse.json(
+      { error: "Failed to create exercice" },
+      { status: 500 }
+    );
   }
 }
 
 // GET - Get all exercises for a company
-export async function GET(req: NextRequest, { params }: { params: { companyId: string } }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ companyId: string }> }
+) {
+  const { companyId } = await params;
+
   try {
     const session = await auth(); // Check if the user is authenticated
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
+      return NextResponse.json(
+        { error: "User not authenticated" },
+        { status: 401 }
+      );
     }
 
     // Check if the user has access to the company either through the organization or as the company creator
     const company = await db.company.findFirst({
       where: {
-        id: params.companyId,
+        id: companyId,
         OR: [
           {
             userId: session.user.id, // If the user directly owns the company
@@ -58,18 +70,24 @@ export async function GET(req: NextRequest, { params }: { params: { companyId: s
     });
 
     if (!company) {
-      return NextResponse.json({ error: "Not authorized to access this company's exercises" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Not authorized to access this company's exercises" },
+        { status: 403 }
+      );
     }
 
     // Fetch all exercises related to the company
-    const exercises = await db.exercice.findMany({
-      where: { companyId: params.companyId },
-      orderBy: { startDate: "asc" }, // Optional: Order by the start date
+    const exercices = await db.exercice.findMany({
+      where: { companyId },
+      orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(exercises);
+    return NextResponse.json(exercices);
   } catch (error) {
-    console.error("Error fetching exercises:", error);
-    return NextResponse.json({ error: "Failed to fetch exercises" }, { status: 500 });
+    console.error("Error fetching exercices:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch exercices" },
+      { status: 500 }
+    );
   }
 }

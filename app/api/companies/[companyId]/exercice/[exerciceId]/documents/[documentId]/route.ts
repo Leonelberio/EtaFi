@@ -1,12 +1,15 @@
 // api/companies/[companyId]/exercice/[exerciceId]/documents/[documentId]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";  // Adjust to the actual path of your db client
+import { db } from "@/lib/db"; // Adjust to the actual path of your db client
 import { unlink } from "fs/promises";
 import { join } from "path";
 
-export async function DELETE(req: NextRequest, { params }: { params: { documentId: string } }) {
-  const { documentId } = params;
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ documentId: string }> }
+) {
+  const { documentId } = await params;
 
   try {
     // Fetch the document to get the file URL
@@ -15,7 +18,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { documentI
     });
 
     if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 }
+      );
     }
 
     // Delete the document from the database
@@ -24,12 +30,18 @@ export async function DELETE(req: NextRequest, { params }: { params: { documentI
     });
 
     // Delete the file from the server
-    const filePath = join(process.cwd(), "public", document.fileUrl);  // Ensure fileUrl starts with /uploads/...
+    const filePath = join(process.cwd(), "public", document.fileUrl); // Ensure fileUrl starts with /uploads/...
     await unlink(filePath);
 
-    return NextResponse.json({ message: "Document deleted successfully" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Document deleted successfully" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error deleting document:", error);
-    return NextResponse.json({ error: "Failed to delete document" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete document" },
+      { status: 500 }
+    );
   }
 }

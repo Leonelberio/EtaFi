@@ -1,236 +1,369 @@
-// @ts-nocheck
-
-
 "use client";
 
+import React, { useState, useEffect } from "react";
+import { formatNumber } from "@/lib/utils";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-  TableFooter,
 } from "@/components/ui/table";
-import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useParams, useRouter } from "next/navigation"; // Import useRouter for navigation
-import { parse } from 'csv-parse/sync'; // CSV parsing library
+import { Input } from "@/components/ui/input";
+import { useParams } from "next/navigation";
+import { Edit, Save, X, Check, Plus } from "lucide-react";
+import {
+  useBalanceStore,
+  type BalanceData,
+  useBalanceIsSaving,
+} from "@/lib/stores/balance-store";
+import RealTimeFinancialSummary from "@/app/(protected)/_components/real-time-financial-summary";
 
-// Mapping CSV columns to internal keys
-const columnMapping = {
-  "Numéro de compte": "accountNumber",
-  "Libellé du compte": "account",
-  "Débit": "debits",
-  "Crédit": "credits",
-  "Solde": "solde",
-};
-
-// Format number for display
-const formatNumber = (value:string) => {
-  if (!value) return "";
-  const number = parseFloat(value.replace(",", ".").replace(/[^0-9.]/g, ""));
-  return new Intl.NumberFormat("fr-FR", {
-    style: "decimal",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(number);
-};
-
-// Convert formatted numbers to floats for calculations
-const parseFormattedNumber = (value:string) => {
-  if (!value) return 0;
-  return parseFloat(value.replace(/\s/g, "").replace(",", "."));
-};
-
-// Grouping the balance sheet data by classes
-const groupByClass = (data:any) => {
-  const classes = {
-    "Classe 1 : Comptes de Capitaux": [],
-    "Classe 2 : Comptes d'Immobilisations": [],
-    "Classe 3 : Comptes de Stocks": [],
-    "Classe 4 : Comptes de Tiers": [],
-    "Classe 5 : Comptes de Trésorerie": [],
-    "Classe 6 : Comptes de Charges": [],
-    "Classe 7 : Comptes de Produits": [],
+export default function BalanceSheet() {
+  const { companyId, exerciceId } = useParams() as {
+    companyId: string;
+    exerciceId: string;
   };
 
-  data.forEach((row) => {
-    const accountNumber = parseInt(row.accountNumber, 10);
-    if (accountNumber >= 100 && accountNumber < 200) {
-      classes["Classe 1 : Comptes de Capitaux"].push(row);
-    } else if (accountNumber >= 200 && accountNumber < 300) {
-      classes["Classe 2 : Comptes d'Immobilisations"].push(row);
-    } else if (accountNumber >= 300 && accountNumber < 400) {
-      classes["Classe 3 : Comptes de Stocks"].push(row);
-    } else if (accountNumber >= 400 && accountNumber < 500) {
-      classes["Classe 4 : Comptes de Tiers"].push(row);
-    } else if (accountNumber >= 500 && accountNumber < 600) {
-      classes["Classe 5 : Comptes de Trésorerie"].push(row);
-    } else if (accountNumber >= 600 && accountNumber < 700) {
-      classes["Classe 6 : Comptes de Charges"].push(row);
-    } else if (accountNumber >= 700 && accountNumber < 800) {
-      classes["Classe 7 : Comptes de Produits"].push(row);
-    }
-  });
+  // Global state
+  const { balance, updateBalanceRow, setLoading, lastUpdated } =
+    useBalanceStore();
+  const isSaving = useBalanceIsSaving();
 
-  return classes;
-};
+  // Add sample data function
+  const { addSampleData } = useBalanceStore();
 
-// Main Balance Sheet Table component
-export function BalanceSheetTable({ data = [], setData }) {
-  const { exerciceId, companyId } = useParams(); // Fetch params from the router
-  const router = useRouter(); // useRouter hook for navigation
+  // Local editing state
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<Partial<BalanceData>>({});
 
-  // Load balance from localStorage if available
-  useEffect(() => {
-    const storedBalance = localStorage.getItem(`balance_${exerciceId}`);
-    if (storedBalance) {
-      setData(JSON.parse(storedBalance));
-    }
-  }, [exerciceId, setData]);
+  const handleEdit = (row: BalanceData) => {
+    setEditingRow(row.accountNumber);
+    setEditValues({
+      account: row.account,
+      debits: row.debits,
+      credits: row.credits,
+    });
+  };
 
-  // Handle CSV upload, parse it and set it to state
-  const handleCsvUpload = (event) => {
-    const file = event.target.files[0];
-    const reader = new FileReader();
+  const handleSave = () => {
+    if (!editingRow) return;
 
-    reader.onload = (e) => {
-      const csvData = e.target.result;
-      const parsedData = parseCsv(csvData); // Parse the CSV data
-      setData(parsedData); // Set parsed data into the state
+    // Calculate new solde
+    const debits = parseFloat(
+      editValues.debits?.replace(/\s/g, "").replace(",", ".") || "0"
+    );
+    const credits = parseFloat(
+      editValues.credits?.replace(/\s/g, "").replace(",", ".") || "0"
+    );
+    const solde = debits - credits;
 
-      // Save to localStorage
+    const updates = {
+      ...editValues,
+      solde: formatNumber(solde.toString()),
     };
 
-    reader.readAsText(file);
+    updateBalanceRow(editingRow, updates);
+    setEditingRow(null);
+    setEditValues({});
   };
 
-  // Parse the CSV and map the columns
-  const parseCsv = (csvData) => {
-    try {
-      // Parse CSV data with column mapping
-      const records = parse(csvData, {
-        columns: (header) => header.map((col) => columnMapping[col.trim()]), // Map columns
-        skip_empty_lines: true,
-        trim: true, // Trim whitespace around fields
-      });
+  const handleCancel = () => {
+    setEditingRow(null);
+    setEditValues({});
+  };
 
-      // Format and return the parsed records
-      return records.map((row) => ({
-        accountNumber: row.accountNumber?.trim(),
-        account: row.account?.trim(),
-        debits: formatNumber(row.debits?.trim() || ""),
-        credits: formatNumber(row.credits?.trim() || ""),
-        solde: formatNumber(row.solde?.trim() || ""),
-      }));
-    } catch (error) {
-      console.error("Error parsing CSV:", error);
-      alert("Error parsing CSV file. Please check the file format.");
-      return [];
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSave();
+    } else if (e.key === "Escape") {
+      handleCancel();
     }
   };
 
-  // Function to save or update the balance sheet data in the server
-  const handleSaveBalance = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("balanceData", JSON.stringify(data)); // Convert data to JSON string
+  const calculateTotals = () => {
+    let totalDebits = 0;
+    let totalCredits = 0;
+    let totalSolde = 0;
 
-      const response = await fetch(`/api/companies/${companyId}/exercice/${exerciceId}/balance`, {
-        method: "POST",
-        body: formData,
-      });
+    balance.forEach((row) => {
+      totalDebits +=
+        parseFloat(row.debits.replace(/\s/g, "").replace(",", ".")) || 0;
+      totalCredits +=
+        parseFloat(row.credits.replace(/\s/g, "").replace(",", ".")) || 0;
+      totalSolde +=
+        parseFloat(row.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+    });
 
-
-      if (!response.ok) {
-        throw new Error("Failed to save balance");
-      }
-
-      localStorage.removeItem(`balance_${exerciceId}`);
-
-      localStorage.setItem(`balance_${exerciceId}`, JSON.stringify(data));
-
-      alert("Balance saved successfully!");
-    } catch (error) {
-      console.error("Error saving balance:", error);
-      alert("Error saving balance");
-    }
+    return { totalDebits, totalCredits, totalSolde };
   };
 
-  // Function to handle the "Générer" button click
-  const handleGenerate = () => {
-    router.push(`/dashboard/companies/${companyId}/exercice/${exerciceId}/etats-fin`);
-  };
-
-  // Group data by classes
-  const groupedData = groupByClass(data);
-
-  // Calculate totals for debits and credits
-  const totals = {
-    debits: data.reduce((sum, row) => sum + parseFormattedNumber(row.debits), 0),
-    credits: data.reduce((sum, row) => sum + parseFormattedNumber(row.credits), 0),
-  };
+  const totals = calculateTotals();
 
   return (
-    <div>
-      <div className="flex items-center space-x-4">
-        <Input type="file" accept=".csv" onChange={handleCsvUpload} />
-        <Button onClick={handleSaveBalance}>Sauvegarder</Button>
-        <Button onClick={handleGenerate}>Générer</Button> {/* Added the "Générer" button */}
-      </div>
+    <div className="space-y-6">
+      {/* Real-time Financial Summary */}
+      <RealTimeFinancialSummary />
 
-      <Table className="mt-6">
-        <TableCaption>Exemple de Balance Comptable au 31 décembre N</TableCaption>
+      {/* Balance Sheet Table */}
+      <div className="bg-white rounded-lg shadow-sm border">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Balance Comptable
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Cliquez sur les cellules pour modifier • Appuyez sur Entrée pour
+                sauvegarder • Échap pour annuler
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              {balance.length === 0 && (
+                <Button
+                  onClick={addSampleData}
+                  variant="outline"
+                  size="sm"
+                  className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Charger données d&apos;exemple
+                </Button>
+              )}
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                Dernière mise à jour:{" "}
+                {new Date(lastUpdated).toLocaleTimeString("fr-FR")}
+                {isSaving && (
+                  <span className="text-blue-600 font-medium">
+                    • Sauvegarde en cours...
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <TableHeader>
-          <TableRow>
-            <TableHead>N° de Compte</TableHead>
-            <TableHead>Libellé du Compte</TableHead>
-            <TableHead className="text-right">Débit (D)</TableHead>
-            <TableHead className="text-right">Crédit (C)</TableHead>
-            <TableHead className="text-right">Solde</TableHead>
-          </TableRow>
-        </TableHeader>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50">
+                <TableHead className="font-semibold text-gray-900 w-32">
+                  N° Compte
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900">
+                  <div className="flex items-center gap-2">
+                    Intitulé du compte
+                    <Edit className="h-4 w-4 text-gray-400" />
+                  </div>
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900 text-right w-32">
+                  <div className="flex items-center justify-end gap-2">
+                    Débits
+                    <Edit className="h-4 w-4 text-gray-400" />
+                  </div>
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900 text-right w-32">
+                  <div className="flex items-center justify-end gap-2">
+                    Crédits
+                    <Edit className="h-4 w-4 text-gray-400" />
+                  </div>
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900 text-right w-32">
+                  Solde
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900 w-24">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {balance.map((row) => (
+                <TableRow
+                  key={row.accountNumber}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <TableCell className="font-mono text-sm font-medium">
+                    {row.accountNumber}
+                  </TableCell>
 
-        {/* Group data by classes and render */}
-        {Object.keys(groupedData).map((className) => (
-          groupedData[className].length > 0 && ( // Only render non-empty classes
-            <>
-              <TableHeader key={className}>
-                <TableRow>
-                  <TableHead colSpan={5} className="bg-gray-100">{className}</TableHead>
+                  {/* Account Name - Editable */}
+                  <TableCell>
+                    {editingRow === row.accountNumber ? (
+                      <Input
+                        value={editValues.account || ""}
+                        onChange={(e) =>
+                          setEditValues({
+                            ...editValues,
+                            account: e.target.value,
+                          })
+                        }
+                        onKeyDown={handleKeyPress}
+                        className="border-rose-200 focus:border-rose-500"
+                        autoFocus={editValues.account !== undefined}
+                      />
+                    ) : (
+                      <div
+                        className="cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
+                        onClick={() => handleEdit(row)}
+                      >
+                        {row.account}
+                      </div>
+                    )}
+                  </TableCell>
+
+                  {/* Debits - Editable */}
+                  <TableCell className="text-right">
+                    {editingRow === row.accountNumber ? (
+                      <Input
+                        type="text"
+                        value={editValues.debits || ""}
+                        onChange={(e) =>
+                          setEditValues({
+                            ...editValues,
+                            debits: e.target.value,
+                          })
+                        }
+                        onKeyDown={handleKeyPress}
+                        className="text-right border-rose-200 focus:border-rose-500"
+                        placeholder="0"
+                      />
+                    ) : (
+                      <div
+                        className="cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors text-right"
+                        onClick={() => handleEdit(row)}
+                      >
+                        {row.debits}
+                      </div>
+                    )}
+                  </TableCell>
+
+                  {/* Credits - Editable */}
+                  <TableCell className="text-right">
+                    {editingRow === row.accountNumber ? (
+                      <Input
+                        type="text"
+                        value={editValues.credits || ""}
+                        onChange={(e) =>
+                          setEditValues({
+                            ...editValues,
+                            credits: e.target.value,
+                          })
+                        }
+                        onKeyDown={handleKeyPress}
+                        className="text-right border-rose-200 focus:border-rose-500"
+                        placeholder="0"
+                      />
+                    ) : (
+                      <div
+                        className="cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors text-right"
+                        onClick={() => handleEdit(row)}
+                      >
+                        {row.credits}
+                      </div>
+                    )}
+                  </TableCell>
+
+                  {/* Solde - Auto-calculated */}
+                  <TableCell className="text-right font-medium">
+                    {editingRow === row.accountNumber ? (
+                      <div className="text-right p-2 bg-gray-50 rounded">
+                        {(() => {
+                          const debits =
+                            parseFloat(
+                              editValues.debits
+                                ?.replace(/\s/g, "")
+                                .replace(",", ".") ||
+                                row.debits.replace(/\s/g, "").replace(",", ".")
+                            ) || 0;
+                          const credits =
+                            parseFloat(
+                              editValues.credits
+                                ?.replace(/\s/g, "")
+                                .replace(",", ".") ||
+                                row.credits.replace(/\s/g, "").replace(",", ".")
+                            ) || 0;
+                          const solde = debits - credits;
+                          return formatNumber(solde.toString());
+                        })()}
+                      </div>
+                    ) : (
+                      <span
+                        className={
+                          parseFloat(
+                            row.solde.replace(/\s/g, "").replace(",", ".")
+                          ) >= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {row.solde}
+                      </span>
+                    )}
+                  </TableCell>
+
+                  {/* Actions */}
+                  <TableCell>
+                    {editingRow === row.accountNumber ? (
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          onClick={handleSave}
+                          className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCancel}
+                          className="h-8 w-8 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEdit(row)}
+                        className="h-8 w-8 p-0 hover:bg-rose-50 hover:text-rose-600"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
+              ))}
 
-              <TableBody>
-                {groupedData[className].map((row, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{row.accountNumber}</TableCell>
-                    <TableCell>{row.account}</TableCell>
-                    <TableCell className="text-right">{row.debits}</TableCell>
-                    <TableCell className="text-right">{row.credits}</TableCell>
-                    <TableCell className="text-right">{row.solde}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </>
-          )
-        ))}
-
-        <TableFooter>
-          <TableRow>
-            <TableCell className="font-bold" colSpan={2}>
-              Totaux
-            </TableCell>
-            <TableCell className="text-right font-bold">{formatNumber(totals.debits.toString())}</TableCell>
-            <TableCell className="text-right font-bold">{formatNumber(totals.credits.toString())}</TableCell>
-            <TableCell></TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
+              {/* Totals Row */}
+              <TableRow className="bg-gray-50 font-semibold border-t-2">
+                <TableCell colSpan={2} className="font-bold text-gray-900">
+                  TOTAUX
+                </TableCell>
+                <TableCell className="text-right font-bold text-gray-900">
+                  {formatNumber(totals.totalDebits.toString())}
+                </TableCell>
+                <TableCell className="text-right font-bold text-gray-900">
+                  {formatNumber(totals.totalCredits.toString())}
+                </TableCell>
+                <TableCell className="text-right font-bold text-gray-900">
+                  <span
+                    className={
+                      totals.totalSolde >= 0 ? "text-green-600" : "text-red-600"
+                    }
+                  >
+                    {formatNumber(totals.totalSolde.toString())}
+                  </span>
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   );
 }

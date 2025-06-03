@@ -5,8 +5,19 @@
 
 import React, { useState, useEffect } from "react";
 import { formatNumber } from "@/lib/utils";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useParams } from "next/navigation";
+import {
+  useBalanceData,
+  useBalanceLastUpdated,
+} from "@/lib/stores/balance-store";
 
 // Define the account type
 type Account = {
@@ -34,51 +45,197 @@ const bilanPassif: Section[] = [
     notesAnnexes: "3",
     ref: "CP",
     accounts: [
-      { ref: "CA", accountNumber: "101", libelle: "Capital", brut: 0, amort: 0, net: 0 },
-      { ref: "CB", accountNumber: "102", libelle: "Apporteurs capital non appelé (-)", brut: 0, amort: 0, net: 0 },
-      { ref: "CD", accountNumber: "104", libelle: "Primes liées au capital social", brut: 0, amort: 0, net: 0 },
-      { ref: "CE", accountNumber: "105", libelle: "Écarts de réévaluation", brut: 0, amort: 0, net: 0 },
-      { ref: "CF", accountNumber: "1061", libelle: "Réserves indisponibles", brut: 0, amort: 0, net: 0 },
-      { ref: "CG", accountNumber: "1068", libelle: "Réserves libres", brut: 0, amort: 0, net: 0 },
-      { ref: "CH", accountNumber: "110", libelle: "Report à nouveau", brut: 0, amort: 0, net: 0 },
-      { ref: "CJ", accountNumber: "12", libelle: "Résultat net de l'exercice", brut: 0, amort: 0, net: 0 },
-      { ref: "CL", accountNumber: "131", libelle: "Subventions d'investissement", brut: 0, amort: 0, net: 0 },
-      { ref: "CM", accountNumber: "14", libelle: "Provisions réglementées", brut: 0, amort: 0, net: 0 }
-    ]
+      {
+        ref: "CA",
+        accountNumber: "101",
+        libelle: "Capital",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "CB",
+        accountNumber: "102",
+        libelle: "Apporteurs capital non appelé (-)",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "CD",
+        accountNumber: "104",
+        libelle: "Primes liées au capital social",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "CE",
+        accountNumber: "105",
+        libelle: "Écarts de réévaluation",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "CF",
+        accountNumber: "1061",
+        libelle: "Réserves indisponibles",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "CG",
+        accountNumber: "1068",
+        libelle: "Réserves libres",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "CH",
+        accountNumber: "110",
+        libelle: "Report à nouveau",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "CJ",
+        accountNumber: "12",
+        libelle: "Résultat net de l'exercice",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "CL",
+        accountNumber: "131",
+        libelle: "Subventions d'investissement",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "CM",
+        accountNumber: "14",
+        libelle: "Provisions réglementées",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+    ],
   },
   {
     section: "DETTES FINANCIÈRES ET PROVISIONS",
     notesAnnexes: "5",
     ref: "DD",
     accounts: [
-      { ref: "DA", accountNumber: "16", libelle: "Emprunts et dettes financières diverses", brut: 0, amort: 0, net: 0 },
-      { ref: "DB", accountNumber: "17", libelle: "Dettes de location acquisition", brut: 0, amort: 0, net: 0 },
-      { ref: "DC", accountNumber: "151", libelle: "Provisions pour risques et charges", brut: 0, amort: 0, net: 0 }
-    ]
+      {
+        ref: "DA",
+        accountNumber: "16",
+        libelle: "Emprunts et dettes financières diverses",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "DB",
+        accountNumber: "17",
+        libelle: "Dettes de location acquisition",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "DC",
+        accountNumber: "151",
+        libelle: "Provisions pour risques et charges",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+    ],
   },
   {
     section: "PASSIF CIRCULANT",
     notesAnnexes: "7",
     ref: "DP",
     accounts: [
-      { ref: "DH", accountNumber: "42", libelle: "Dettes circulantes HAO", brut: 0, amort: 0, net: 0 },
-      { ref: "DI", accountNumber: "419", libelle: "Clients, avances reçues", brut: 0, amort: 0, net: 0 },
-      { ref: "DJ", accountNumber: "401", libelle: "Fournisseurs d'exploitation", brut: 0, amort: 0, net: 0 },
-      { ref: "DK", accountNumber: "44", libelle: "Dettes fiscales et sociales", brut: 0, amort: 0, net: 0 },
-      { ref: "DM", accountNumber: "46", libelle: "Autres dettes", brut: 0, amort: 0, net: 0 },
-      { ref: "DN", accountNumber: "1515", libelle: "Provisions pour risques à court terme", brut: 0, amort: 0, net: 0 }
-    ]
+      {
+        ref: "DH",
+        accountNumber: "42",
+        libelle: "Dettes circulantes HAO",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "DI",
+        accountNumber: "419",
+        libelle: "Clients, avances reçues",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "DJ",
+        accountNumber: "401",
+        libelle: "Fournisseurs d'exploitation",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "DK",
+        accountNumber: "44",
+        libelle: "Dettes fiscales et sociales",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "DM",
+        accountNumber: "46",
+        libelle: "Autres dettes",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "DN",
+        accountNumber: "1515",
+        libelle: "Provisions pour risques à court terme",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+    ],
   },
   {
     section: "TRÉSORERIE PASSIF",
     notesAnnexes: "9",
     ref: "DT",
     accounts: [
-      { ref: "DQ", accountNumber: "5124", libelle: "Banques, crédits d'escompte", brut: 0, amort: 0, net: 0 },
-      { ref: "DR", accountNumber: "5123", libelle: "Banques, établissements financiers et crédits de trésorerie", brut: 0, amort: 0, net: 0 }
-    ]
+      {
+        ref: "DQ",
+        accountNumber: "5124",
+        libelle: "Banques, crédits d'escompte",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+      {
+        ref: "DR",
+        accountNumber: "5123",
+        libelle: "Banques, établissements financiers et crédits de trésorerie",
+        brut: 0,
+        amort: 0,
+        net: 0,
+      },
+    ],
   },
-
 ];
 
 // Function to calculate totals for each section
@@ -87,7 +244,7 @@ const calculerTotal = (accounts: Account[]) => {
     (total, account) => ({
       brut: total.brut + account.brut,
       amort: total.amort + account.amort,
-      net: total.net + account.net
+      net: total.net + account.net,
     }),
     { brut: 0, amort: 0, net: 0 }
   );
@@ -96,118 +253,111 @@ const calculerTotal = (accounts: Account[]) => {
 // Function to calculate the total for each major section and update directly in `passifData`
 const updateSectionTotals = (sections: Section[]) => {
   const updatedSections = sections.map((section) => {
-    const previousAccounts = section.accounts; // Keep previous accounts
-
-    if (section.ref === "CP") {
-      // Total Capitaux Propres
-      const relevantSections = sections.filter((s) => ["CA", "CB", "CD", "CE", "CF", "CG", "CH", "CJ", "CL", "CM"].includes(s.ref));
-      const total = relevantSections.reduce((acc, s) => {
-        const sectionTotal = calculerTotal(s.accounts);
-        acc.brut += sectionTotal.brut;
-        acc.amort += sectionTotal.amort;
-        acc.net += sectionTotal.net;
-        return acc;
-      }, { brut: 0, amort: 0, net: 0 });
-      section.accounts = [...previousAccounts, { ref: "CP", accountNumber: "", libelle: "Total Capitaux Propres", brut: total.brut, amort: total.amort, net: total.net }];
-    }
-
-    if (section.ref === "DD") {
-      // Total Dettes Financières et Provisions
-      const relevantSections = sections.filter((s) => ["DA", "DB", "DC"].includes(s.ref));
-      const total = relevantSections.reduce((acc, s) => {
-        const sectionTotal = calculerTotal(s.accounts);
-        acc.brut += sectionTotal.brut;
-        acc.amort += sectionTotal.amort;
-        acc.net += sectionTotal.net;
-        return acc;
-      }, { brut: 0, amort: 0, net: 0 });
-      section.accounts = [...previousAccounts, { ref: "DD", accountNumber: "", libelle: "Total Dettes Financières et Provisions", brut: total.brut, amort: total.amort, net: total.net }];
-    }
-
-    if (section.ref === "DP") {
-      // Total Passif Circulant
-      const relevantSections = sections.filter((s) => ["DH", "DI", "DJ", "DK", "DM", "DN"].includes(s.ref));
-      const total = relevantSections.reduce((acc, s) => {
-        const sectionTotal = calculerTotal(s.accounts);
-        acc.brut += sectionTotal.brut;
-        acc.amort += sectionTotal.amort;
-        acc.net += sectionTotal.net;
-        return acc;
-      }, { brut: 0, amort: 0, net: 0 });
-      section.accounts = [...previousAccounts, { ref: "DP", accountNumber: "", libelle: "Total Passif Circulant", brut: total.brut, amort: total.amort, net: total.net }];
-    }
-
+    // Don't add totals to individual account sections, only calculate them
     return section;
   });
 
   return updatedSections;
 };
 
+// Calculate totals for major groups
+const calculateMajorTotals = (sections: Section[]) => {
+  const capitauxPropres = sections.find((s) => s.ref === "CP");
+  const dettesFinancieres = sections.find((s) => s.ref === "DD");
+  const passifCirculant = sections.find((s) => s.ref === "DP");
+  const tresoreriePassif = sections.find((s) => s.ref === "DT");
+
+  const totals = {
+    capitauxPropres: capitauxPropres
+      ? calculerTotal(capitauxPropres.accounts)
+      : { brut: 0, amort: 0, net: 0 },
+    dettesFinancieres: dettesFinancieres
+      ? calculerTotal(dettesFinancieres.accounts)
+      : { brut: 0, amort: 0, net: 0 },
+    passifCirculant: passifCirculant
+      ? calculerTotal(passifCirculant.accounts)
+      : { brut: 0, amort: 0, net: 0 },
+    tresoreriePassif: tresoreriePassif
+      ? calculerTotal(tresoreriePassif.accounts)
+      : { brut: 0, amort: 0, net: 0 },
+  };
+
+  const totalGeneral = {
+    brut:
+      totals.capitauxPropres.brut +
+      totals.dettesFinancieres.brut +
+      totals.passifCirculant.brut +
+      totals.tresoreriePassif.brut,
+    amort:
+      totals.capitauxPropres.amort +
+      totals.dettesFinancieres.amort +
+      totals.passifCirculant.amort +
+      totals.tresoreriePassif.amort,
+    net:
+      totals.capitauxPropres.net +
+      totals.dettesFinancieres.net +
+      totals.passifCirculant.net +
+      totals.tresoreriePassif.net,
+  };
+
+  return { ...totals, totalGeneral };
+};
+
 // Main Bilan Passif component
 export default function BilanPassif() {
   const [passifData, setPassifData] = useState<Section[]>(bilanPassif);
-  const [balance, setBalance] = useState([]);
-  const { exerciceId, companyId } = useParams();
 
-  // Load balance from API or LocalStorage
-  useEffect(() => {
-    const loadBalanceFromAPI = async () => {
-      try {
-        const response = await fetch(`/api/companies/${companyId}/exercice/${exerciceId}/balance`);
-        if (response.ok) {
-          const data = await response.json();
-          setBalance(data.data);
-        } else {
-          console.error("Failed to fetch balance from API.");
-        }
-      } catch (error) {
-        console.error("Error fetching balance:", error);
-      }
-    };
+  // Use global balance store instead of local state
+  const balanceData = useBalanceData();
+  const lastUpdated = useBalanceLastUpdated();
 
-    const loadBalanceFromLocalStorage = () => {
-      const storedBalance = localStorage.getItem(`balance_${exerciceId}`);
-      if (storedBalance) {
-        setBalance(JSON.parse(storedBalance));
-      }
-    };
+  const { exerciceId, companyId } = useParams() as {
+    exerciceId: string;
+    companyId: string;
+  };
 
-    // Decide whether to load from API or LocalStorage
-    if (navigator.onLine) {
-      loadBalanceFromAPI();
-    } else {
-      loadBalanceFromLocalStorage();
-    }
-  }, [companyId, exerciceId]);
-
-  // Map balance to Bilan Passif
+  // Map balance to Bilan Passif - now using global store data
   const mapBalanceToBilanPassif = () => {
+    if (!balanceData || balanceData.length === 0) return;
+
     const updatedPassif = passifData.map((section) => {
       const updatedAccounts = section.accounts.map((account) => {
-        const matchingAccount = balance.find((bal) => bal.accountNumber === account.accountNumber);
+        const matchingAccount = balanceData.find(
+          (bal) => bal.accountNumber === account.accountNumber
+        );
         if (matchingAccount) {
+          const solde =
+            parseFloat(
+              matchingAccount.solde.replace(/\s/g, "").replace(",", ".")
+            ) || 0;
+
           return {
             ...account,
-            brut: parseFloat(matchingAccount.debits.replace(/\s/g, "")) || 0,
-            amort: parseFloat(matchingAccount.credits.replace(/\s/g, "")) || 0,
-            net: parseFloat(matchingAccount.solde.replace(/\s/g, "")) || 0,
+            brut: Math.abs(solde),
+            amort: 0,
+            net: Math.abs(solde),
           };
         }
         return account;
       });
+
       return { ...section, accounts: updatedAccounts };
     });
 
-    const updatedPassifWithTotals = updateSectionTotals(updatedPassif);
-    setPassifData(updatedPassifWithTotals);
+    // Update section totals
+    const passifWithTotals = updateSectionTotals(updatedPassif);
+    setPassifData(passifWithTotals);
   };
 
-  // Trigger mapping when balance is loaded
+  // Auto-update when balance data changes in the global store
   useEffect(() => {
-    if (balance?.length > 0) {
+    if (balanceData.length > 0) {
       mapBalanceToBilanPassif();
     }
-  }, [balance]);
+  }, [balanceData, lastUpdated]);
+
+  // Calculate totals for display
+  const majorTotals = calculateMajorTotals(passifData);
 
   return (
     <div className="container mx-auto p-4">
@@ -228,9 +378,15 @@ export default function BilanPassif() {
           {passifData?.map((section, sectionIndex) => (
             <React.Fragment key={sectionIndex}>
               <TableRow>
-                <TableCell className="bg-gray-200 font-bold">{section.ref}</TableCell>
-                <TableCell className="bg-gray-200 font-bold">{section.section}</TableCell>
-                <TableCell className="bg-gray-200 font-bold">{section.notesAnnexes}</TableCell>
+                <TableCell className="bg-gray-200 font-bold">
+                  {section.ref}
+                </TableCell>
+                <TableCell className="bg-gray-200 font-bold">
+                  {section.section}
+                </TableCell>
+                <TableCell className="bg-gray-200 font-bold">
+                  {section.notesAnnexes}
+                </TableCell>
                 <TableCell className="text-right bg-gray-200 font-bold">
                   {formatNumber(calculerTotal(section.accounts).brut)}
                 </TableCell>
@@ -247,9 +403,15 @@ export default function BilanPassif() {
                   <TableCell>{account.ref}</TableCell>
                   <TableCell>{account.libelle}</TableCell>
                   <TableCell>{account.note || ""}</TableCell>
-                  <TableCell className="text-right">{formatNumber(account.brut)}</TableCell>
-                  <TableCell className="text-right">{formatNumber(account.amort)}</TableCell>
-                  <TableCell className="text-right">{formatNumber(account.net)}</TableCell>
+                  <TableCell className="text-right">
+                    {formatNumber(account.brut)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatNumber(account.amort)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatNumber(account.net)}
+                  </TableCell>
                 </TableRow>
               ))}
             </React.Fragment>
@@ -260,9 +422,15 @@ export default function BilanPassif() {
             <TableCell>DZ</TableCell>
             <TableCell>TOTAL GENERAL</TableCell>
             <TableCell></TableCell>
-            <TableCell className="text-right">{formatNumber(calculerTotal(passifData.map(s => calculerTotal(s.accounts))).brut)}</TableCell>
-            <TableCell className="text-right">{formatNumber(calculerTotal(passifData.map(s => calculerTotal(s.accounts))).amort)}</TableCell>
-            <TableCell className="text-right">{formatNumber(calculerTotal(passifData.map(s => calculerTotal(s.accounts))).net)}</TableCell>
+            <TableCell className="text-right">
+              {formatNumber(majorTotals.totalGeneral.brut)}
+            </TableCell>
+            <TableCell className="text-right">
+              {formatNumber(majorTotals.totalGeneral.amort)}
+            </TableCell>
+            <TableCell className="text-right">
+              {formatNumber(majorTotals.totalGeneral.net)}
+            </TableCell>
           </TableRow>
         </TableBody>
       </Table>

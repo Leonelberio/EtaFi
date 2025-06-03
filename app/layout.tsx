@@ -1,37 +1,50 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { SessionProvider } from 'next-auth/react'
-import { auth } from '@/auth'
-import './globals.css'
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { auth } from "@/auth";
 import { Toaster } from "@/components/ui/toaster";
+import ClientProviders from "@/components/providers/client-providers";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: 'EtaFi',
-  description: 'Explorez notre generteur des Etats Financiers',
-}
+  title: "EtaFi - SYSCOHADA Financial Statements",
+  description:
+    "Generate professional SYSCOHADA financial statements for West African businesses",
+  keywords: "SYSCOHADA, financial statements, OHADA, accounting, West Africa",
+};
 
 export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   const session = await auth();
 
   return (
-    <SessionProvider session={session}>
-      <html lang="fr">
+    <html lang="fr" className={`${inter.variable} antialiased`}>
       <head>
-          <link rel="icon" href="./favicon.ico" sizes="any" />
-          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        </head>
-        <body className={inter.className}>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="icon" href="./favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
+      <body className={`${inter.className} font-sans`}>
+        <ClientProviders session={session}>
+          <div className="min-h-screen bg-gray-50">{children}</div>
           <Toaster />
-          {children}
-        </body>
-      </html>
-    </SessionProvider>
-  )
+        </ClientProviders>
+      </body>
+    </html>
+  );
 }
