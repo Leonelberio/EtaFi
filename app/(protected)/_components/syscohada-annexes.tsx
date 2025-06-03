@@ -1620,323 +1620,548 @@ export default function SyscohadaAnnexes({
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* CHARGES */}
-                <div>
-                  <h3 className="text-lg font-bold text-red-700 mb-4">
-                    CHARGES
-                  </h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-red-50">
-                        <TableHead className="font-bold">RUBRIQUES</TableHead>
-                        <TableHead className="text-right font-bold">
-                          MONTANT (XOF)
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow className="bg-red-100">
-                        <TableCell
-                          className="font-bold text-red-900"
-                          colSpan={2}
-                        >
-                          CHARGES D&apos;EXPLOITATION
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Achats de marchandises
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("3200000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">Transport</TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("120000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Services extérieurs
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("350000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">Impôts et taxes</TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("85000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Charges de personnel
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("1200000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Dotations aux amortissements
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("280000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="bg-red-50 border-t-2">
-                        <TableCell className="font-bold">
-                          TOTAL CHARGES D&apos;EXPLOITATION
-                        </TableCell>
-                        <TableCell className="text-right font-bold font-mono">
-                          {formatNumber("5235000")}
-                        </TableCell>
-                      </TableRow>
-
-                      <TableRow className="bg-orange-100">
-                        <TableCell
-                          className="font-bold text-orange-900"
-                          colSpan={2}
-                        >
-                          CHARGES FINANCIÈRES
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Intérêts des emprunts
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("75000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Autres charges financières
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("25000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="bg-orange-50 border-t-2">
-                        <TableCell className="font-bold">
-                          TOTAL CHARGES FINANCIÈRES
-                        </TableCell>
-                        <TableCell className="text-right font-bold font-mono">
-                          {formatNumber("100000")}
-                        </TableCell>
-                      </TableRow>
-
-                      <TableRow className="bg-gray-100">
-                        <TableCell
-                          className="font-bold text-gray-900"
-                          colSpan={2}
-                        >
-                          CHARGES H.A.O.
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Charges exceptionnelles
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("45000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="bg-gray-50 border-t-2">
-                        <TableCell className="font-bold">
-                          TOTAL CHARGES H.A.O.
-                        </TableCell>
-                        <TableCell className="text-right font-bold font-mono">
-                          {formatNumber("45000")}
-                        </TableCell>
-                      </TableRow>
-
-                      <TableRow className="bg-red-200 border-t-4">
-                        <TableCell className="font-bold text-lg text-red-900">
-                          TOTAL GÉNÉRAL CHARGES
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-lg font-mono">
-                          {formatNumber("5380000")}
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* PRODUITS */}
-                <div>
-                  <h3 className="text-lg font-bold text-green-700 mb-4">
-                    PRODUITS
-                  </h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-green-50">
-                        <TableHead className="font-bold">RUBRIQUES</TableHead>
-                        <TableHead className="text-right font-bold">
-                          MONTANT (XOF)
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow className="bg-green-100">
-                        <TableCell
-                          className="font-bold text-green-900"
-                          colSpan={2}
-                        >
-                          PRODUITS D&apos;EXPLOITATION
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Ventes de marchandises
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("5200000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Prestations de services
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("350000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Autres produits d&apos;exploitation
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("75000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="bg-green-50 border-t-2">
-                        <TableCell className="font-bold">
-                          TOTAL PRODUITS D&apos;EXPLOITATION
-                        </TableCell>
-                        <TableCell className="text-right font-bold font-mono">
-                          {formatNumber("5625000")}
-                        </TableCell>
-                      </TableRow>
-
-                      <TableRow className="bg-blue-100">
-                        <TableCell
-                          className="font-bold text-blue-900"
-                          colSpan={2}
-                        >
-                          PRODUITS FINANCIERS
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Revenus financiers
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("15000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">Gains de change</TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("8000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="bg-blue-50 border-t-2">
-                        <TableCell className="font-bold">
-                          TOTAL PRODUITS FINANCIERS
-                        </TableCell>
-                        <TableCell className="text-right font-bold font-mono">
-                          {formatNumber("23000")}
-                        </TableCell>
-                      </TableRow>
-
-                      <TableRow className="bg-purple-100">
-                        <TableCell
-                          className="font-bold text-purple-900"
-                          colSpan={2}
-                        >
-                          PRODUITS H.A.O.
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="pl-6">
-                          Produits exceptionnels
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatNumber("12000")}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="bg-purple-50 border-t-2">
-                        <TableCell className="font-bold">
-                          TOTAL PRODUITS H.A.O.
-                        </TableCell>
-                        <TableCell className="text-right font-bold font-mono">
-                          {formatNumber("12000")}
-                        </TableCell>
-                      </TableRow>
-
-                      <TableRow className="bg-green-200 border-t-4">
-                        <TableCell className="font-bold text-lg text-green-900">
-                          TOTAL GÉNÉRAL PRODUITS
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-lg font-mono">
-                          {formatNumber("5660000")}
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-
-              {/* Résultats intermédiaires */}
-              <div className="mt-8 space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  SOLDES INTERMÉDIAIRES DE GESTION
-                </h3>
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead className="font-bold">INDICATEURS</TableHead>
-                      <TableHead className="text-right font-bold">
-                        MONTANT (XOF)
+                    <TableRow className="bg-green-50">
+                      <TableHead className="font-bold text-center w-16">
+                        Réf
+                      </TableHead>
+                      <TableHead className="font-bold">LIBELLES</TableHead>
+                      <TableHead className="font-bold text-center w-16">
+                        +/-
+                      </TableHead>
+                      <TableHead className="font-bold text-center w-16">
+                        NOTE
+                      </TableHead>
+                      <TableHead className="font-bold text-center">
+                        EXERCICE 2024
+                      </TableHead>
+                      <TableHead className="font-bold text-center">
+                        EXERCICE 2023
+                      </TableHead>
+                    </TableRow>
+                    <TableRow className="bg-green-100">
+                      <TableHead></TableHead>
+                      <TableHead></TableHead>
+                      <TableHead></TableHead>
+                      <TableHead></TableHead>
+                      <TableHead className="font-bold text-center">
+                        NET
+                      </TableHead>
+                      <TableHead className="font-bold text-center">
+                        NET
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-medium">
-                        Marge Commerciale
+                      <TableCell className="text-center">TA</TableCell>
+                      <TableCell>Ventes de marchandises</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">21</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("5200000")}
                       </TableCell>
-                      <TableCell className="text-right font-mono font-bold text-blue-700">
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("4800000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RA</TableCell>
+                      <TableCell>Achats de marchandises</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">22</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("3200000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("3000000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RB</TableCell>
+                      <TableCell>Variation de stocks de marchandises</TableCell>
+                      <TableCell className="text-center">-/+</TableCell>
+                      <TableCell className="text-center">6</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow className="bg-blue-100 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        XA
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        MARGE COMMERCIALE (Somme TA à RB)
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold font-mono">
                         {formatNumber("2000000")}
                       </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("1800000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">TB</TableCell>
+                      <TableCell>Ventes de produits fabriqués</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">21</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium">
-                        Valeur Ajoutée
+                      <TableCell className="text-center">TC</TableCell>
+                      <TableCell>Travaux, services vendus</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">21</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("350000")}
                       </TableCell>
-                      <TableCell className="text-right font-mono font-bold text-green-700">
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("300000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">TD</TableCell>
+                      <TableCell>Produits accessoires</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">21</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("75000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("50000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className="bg-green-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        XB
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        CHIFFRE D&apos;AFFAIRES (A+B+C+D)
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("5625000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("5150000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">TE</TableCell>
+                      <TableCell>Production stockée (ou déstockage)</TableCell>
+                      <TableCell className="text-center">-/+</TableCell>
+                      <TableCell className="text-center">6</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">TF</TableCell>
+                      <TableCell>Production immobilisée</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">21</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">TG</TableCell>
+                      <TableCell>Subvention d&apos;exploitation</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">21</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">TH</TableCell>
+                      <TableCell>Autres produits</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">21</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">TI</TableCell>
+                      <TableCell>
+                        Transfert de charges d&apos;exploitation
+                      </TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">12</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">RC</TableCell>
+                      <TableCell>
+                        Achats de matières et fournitures liées
+                      </TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">22</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RD</TableCell>
+                      <TableCell>
+                        Variation de stocks de matières premières et fournitures
+                        liées
+                      </TableCell>
+                      <TableCell className="text-center">-/+</TableCell>
+                      <TableCell className="text-center">6</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RE</TableCell>
+                      <TableCell>Autres achats</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">22</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RF</TableCell>
+                      <TableCell>
+                        Variation de stocks d&apos;autres approvisionnements
+                      </TableCell>
+                      <TableCell className="text-center">-/+</TableCell>
+                      <TableCell className="text-center">6</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RG</TableCell>
+                      <TableCell>Transports</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">23</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("120000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("100000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RH</TableCell>
+                      <TableCell>Services extérieurs</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">24</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("350000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("320000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RI</TableCell>
+                      <TableCell>Impôts et taxes</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">25</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("85000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("75000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RJ</TableCell>
+                      <TableCell>Autres charges</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">26</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-yellow-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        XC
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        VALEUR AJOUTEE (XB+RA+RB) + (Somme TE à RJ)
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold font-mono">
                         {formatNumber("1730000")}
                       </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("1555000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">RK</TableCell>
+                      <TableCell>Charges de personnel</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">27</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("1200000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("1100000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-purple-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        XD
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        EXCEDENT BRUT D&apos;EXPLOITATION (XC+RK)
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("530000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("455000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">TJ</TableCell>
+                      <TableCell>
+                        Reprises d&apos;amortissements, provisions et
+                        dépréciations
+                      </TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">28</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium">
-                        Excédent Brut d&apos;Exploitation (E.B.E.)
+                      <TableCell className="text-center">RL</TableCell>
+                      <TableCell>
+                        Dotations aux amortissements, aux provisions et
+                        dépréciations
                       </TableCell>
-                      <TableCell className="text-right font-mono font-bold text-purple-700">
-                        {formatNumber("445000")}
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">3C&28</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("280000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("250000")}
                       </TableCell>
                     </TableRow>
-                    <TableRow className="bg-green-50">
-                      <TableCell className="font-bold text-green-900">
-                        Résultat Net de l&apos;Exercice
+
+                    <TableRow className="bg-orange-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        XE
                       </TableCell>
-                      <TableCell className="text-right font-mono font-bold text-green-700 text-lg">
-                        {formatNumber("280000")}
+                      <TableCell className="font-bold">
+                        RESULTAT D&apos;EXPLOITATION (XD+TJ+RL)
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("250000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("205000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">TK</TableCell>
+                      <TableCell>Revenus financiers et assimilés</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">29</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("15000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("12000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">TL</TableCell>
+                      <TableCell>
+                        Reprises de provisions et dépréciations financières
+                      </TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">28</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">TM</TableCell>
+                      <TableCell>Transfert de charges financières</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">12</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RM</TableCell>
+                      <TableCell>
+                        Frais financiers et charges assimilées
+                      </TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">29</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("75000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("80000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RN</TableCell>
+                      <TableCell>
+                        Dotations aux provisions et aux dépréciations
+                        financières
+                      </TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">3C&28</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-blue-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        XF
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        RESULTAT FINANCIER (Somme TK à RN)
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-60000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-68000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-cyan-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        XG
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        RESULTAT DES ACTIVITES ORDINAIRES (XE+XF)
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("190000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("137000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">TN</TableCell>
+                      <TableCell>
+                        Produits des cessions d&apos;immobilisations
+                      </TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">3D</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("12000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("15000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">TO</TableCell>
+                      <TableCell>Autres produits HAO</TableCell>
+                      <TableCell className="text-center">+</TableCell>
+                      <TableCell className="text-center">30</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RO</TableCell>
+                      <TableCell>
+                        Valeur comptable des cessions d&apos;immobilisations
+                      </TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">3D</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("8000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("10000")}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RP</TableCell>
+                      <TableCell>Autres charges HAO</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">30</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("37000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("25000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-gray-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        XH
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        RESULTAT HORS ACTIVITES ORDINAIRES (Somme TN à RP)
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-33000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-20000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">RQ</TableCell>
+                      <TableCell>Participation des travailleurs</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center">30</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-center">RS</TableCell>
+                      <TableCell>Impôts sur le résultat</TableCell>
+                      <TableCell className="text-center">-</TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("47000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("35000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-green-300 border-t-4">
+                      <TableCell className="font-bold text-center text-lg">
+                        XI
+                      </TableCell>
+                      <TableCell className="font-bold text-lg">
+                        RESULTAT NET (XG+XH+RQ+RS)
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold text-lg font-mono">
+                        {formatNumber("110000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-lg font-mono">
+                        {formatNumber("82000")}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -1949,11 +2174,12 @@ export default function SyscohadaAnnexes({
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-green-600" />
                     <span className="font-semibold text-green-800">
-                      Résultat de l&apos;exercice (Bénéfice)
+                      Résultat Net de l&apos;exercice (Bénéfice)
                     </span>
                   </div>
                   <span className="text-lg font-bold text-green-700">
-                    {formatNumber("280000")} XOF
+                    {formatNumber("110000")} XOF (2024) |{" "}
+                    {formatNumber("82000")} XOF (2023)
                   </span>
                 </div>
               </div>
@@ -1972,7 +2198,7 @@ export default function SyscohadaAnnexes({
                     TAFIRE - Tableau de financement
                   </CardTitle>
                   <CardDescription>
-                    Analyse des emplois et ressources de l&apos;exercice
+                    Analyse des flux de trésorerie de l&apos;exercice
                   </CardDescription>
                 </div>
                 <Button variant="outline" size="sm">
@@ -1982,113 +2208,481 @@ export default function SyscohadaAnnexes({
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Ressources */}
-                <div>
-                  <h4 className="font-semibold text-green-700 mb-4 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Ressources
-                  </h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nature</TableHead>
-                        <TableHead className="text-right">
-                          Montant (XOF)
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {annexesData.tafire.ressources.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">
-                            {item.libelle}
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {formatNumber(item.montant.toString())}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow className="bg-green-50">
-                        <TableCell className="font-bold">
-                          Total Ressources
-                        </TableCell>
-                        <TableCell className="text-right font-bold">
-                          {formatNumber(
-                            annexesData.tafire.ressources
-                              .reduce((sum, item) => sum + item.montant, 0)
-                              .toString()
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-purple-50">
+                      <TableHead className="font-bold text-center w-16">
+                        Réf
+                      </TableHead>
+                      <TableHead className="font-bold">LIBELLES</TableHead>
+                      <TableHead className="font-bold text-center w-16">
+                        Note
+                      </TableHead>
+                      <TableHead className="font-bold text-center">
+                        EXERCICE 2024
+                      </TableHead>
+                      <TableHead className="font-bold text-center">
+                        EXERCICE 2023
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow className="bg-green-100">
+                      <TableCell className="font-bold text-center">
+                        ZA
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        Trésorerie nette au 1er janvier (Trésorerie actif N-1 -
+                        Trésorerie passif N-1)
+                      </TableCell>
+                      <TableCell className="text-center">A</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("680000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("550000")}
+                      </TableCell>
+                    </TableRow>
 
-                {/* Emplois */}
-                <div>
-                  <h4 className="font-semibold text-red-700 mb-4 flex items-center gap-2">
-                    <TrendingDown className="h-4 w-4" />
-                    Emplois
-                  </h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nature</TableHead>
-                        <TableHead className="text-right">
-                          Montant (XOF)
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {annexesData.tafire.emplois.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">
-                            {item.libelle}
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {formatNumber(item.montant.toString())}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow className="bg-red-50">
-                        <TableCell className="font-bold">
-                          Total Emplois
-                        </TableCell>
-                        <TableCell className="text-right font-bold">
-                          {formatNumber(
-                            annexesData.tafire.emplois
-                              .reduce((sum, item) => sum + item.montant, 0)
-                              .toString()
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
+                    <TableRow className="bg-gray-100">
+                      <TableCell colSpan={5} className="font-bold text-center">
+                        Flux de trésorerie provenant des activités
+                        opérationnelles
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FA</TableCell>
+                      <TableCell>
+                        Capacité d&apos;Autofinancement Global (CAFG)
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("390000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("332000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FB</TableCell>
+                      <TableCell>- Actif circulant HAO (1)</TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FC</TableCell>
+                      <TableCell>- Variation des stocks</TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-55000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-30000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FD</TableCell>
+                      <TableCell>- Variation des créances</TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-165000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-120000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FE</TableCell>
+                      <TableCell>+ Variation du passif circulant (1)</TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("0")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("85000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-gray-50">
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="font-medium">
+                        Variation du BF lié aux activités opérationnelles
+                        (FB+FC+FD+FE) :
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-220000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-65000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-blue-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        ZB
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        Flux de trésorerie provenant des activités
+                        opérationnelles (somme FA à FE)
+                      </TableCell>
+                      <TableCell className="text-center">B</TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("170000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("267000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-gray-100">
+                      <TableCell colSpan={5} className="font-bold text-center">
+                        Flux de trésorerie provenant des opérations
+                        d&apos;investissements
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FF</TableCell>
+                      <TableCell>
+                        - Décaissements liés aux acquisitions
+                        d&apos;immobilisations incorporelles
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-20000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-15000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FG</TableCell>
+                      <TableCell>
+                        - Décaissements liés aux acquisitions
+                        d&apos;immobilisations corporelles
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-500000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-400000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FH</TableCell>
+                      <TableCell>
+                        - Décaissements liés aux acquisitions
+                        d&apos;immobilisations financières
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-50000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-80000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FI</TableCell>
+                      <TableCell>
+                        + Encaissements liés aux cessions d&apos;immobilisations
+                        incorporelles et corporelles
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("12000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("15000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FJ</TableCell>
+                      <TableCell>
+                        + Encaissements liés aux cessions d&apos;immobilisations
+                        financières
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-blue-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        ZC
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        Flux de trésorerie provenant des opérations
+                        d&apos;investissements (somme FF à FJ)
+                      </TableCell>
+                      <TableCell className="text-center">C</TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-558000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-480000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-gray-100">
+                      <TableCell colSpan={5} className="font-bold text-center">
+                        Flux de trésorerie provenant du financement par capitaux
+                        propres
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FK</TableCell>
+                      <TableCell>
+                        + Augmentation de capital par apports nouveaux
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("200000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FL</TableCell>
+                      <TableCell>
+                        + Subventions d&apos;investissement reçues
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FM</TableCell>
+                      <TableCell>- Prélèvements sur le capital</TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                      <TableCell className="text-right font-mono">-</TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FN</TableCell>
+                      <TableCell>- Dividendes versés</TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-120000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-100000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-blue-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        ZD
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        Flux de trésorerie provenant du financement par capitaux
+                        propres (somme FK à FN)
+                      </TableCell>
+                      <TableCell className="text-center">D</TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-120000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("100000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-gray-100">
+                      <TableCell colSpan={5} className="font-bold text-center">
+                        Trésorerie provenant du financement par capitaux
+                        étrangers
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FO</TableCell>
+                      <TableCell>+ Emprunts</TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("200000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("300000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FP</TableCell>
+                      <TableCell>+ Autres dettes financières</TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("50000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("75000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell className="text-center">FQ</TableCell>
+                      <TableCell>
+                        - Remboursements des emprunts et autres dettes
+                        financières
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-300000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber("-250000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-blue-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        ZE
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        Trésorerie provenant des capitaux étrangers (somme FO à
+                        FQ)
+                      </TableCell>
+                      <TableCell className="text-center">E</TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-50000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("125000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-purple-200 border-t-2">
+                      <TableCell className="font-bold text-center">
+                        ZF
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        Flux de trésorerie provenant des activités de
+                        financement (D+E)
+                      </TableCell>
+                      <TableCell className="text-center">F</TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-170000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("225000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-orange-200 border-t-4">
+                      <TableCell className="font-bold text-center">
+                        ZG
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        VARIATION DE LA TRÉSORERIE NETTE DE LA PÉRIODE (B+C+F)
+                      </TableCell>
+                      <TableCell className="text-center">G</TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("-558000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("12000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-green-200 border-t-4">
+                      <TableCell className="font-bold text-center">
+                        ZH
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        Trésorerie nette au 31 Décembre (G+A)
+                      </TableCell>
+                      <TableCell className="text-center">H</TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("122000")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold font-mono">
+                        {formatNumber("680000")}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="bg-yellow-50">
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="font-bold text-sm">
+                        Contrôle : Trésorerie actif N - Trésorerie passif N
+                      </TableCell>
+                      <TableCell className="text-center"></TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        {formatNumber("935000")} - {formatNumber("80000")} ={" "}
+                        {formatNumber("855000")}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        {formatNumber("800000")} - {formatNumber("120000")} ={" "}
+                        {formatNumber("680000")}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
 
-              {/* Variation de trésorerie */}
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold text-blue-700 mb-2">
-                  Variation de Trésorerie
+              {/* Note explicative */}
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-blue-700 mb-2 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Note explicative
                 </h4>
-                <div className="flex justify-between items-center">
-                  <span>Ressources - Emplois</span>
-                  <span className="font-bold text-lg">
-                    {formatNumber(
-                      (
-                        annexesData.tafire.ressources.reduce(
-                          (sum, item) => sum + item.montant,
-                          0
-                        ) -
-                        annexesData.tafire.emplois.reduce(
-                          (sum, item) => sum + item.montant,
-                          0
-                        )
-                      ).toString()
-                    )}{" "}
-                    XOF
+                <p className="text-sm text-blue-800">
+                  (1) À l&apos;exclusion des variations des créances et dettes
+                  liées aux activités d&apos;investissement (variation des
+                  créances sur cession d&apos;immobilisation et des dettes sur
+                  acquisition ou production d&apos;immobilisation) et de
+                  financement (par exemple variation des créances sur
+                  subventions d&apos;investissements reçues).
+                </p>
+              </div>
+
+              {/* Synthèse des flux */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="h-5 w-5 text-blue-600" />
+                    <span className="font-semibold text-blue-800">
+                      Flux Opérationnels
+                    </span>
+                  </div>
+                  <span className="text-lg font-bold text-blue-700">
+                    {formatNumber("170000")} XOF
+                  </span>
+                </div>
+                <div className="p-4 bg-red-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Building2 className="h-5 w-5 text-red-600" />
+                    <span className="font-semibold text-red-800">
+                      Flux Investissements
+                    </span>
+                  </div>
+                  <span className="text-lg font-bold text-red-700">
+                    {formatNumber("-558000")} XOF
+                  </span>
+                </div>
+                <div className="p-4 bg-purple-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CreditCard className="h-5 w-5 text-purple-600" />
+                    <span className="font-semibold text-purple-800">
+                      Flux Financement
+                    </span>
+                  </div>
+                  <span className="text-lg font-bold text-purple-700">
+                    {formatNumber("-170000")} XOF
                   </span>
                 </div>
               </div>
