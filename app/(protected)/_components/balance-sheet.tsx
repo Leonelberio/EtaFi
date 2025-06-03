@@ -86,18 +86,27 @@ export default function BalanceSheet() {
   const calculateTotals = () => {
     let totalDebits = 0;
     let totalCredits = 0;
-    let totalSolde = 0;
 
     balance.forEach((row) => {
-      totalDebits +=
+      const debits =
         parseFloat(row.debits.replace(/\s/g, "").replace(",", ".")) || 0;
-      totalCredits +=
+      const credits =
         parseFloat(row.credits.replace(/\s/g, "").replace(",", ".")) || 0;
-      totalSolde +=
-        parseFloat(row.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+
+      totalDebits += debits;
+      totalCredits += credits;
     });
 
-    return { totalDebits, totalCredits, totalSolde };
+    // In proper double-entry accounting, Total Debits should equal Total Credits
+    const difference = totalDebits - totalCredits;
+    const isBalanced = Math.abs(difference) < 1; // Allow for rounding errors
+
+    return {
+      totalDebits,
+      totalCredits,
+      difference,
+      isBalanced,
+    };
   };
 
   const totals = calculateTotals();
@@ -106,6 +115,33 @@ export default function BalanceSheet() {
     <div className="space-y-6">
       {/* Real-time Financial Summary */}
       <RealTimeFinancialSummary />
+
+      {/* Balance Validation Alert */}
+      {balance.length > 0 && !totals.isBalanced && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <div className="text-red-600">⚠️</div>
+            <div>
+              <h3 className="text-red-800 font-semibold">
+                Balance comptable déséquilibrée
+              </h3>
+              <p className="text-red-700 text-sm">
+                Total débits ({formatNumber(totals.totalDebits.toString())} XOF)
+                ≠ Total crédits ({formatNumber(totals.totalCredits.toString())}{" "}
+                XOF)
+              </p>
+              <p className="text-red-600 text-sm font-medium">
+                Écart: {formatNumber(Math.abs(totals.difference).toString())}{" "}
+                XOF
+              </p>
+              <p className="text-red-600 text-xs mt-1">
+                En comptabilité à partie double, les totaux débits et crédits
+                doivent être égaux.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Balance Sheet Table */}
       <div className="bg-white rounded-lg shadow-sm border">
@@ -350,13 +386,22 @@ export default function BalanceSheet() {
                   {formatNumber(totals.totalCredits.toString())}
                 </TableCell>
                 <TableCell className="text-right font-bold text-gray-900">
-                  <span
-                    className={
-                      totals.totalSolde >= 0 ? "text-green-600" : "text-red-600"
-                    }
-                  >
-                    {formatNumber(totals.totalSolde.toString())}
-                  </span>
+                  <div className="flex flex-col items-end">
+                    <span
+                      className={
+                        totals.isBalanced ? "text-green-600" : "text-red-600"
+                      }
+                    >
+                      {formatNumber(totals.difference.toString())}
+                    </span>
+                    <span
+                      className={`text-xs ${
+                        totals.isBalanced ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {totals.isBalanced ? "✓ Équilibré" : "⚠ Déséquilibré"}
+                    </span>
+                  </div>
                 </TableCell>
                 <TableCell></TableCell>
               </TableRow>

@@ -1,0 +1,59 @@
+accountNumber,account,debits,credits,solde
+101,Capital social,0,15000000,-15000000
+106,Réserves légales,0,2000000,-2000000
+110,Report à nouveau,0,1500000,-1500000
+120,Résultat de l'exercice,0,3200000,-3200000
+161,Emprunts bancaires long terme,0,8000000,-8000000
+162,Emprunts obligataires,0,2000000,-2000000
+211,Brevets et licences,800000,0,800000
+212,Logiciels informatiques,450000,0,450000
+213,Fonds commercial,1200000,0,1200000
+221,Terrains nus,2500000,0,2500000
+222,Terrains bâtis,3500000,0,3500000
+231,Bâtiments industriels,12000000,0,12000000
+232,Bâtiments administratifs,4500000,0,4500000
+241,Matériel industriel,8500000,0,8500000
+242,Outillage,1800000,0,1800000
+245,Matériel de transport,3200000,0,3200000
+261,Titres de participation,2200000,0,2200000
+271,Prêts accordés,800000,0,800000
+272,Dépôts et cautionnements,350000,0,350000
+311,Matières premières,2800000,0,2800000
+321,En-cours de production,1200000,0,1200000
+331,Produits finis,3500000,0,3500000
+371,Marchandises diverses,4200000,0,4200000
+401,Fournisseurs locaux,0,2800000,-2800000
+402,Fournisseurs étrangers,0,1200000,-1200000
+411,Clients locaux,4500000,0,4500000
+412,Clients étrangers,2200000,0,2200000
+421,Personnel - avances,350000,0,350000
+431,Sécurité sociale,0,850000,-850000
+441,État - TVA à payer,0,1200000,-1200000
+442,État - impôt sur bénéfices,0,980000,-980000
+512,Banque Atlantique,2800000,0,2800000
+521,Banque BCEAO,1500000,0,1500000
+531,Caisse,450000,0,450000
+601,Achats de marchandises,18500000,0,18500000
+602,Achats de matières premières,8200000,0,8200000
+621,Frais de transport,850000,0,850000
+622,Services bancaires,120000,0,120000
+631,Loyers et charges locatives,1800000,0,1800000
+632,Entretien et réparations,650000,0,650000
+633,Assurances,480000,0,480000
+634,Télécommunications,320000,0,320000
+641,Impôts et taxes,950000,0,950000
+661,Salaires,12500000,0,12500000
+662,Charges sociales,3200000,0,3200000
+671,Intérêts des emprunts,680000,0,680000
+672,Frais bancaires,180000,0,180000
+681,Dotations amortissements immobilisations,2800000,0,2800000
+682,Dotations provisions,420000,0,420000
+701,Ventes de marchandises,0,32500000,-32500000
+702,Ventes de produits finis,0,18200000,-18200000
+706,Prestations de services,0,4800000,-4800000
+754,Produits exceptionnels,0,650000,-650000
+771,Revenus des participations,0,280000,-280000
+772,Revenus des prêts,0,120000,-120000
+84,Produits HAO divers,0,350000,-350000
+85,Charges HAO diverses,180000,0,180000
+891,Impôt sur les sociétés,1200000,0,1200000 

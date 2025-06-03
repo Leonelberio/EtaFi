@@ -1,0 +1,50 @@
+accountNumber,account,debits,credits,solde
+101,Capital social,0,15000000,-15000000
+106,Réserves légales,0,2000000,-2000000
+110,Report à nouveau,0,1500000,-1500000
+120,Résultat de l'exercice,0,1040000,-1040000
+161,Emprunts bancaires long terme,0,8000000,-8000000
+162,Emprunts obligataires,0,2000000,-2000000
+164,Dettes fournisseurs d'immobilisations,0,1200000,-1200000
+165,Provisions pour risques,0,800000,-800000
+211,Brevets et licences,800000,0,800000
+212,Logiciels informatiques,450000,0,450000
+213,Fonds commercial,1200000,0,1200000
+221,Terrains nus,2500000,0,2500000
+222,Terrains bâtis,3500000,0,3500000
+231,Bâtiments industriels,12000000,0,12000000
+232,Bâtiments administratifs,4500000,0,4500000
+241,Matériel industriel,8500000,0,8500000
+242,Outillage,1800000,0,1800000
+245,Matériel de transport,3200000,0,3200000
+261,Titres de participation,2200000,0,2200000
+271,Prêts accordés,800000,0,800000
+272,Dépôts et cautionnements,350000,0,350000
+281,Amortissements immobilisations incorporelles,0,820000,-820000
+282,Amortissements bâtiments,0,3200000,-3200000
+284,Amortissements matériel et outillage,0,5400000,-5400000
+285,Amortissements matériel de transport,0,1680000,-1680000
+311,Matières premières,2800000,0,2800000
+321,En-cours de production,1200000,0,1200000
+331,Produits finis,3500000,0,3500000
+371,Marchandises diverses,4200000,0,4200000
+401,Fournisseurs locaux,0,2800000,-2800000
+402,Fournisseurs étrangers,0,1200000,-1200000
+403,Fournisseurs d'immobilisations,0,650000,-650000
+411,Clients locaux,4500000,0,4500000
+412,Clients étrangers,2200000,0,2200000
+416,Créances douteuses,580000,0,580000
+421,Personnel - avances,350000,0,350000
+425,Personnel - autres créances,180000,0,180000
+431,Sécurité sociale,0,850000,-850000
+441,État - TVA à payer,0,1200000,-1200000
+442,État - impôt sur bénéfices,0,980000,-980000
+443,État - autres impôts,0,320000,-320000
+471,Comptes d'attente,0,450000,-450000
+481,Charges constatées d'avance,280000,0,280000
+491,Provisions pour dépréciation clients,0,420000,-420000
+492,Provisions pour dépréciation stocks,0,350000,-350000
+501,Provisions pour litiges,0,180000,-180000
+512,Banque Atlantique,2800000,0,2800000
+521,Banque BCEAO,1500000,0,1500000
+531,Caisse,450000,0,450000 
