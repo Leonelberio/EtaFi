@@ -635,36 +635,211 @@ export default function CompteResultat() {
   const mapBalanceToCompteResultat = () => {
     const updatedResultat = resultatData.map((section) => {
       const updatedAccounts = section.accounts.map((account) => {
-        const matchingAccount = balanceData.find(
-          (bal) => bal.accountNumber === account.accountNumber
-        );
-        if (matchingAccount) {
-          const solde =
-            parseFloat(
-              matchingAccount.solde.replace(/\s/g, "").replace(",", ".")
-            ) || 0;
+        let montant = 0;
 
-          // SYSCOHADA: Proper handling of income statement accounts
-          let montant = 0;
-          const accountNum = account.accountNumber;
-
-          if (accountNum.startsWith("7")) {
-            // Revenue accounts (Class 7) have credit nature - use absolute value when solde is negative
-            montant = Math.abs(solde);
-          } else if (accountNum.startsWith("6")) {
-            // Expense accounts (Class 6) have debit nature - use absolute value when solde is positive
-            montant = Math.abs(solde);
-          } else {
-            // For other accounts, use absolute value
+        // Map accounts based on SYSCOHADA account class ranges
+        if (account.accountNumber === "701") {
+          // Ventes de marchandises - All Class 7 revenue accounts
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("70")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "706") {
+          // Travaux, services vendus - Services (706-708)
+          const matchingAccounts = balanceData.filter(
+            (bal) =>
+              bal.accountNumber.startsWith("706") ||
+              bal.accountNumber.startsWith("707") ||
+              bal.accountNumber.startsWith("708")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "707") {
+          // Produits accessoires - Other products (754, 758, 75x)
+          const matchingAccounts = balanceData.filter(
+            (bal) =>
+              bal.accountNumber.startsWith("754") ||
+              bal.accountNumber.startsWith("758") ||
+              bal.accountNumber.startsWith("75")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (
+          account.accountNumber === "73" ||
+          account.accountNumber === "72" ||
+          account.accountNumber === "74"
+        ) {
+          // Production stockée, immobilisée, subventions (72-74)
+          const prefix = account.accountNumber;
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith(prefix)
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "75") {
+          // Autres produits (75x)
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("75")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "781") {
+          // Transferts de charges (78x)
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("78")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "601") {
+          // Achats - All purchase accounts (60x)
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("60")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (
+          account.accountNumber === "603" ||
+          account.accountNumber === "6032" ||
+          account.accountNumber === "604"
+        ) {
+          // Variations de stocks et autres achats (603, 604)
+          const prefixes = ["603", "604"];
+          const matchingAccounts = balanceData.filter((bal) =>
+            prefixes.some((prefix) => bal.accountNumber.startsWith(prefix))
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "645") {
+          // Transports et charges de personnel (64x)
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("64")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "60") {
+          // Services extérieurs, impôts, autres charges (61-65)
+          const matchingAccounts = balanceData.filter(
+            (bal) =>
+              bal.accountNumber.startsWith("61") ||
+              bal.accountNumber.startsWith("62") ||
+              bal.accountNumber.startsWith("63") ||
+              bal.accountNumber.startsWith("65")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "681") {
+          // Amortissements et provisions (68x)
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("68")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "76") {
+          // Revenus financiers (76x, 77x)
+          const matchingAccounts = balanceData.filter(
+            (bal) =>
+              bal.accountNumber.startsWith("76") ||
+              bal.accountNumber.startsWith("77")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "791") {
+          // Transferts de charges financières (79x)
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("79")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "775") {
+          // Produits des cessions (77x)
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("775")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "67") {
+          // Valeurs comptables des cessions (67x)
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("67")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "70") {
+          // Autres produits (84x, 85x)
+          const matchingAccounts = balanceData.filter(
+            (bal) =>
+              bal.accountNumber.startsWith("84") ||
+              bal.accountNumber.startsWith("85")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            montant += Math.abs(solde);
+          });
+        } else {
+          // Exact match fallback
+          const matchingAccount = balanceData.find(
+            (bal) => bal.accountNumber === account.accountNumber
+          );
+          if (matchingAccount) {
+            const solde =
+              parseFloat(
+                matchingAccount.solde.replace(/\s/g, "").replace(",", ".")
+              ) || 0;
             montant = Math.abs(solde);
           }
-
-          return {
-            ...account,
-            montant: montant,
-          };
         }
-        return account;
+
+        return {
+          ...account,
+          montant: montant,
+        };
       });
 
       return { ...section, accounts: updatedAccounts };

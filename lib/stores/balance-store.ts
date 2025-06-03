@@ -71,35 +71,67 @@ export const useBalanceStore = create<BalanceStore>()(
         const solde = parseFloat(row.solde.replace(/[^0-9.-]/g, "")) || 0;
         const accountNum = row.accountNumber;
 
-        // Calculate total actif (Classes 2, 3, 4-receivables, 5)
+        // SYSCOHADA Balance Sheet Classification
+        // ACTIF = Assets with debit normal balance (positive solde)
         if (
-          accountNum.startsWith("2") ||
+          // Class 2: Immobilisations (Fixed Assets) - BRUT values
+          (accountNum.startsWith("2") && !accountNum.startsWith("28")) || // Exclude depreciation (28x)
+          // Class 3: Stocks (Inventory)
           accountNum.startsWith("3") ||
-          accountNum.startsWith("5") ||
+          // Class 4: Créances (Receivables) - only asset accounts
           (accountNum.startsWith("4") &&
-            (accountNum.startsWith("41") || accountNum.startsWith("45")))
+            (accountNum.startsWith("41") || // Clients
+              accountNum.startsWith("42") || // Personnel débiteur
+              accountNum.startsWith("43") || // État débiteur
+              accountNum.startsWith("44") || // État débiteur
+              accountNum.startsWith("45") || // Groupe et associés débiteurs
+              accountNum.startsWith("46") || // Débiteurs divers
+              accountNum.startsWith("47") || // Comptes transitoires actif
+              accountNum.startsWith("48"))) || // Charges constatées d'avance
+          // Class 5: Trésorerie Actif (Cash and banks)
+          (accountNum.startsWith("5") &&
+            (accountNum.startsWith("51") || // Valeurs à encaisser
+              accountNum.startsWith("52") || // Banques
+              accountNum.startsWith("53") || // Établissements financiers et assimilés
+              accountNum.startsWith("54") || // Instruments de trésorerie
+              accountNum.startsWith("58"))) // Virements internes
         ) {
           totalActif += Math.abs(solde);
         }
 
-        // Calculate total passif (Class 1 + Class 4-payables)
+        // PASSIF = Liabilities and Equity with credit normal balance (negative solde)
         if (
+          // Class 1: Ressources durables (Equity and Long-term liabilities)
           accountNum.startsWith("1") ||
+          // Class 2: Amortissements (Accumulated Depreciation) - contra-asset
+          accountNum.startsWith("28") ||
+          // Class 4: Dettes (Payables) - only liability accounts
           (accountNum.startsWith("4") &&
-            !(accountNum.startsWith("41") || accountNum.startsWith("45")))
+            (accountNum.startsWith("40") || // Fournisseurs et comptes rattachés
+              accountNum.startsWith("49"))) || // Provisions pour dépréciation
+          // Class 5: Trésorerie Passif (Bank overdrafts)
+          (accountNum.startsWith("5") &&
+            (accountNum.startsWith("50") || // Provisions pour risques et charges
+              accountNum.startsWith("55") || // Caisse et régies d'avance créditeurs
+              accountNum.startsWith("56") || // Banques créditrices
+              accountNum.startsWith("57"))) // Virements internes créditeurs
         ) {
           totalPassif += Math.abs(solde);
         }
 
-        // Calculate net result (Class 7 - Class 6)
+        // Calculate net result (Class 7 - Class 6) - for P&L summary
         if (accountNum.startsWith("7")) {
           resultatNet += Math.abs(solde);
         } else if (accountNum.startsWith("6")) {
           resultatNet -= Math.abs(solde);
         }
 
-        // Calculate cash flow approximation (Class 5 - treasury accounts)
-        if (accountNum.startsWith("5")) {
+        // Calculate cash flow (Class 5 - treasury accounts only)
+        if (
+          accountNum.startsWith("51") ||
+          accountNum.startsWith("52") ||
+          accountNum.startsWith("53")
+        ) {
           fluxTresorerie += Math.abs(solde);
         }
       });
@@ -108,7 +140,7 @@ export const useBalanceStore = create<BalanceStore>()(
     },
 
     setBalance: (balance: BalanceData[]) => {
-      // Calculate totals with the new balance
+      // Calculate totals with the new balance using corrected SYSCOHADA classification
       let totalActif = 0;
       let totalPassif = 0;
       let resultatNet = 0;
@@ -118,35 +150,66 @@ export const useBalanceStore = create<BalanceStore>()(
         const solde = parseFloat(row.solde.replace(/[^0-9.-]/g, "")) || 0;
         const accountNum = row.accountNumber;
 
-        // Calculate total actif (Classes 2, 3, 4-receivables, 5)
+        // SYSCOHADA Balance Sheet Classification - ACTIF
         if (
-          accountNum.startsWith("2") ||
+          // Class 2: Immobilisations (Fixed Assets) - BRUT values
+          (accountNum.startsWith("2") && !accountNum.startsWith("28")) || // Exclude depreciation (28x)
+          // Class 3: Stocks (Inventory)
           accountNum.startsWith("3") ||
-          accountNum.startsWith("5") ||
+          // Class 4: Créances (Receivables) - only asset accounts
           (accountNum.startsWith("4") &&
-            (accountNum.startsWith("41") || accountNum.startsWith("45")))
+            (accountNum.startsWith("41") || // Clients
+              accountNum.startsWith("42") || // Personnel débiteur
+              accountNum.startsWith("43") || // État débiteur
+              accountNum.startsWith("44") || // État débiteur
+              accountNum.startsWith("45") || // Groupe et associés débiteurs
+              accountNum.startsWith("46") || // Débiteurs divers
+              accountNum.startsWith("47") || // Comptes transitoires actif
+              accountNum.startsWith("48"))) || // Charges constatées d'avance
+          // Class 5: Trésorerie Actif (Cash and banks)
+          (accountNum.startsWith("5") &&
+            (accountNum.startsWith("51") || // Valeurs à encaisser
+              accountNum.startsWith("52") || // Banques
+              accountNum.startsWith("53") || // Établissements financiers et assimilés
+              accountNum.startsWith("54") || // Instruments de trésorerie
+              accountNum.startsWith("58"))) // Virements internes
         ) {
           totalActif += Math.abs(solde);
         }
 
-        // Calculate total passif (Class 1 + Class 4-payables)
+        // SYSCOHADA Balance Sheet Classification - PASSIF
         if (
+          // Class 1: Ressources durables (Equity and Long-term liabilities)
           accountNum.startsWith("1") ||
+          // Class 2: Amortissements (Accumulated Depreciation) - contra-asset
+          accountNum.startsWith("28") ||
+          // Class 4: Dettes (Payables) - only liability accounts
           (accountNum.startsWith("4") &&
-            !(accountNum.startsWith("41") || accountNum.startsWith("45")))
+            (accountNum.startsWith("40") || // Fournisseurs et comptes rattachés
+              accountNum.startsWith("49"))) || // Provisions pour dépréciation
+          // Class 5: Trésorerie Passif (Bank overdrafts)
+          (accountNum.startsWith("5") &&
+            (accountNum.startsWith("50") || // Provisions pour risques et charges
+              accountNum.startsWith("55") || // Caisse et régies d'avance créditeurs
+              accountNum.startsWith("56") || // Banques créditrices
+              accountNum.startsWith("57"))) // Virements internes créditeurs
         ) {
           totalPassif += Math.abs(solde);
         }
 
-        // Calculate net result (Class 7 - Class 6)
+        // Calculate net result (Class 7 - Class 6) - for P&L summary
         if (accountNum.startsWith("7")) {
           resultatNet += Math.abs(solde);
         } else if (accountNum.startsWith("6")) {
           resultatNet -= Math.abs(solde);
         }
 
-        // Calculate cash flow approximation (Class 5 - treasury accounts)
-        if (accountNum.startsWith("5")) {
+        // Calculate cash flow (Class 5 - treasury accounts only)
+        if (
+          accountNum.startsWith("51") ||
+          accountNum.startsWith("52") ||
+          accountNum.startsWith("53")
+        ) {
           fluxTresorerie += Math.abs(solde);
         }
       });
@@ -186,35 +249,66 @@ export const useBalanceStore = create<BalanceStore>()(
         const solde = parseFloat(row.solde.replace(/[^0-9.-]/g, "")) || 0;
         const accountNum = row.accountNumber;
 
-        // Calculate total actif (Classes 2, 3, 4-receivables, 5)
+        // SYSCOHADA Balance Sheet Classification - ACTIF
         if (
-          accountNum.startsWith("2") ||
+          // Class 2: Immobilisations (Fixed Assets) - BRUT values
+          (accountNum.startsWith("2") && !accountNum.startsWith("28")) || // Exclude depreciation (28x)
+          // Class 3: Stocks (Inventory)
           accountNum.startsWith("3") ||
-          accountNum.startsWith("5") ||
+          // Class 4: Créances (Receivables) - only asset accounts
           (accountNum.startsWith("4") &&
-            (accountNum.startsWith("41") || accountNum.startsWith("45")))
+            (accountNum.startsWith("41") || // Clients
+              accountNum.startsWith("42") || // Personnel débiteur
+              accountNum.startsWith("43") || // État débiteur
+              accountNum.startsWith("44") || // État débiteur
+              accountNum.startsWith("45") || // Groupe et associés débiteurs
+              accountNum.startsWith("46") || // Débiteurs divers
+              accountNum.startsWith("47") || // Comptes transitoires actif
+              accountNum.startsWith("48"))) || // Charges constatées d'avance
+          // Class 5: Trésorerie Actif (Cash and banks)
+          (accountNum.startsWith("5") &&
+            (accountNum.startsWith("51") || // Valeurs à encaisser
+              accountNum.startsWith("52") || // Banques
+              accountNum.startsWith("53") || // Établissements financiers et assimilés
+              accountNum.startsWith("54") || // Instruments de trésorerie
+              accountNum.startsWith("58"))) // Virements internes
         ) {
           totalActif += Math.abs(solde);
         }
 
-        // Calculate total passif (Class 1 + Class 4-payables)
+        // SYSCOHADA Balance Sheet Classification - PASSIF
         if (
+          // Class 1: Ressources durables (Equity and Long-term liabilities)
           accountNum.startsWith("1") ||
+          // Class 2: Amortissements (Accumulated Depreciation) - contra-asset
+          accountNum.startsWith("28") ||
+          // Class 4: Dettes (Payables) - only liability accounts
           (accountNum.startsWith("4") &&
-            !(accountNum.startsWith("41") || accountNum.startsWith("45")))
+            (accountNum.startsWith("40") || // Fournisseurs et comptes rattachés
+              accountNum.startsWith("49"))) || // Provisions pour dépréciation
+          // Class 5: Trésorerie Passif (Bank overdrafts)
+          (accountNum.startsWith("5") &&
+            (accountNum.startsWith("50") || // Provisions pour risques et charges
+              accountNum.startsWith("55") || // Caisse et régies d'avance créditeurs
+              accountNum.startsWith("56") || // Banques créditrices
+              accountNum.startsWith("57"))) // Virements internes créditeurs
         ) {
           totalPassif += Math.abs(solde);
         }
 
-        // Calculate net result (Class 7 - Class 6)
+        // Calculate net result (Class 7 - Class 6) - for P&L summary
         if (accountNum.startsWith("7")) {
           resultatNet += Math.abs(solde);
         } else if (accountNum.startsWith("6")) {
           resultatNet -= Math.abs(solde);
         }
 
-        // Calculate cash flow approximation (Class 5 - treasury accounts)
-        if (accountNum.startsWith("5")) {
+        // Calculate cash flow (Class 5 - treasury accounts only)
+        if (
+          accountNum.startsWith("51") ||
+          accountNum.startsWith("52") ||
+          accountNum.startsWith("53")
+        ) {
           fluxTresorerie += Math.abs(solde);
         }
       });

@@ -84,89 +84,95 @@ export default function SyscohadaAnnexes({
 
   // Calculate SYSCOHADA BILAN ACTIF data from balance
   const bilanActifData = {
-    // Immobilisations incorporelles
-    brevetsLicences: getAccountClassTotal(["211", "212", "213"]),
+    // Immobilisations incorporelles - All Class 21x accounts
+    brevetsLicences: getAccountClassTotal(["21"]),
 
-    // Immobilisations corporelles
-    terrains: getAccountClassTotal(["221", "222"]),
-    batiments: getAccountClassTotal(["231", "232"]),
-    materielOutillage: getAccountClassTotal(["241", "242"]),
+    // Immobilisations corporelles - All Class 22x, 23x, 24x accounts
+    terrains: getAccountClassTotal(["22"]),
+    batiments: getAccountClassTotal(["23"]),
+    materielOutillage: getAccountClassTotal(["24"]),
     materielTransport: getAccountClassTotal(["245"]),
 
-    // Immobilisations financières
-    titresParticipation: getAccountClassTotal(["261", "262"]),
-    autresImmoFinancieres: getAccountClassTotal(["271", "272", "273"]),
+    // Immobilisations financières - All Class 26x, 27x accounts
+    titresParticipation: getAccountClassTotal(["26"]),
+    autresImmoFinancieres: getAccountClassTotal(["27"]),
 
-    // Stocks
-    stocks: getAccountClassTotal(["31", "32", "33", "34", "35", "36", "37"]),
+    // Stocks - All Class 3x accounts
+    stocks: getAccountClassTotal(["3"]),
 
-    // Créances
-    clients: getAccountClassTotal(["411", "412", "416"]),
-    autresCreances: getAccountClassTotal(["421", "431", "441", "451", "471"]),
+    // Créances - All Class 4x asset accounts (41-48)
+    clients: getAccountClassTotal(["41"]),
+    autresCreances: getAccountClassTotal([
+      "42",
+      "43",
+      "44",
+      "45",
+      "46",
+      "47",
+      "48",
+    ]),
 
-    // Trésorerie actif
-    banquesCaisse: getAccountClassTotal(["512", "521", "531"]),
+    // Trésorerie actif - All Class 51x, 52x, 53x accounts
+    banquesCaisse: getAccountClassTotal(["51", "52", "53"]),
   };
 
   // Calculate SYSCOHADA BILAN PASSIF data from balance
   const bilanPassifData = {
-    // Capitaux propres
-    capital: Math.abs(getAccountBalance("101")),
+    // Capitaux propres - All Class 1x accounts
+    capital: Math.abs(getAccountClassTotal(["10"])),
     reservesIndisponibles: Math.abs(getAccountClassTotal(["106"])) * 0.25, // Estimation
     reservesLibres: Math.abs(getAccountClassTotal(["106"])) * 0.75, // Estimation
-    reportNouveau: Math.abs(getAccountBalance("110")),
-    resultatExercice: Math.abs(getAccountBalance("120")),
+    reportNouveau: Math.abs(getAccountClassTotal(["11"])),
+    resultatExercice: Math.abs(getAccountClassTotal(["12"])),
 
-    // Dettes financières
-    emprunts: getAccountClassTotal(["161", "162", "163", "164"]),
-    provisionsRisques: getAccountClassTotal(["151", "152", "153"]),
+    // Dettes financières - All Class 16x accounts
+    emprunts: getAccountClassTotal(["16"]),
+    provisionsRisques: getAccountClassTotal(["15"]),
 
-    // Passif circulant
+    // Passif circulant - All Class 4x liability accounts (40, 49)
     avancesClients: getAccountClassTotal(["419"]),
-    fournisseurs: Math.abs(getAccountClassTotal(["401", "402", "403", "408"])),
-    dettesFiscales: Math.abs(
-      getAccountClassTotal(["431", "441", "442", "443", "444"])
-    ),
-    autresDettes: Math.abs(getAccountClassTotal(["421", "425", "471", "472"])),
-    provisionsCourtTerme: getAccountClassTotal(["501", "502"]),
+    fournisseurs: Math.abs(getAccountClassTotal(["40"])),
+    dettesFiscales: Math.abs(getAccountClassTotal(["43", "44"])),
+    autresDettes: Math.abs(getAccountClassTotal(["42", "46", "47"])),
+    provisionsCourtTerme: getAccountClassTotal(["50"]),
 
-    // Trésorerie passif
-    banquesCredits: getAccountClassTotal(["561", "564"]),
+    // Trésorerie passif - All Class 55x, 56x, 57x accounts
+    banquesCredits: getAccountClassTotal(["55", "56", "57"]),
   };
 
   // Calculate SYSCOHADA COMPTE DE RÉSULTAT data from balance
   const compteResultatData = {
-    // Produits d'exploitation
-    ventesMarkhandises: Math.abs(getAccountClassTotal(["701", "702"])),
+    // Produits d'exploitation - All Class 7x revenue accounts
+    ventesMarkhandises: Math.abs(getAccountClassTotal(["70"])),
     servicesVendus: Math.abs(getAccountClassTotal(["706", "707", "708"])),
-    produitsAccessoires: Math.abs(getAccountClassTotal(["754", "758"])),
+    produitsAccessoires: Math.abs(getAccountClassTotal(["75"])),
 
-    // Charges d'exploitation
-    achatsMarkhandises: getAccountClassTotal(["601", "602"]),
-    transports: getAccountClassTotal(["621", "622"]),
-    servicesExterieurs: getAccountClassTotal(["631", "632", "633", "634"]),
-    impotsTaxes: getAccountClassTotal(["641", "642", "645"]),
-    chargesPersonnel: getAccountClassTotal(["661", "662", "663", "664"]),
-    amortissements: getAccountClassTotal(["681", "682"]),
+    // Charges d'exploitation - All Class 6x expense accounts
+    achatsMarkhandises: getAccountClassTotal(["60"]),
+    transports: getAccountClassTotal(["62"]),
+    servicesExterieurs: getAccountClassTotal(["61", "63"]),
+    impotsTaxes: getAccountClassTotal(["64"]),
+    chargesPersonnel: getAccountClassTotal(["66"]),
+    amortissements: getAccountClassTotal(["68"]),
 
-    // Résultat financier
-    revenus: Math.abs(getAccountClassTotal(["771", "772", "773"])),
-    fraisFinanciers: getAccountClassTotal(["671", "672", "673"]),
+    // Résultat financier - All Class 77x revenue and 67x expense accounts
+    revenus: Math.abs(getAccountClassTotal(["76", "77"])),
+    fraisFinanciers: getAccountClassTotal(["67"]),
 
-    // Résultat HAO
+    // Résultat HAO - All Class 84x and 85x accounts
     produitsHAO: Math.abs(getAccountClassTotal(["84"])),
     chargesHAO: getAccountClassTotal(["85"]),
 
-    // Impôts
-    impotResultat: getAccountClassTotal(["891"]),
+    // Impôts - All Class 89x accounts
+    impotResultat: getAccountClassTotal(["89"]),
   };
 
   // Calculate SYSCOHADA TAFIRE data from balance and compte de résultat
   const tafireData = {
     // Trésorerie initiale
     tresorerieInitiale:
-      getAccountClassTotal(["512", "521", "531"]) -
-      getAccountClassTotal(["561", "564"]),
+      getAccountClassTotal(["51", "52", "53"]) -
+      getAccountClassTotal(["55", "56", "57"]),
 
     // CAFG (approximation)
     cafg:
@@ -177,9 +183,10 @@ export default function SyscohadaAnnexes({
       compteResultatData.fraisFinanciers,
 
     // Variations BFR
-    variationStocks:
-      -getAccountClassTotal(["31", "32", "33", "34", "35", "36", "37"]) * 0.1, // Estimation
-    variationCreances: -getAccountClassTotal(["411", "412", "416"]) * 0.15, // Estimation
+    variationStocks: -getAccountClassTotal(["3"]) * 0.1, // Estimation
+    variationCreances:
+      -getAccountClassTotal(["41", "42", "43", "44", "45", "46", "47", "48"]) *
+      0.15, // Estimation
     variationPassifCirculant: 0,
 
     // Investissements

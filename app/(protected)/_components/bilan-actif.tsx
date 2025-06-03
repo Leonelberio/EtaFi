@@ -373,23 +373,147 @@ export default function BilanActif() {
 
     const updatedBilan = bilanData.map((section) => {
       const updatedAccounts = section.accounts.map((account) => {
-        const matchingAccount = balanceData.find(
-          (bal) => bal.accountNumber === account.accountNumber
-        );
-        if (matchingAccount) {
-          const solde =
-            parseFloat(
-              matchingAccount.solde.replace(/\s/g, "").replace(",", ".")
-            ) || 0;
+        let brut = 0;
+        let amort = 0;
+        let net = 0;
 
-          return {
-            ...account,
-            brut: Math.abs(solde),
-            amort: 0, // You may need to calculate depreciation separately
-            net: Math.abs(solde),
-          };
+        // Map accounts based on SYSCOHADA account class ranges
+        if (
+          account.accountNumber === "211" ||
+          account.accountNumber === "212" ||
+          account.accountNumber === "213" ||
+          account.accountNumber === "214"
+        ) {
+          // Immobilisations incorporelles (211-214)
+          const matchingAccounts = balanceData.filter(
+            (bal) =>
+              bal.accountNumber.startsWith("21") &&
+              !bal.accountNumber.startsWith("28")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            brut += Math.abs(solde);
+            net += Math.abs(solde);
+          });
+        } else if (
+          account.accountNumber === "22" ||
+          account.accountNumber === "23" ||
+          account.accountNumber === "24" ||
+          account.accountNumber === "218"
+        ) {
+          // Immobilisations corporelles (22-24)
+          const accountPrefix =
+            account.accountNumber === "218" ? "245" : account.accountNumber;
+          const matchingAccounts = balanceData.filter(
+            (bal) =>
+              bal.accountNumber.startsWith(accountPrefix) &&
+              !bal.accountNumber.startsWith("28")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            brut += Math.abs(solde);
+            net += Math.abs(solde);
+          });
+
+          // Add amortization for corporelles
+          const amortAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("28" + accountPrefix.substring(0, 1))
+          );
+          amortAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            amort += Math.abs(solde);
+          });
+          net = brut - amort;
+        } else if (
+          account.accountNumber === "231" ||
+          account.accountNumber === "27"
+        ) {
+          // Immobilisations financières (26-27)
+          const prefix = account.accountNumber === "231" ? "26" : "27";
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith(prefix)
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            brut += Math.abs(solde);
+            net += Math.abs(solde);
+          });
+        } else if (
+          account.accountNumber === "31" ||
+          account.accountNumber === "32"
+        ) {
+          // Stocks (31-37)
+          const matchingAccounts = balanceData.filter((bal) =>
+            bal.accountNumber.startsWith("3")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            brut += Math.abs(solde);
+            net += Math.abs(solde);
+          });
+        } else if (
+          account.accountNumber === "411" ||
+          account.accountNumber === "416"
+        ) {
+          // Créances (41-48)
+          const matchingAccounts = balanceData.filter(
+            (bal) =>
+              bal.accountNumber.startsWith("4") &&
+              (bal.accountNumber.startsWith("41") ||
+                bal.accountNumber.startsWith("42") ||
+                bal.accountNumber.startsWith("43") ||
+                bal.accountNumber.startsWith("44") ||
+                bal.accountNumber.startsWith("45") ||
+                bal.accountNumber.startsWith("46") ||
+                bal.accountNumber.startsWith("47") ||
+                bal.accountNumber.startsWith("48"))
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            brut += Math.abs(solde);
+            net += Math.abs(solde);
+          });
+        } else if (account.accountNumber === "512") {
+          // Trésorerie actif (51-53)
+          const matchingAccounts = balanceData.filter(
+            (bal) =>
+              bal.accountNumber.startsWith("51") ||
+              bal.accountNumber.startsWith("52") ||
+              bal.accountNumber.startsWith("53")
+          );
+          matchingAccounts.forEach((bal) => {
+            const solde =
+              parseFloat(bal.solde.replace(/\s/g, "").replace(",", ".")) || 0;
+            brut += Math.abs(solde);
+            net += Math.abs(solde);
+          });
+        } else {
+          // Exact match fallback
+          const matchingAccount = balanceData.find(
+            (bal) => bal.accountNumber === account.accountNumber
+          );
+          if (matchingAccount) {
+            const solde =
+              parseFloat(
+                matchingAccount.solde.replace(/\s/g, "").replace(",", ".")
+              ) || 0;
+            brut = Math.abs(solde);
+            net = Math.abs(solde);
+          }
         }
-        return account;
+
+        return {
+          ...account,
+          brut,
+          amort,
+          net,
+        };
       });
 
       return { ...section, accounts: updatedAccounts };
