@@ -23,16 +23,16 @@ export async function GET(
     });
 
     if (!membership) {
-      return NextResponse.json({ error: "No organization found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 404 }
+      );
     }
 
     const template = await db.projectTemplate.findFirst({
       where: {
         id: templateId,
-        OR: [
-          { organizationId: membership.organizationId },
-          { isPublic: true },
-        ],
+        OR: [{ organizationId: membership.organizationId }, { isPublic: true }],
       },
       include: {
         templateActivities: {
@@ -61,7 +61,10 @@ export async function GET(
     });
 
     if (!template) {
-      return NextResponse.json({ error: "Template not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Template not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ template });
@@ -108,7 +111,10 @@ export async function PUT(
     });
 
     if (!membership) {
-      return NextResponse.json({ error: "No organization found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 404 }
+      );
     }
 
     // Check if template exists and user has access
@@ -120,7 +126,10 @@ export async function PUT(
     });
 
     if (!existingTemplate) {
-      return NextResponse.json({ error: "Template not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Template not found" },
+        { status: 404 }
+      );
     }
 
     // Update template
@@ -198,7 +207,10 @@ export async function DELETE(
     });
 
     if (!membership) {
-      return NextResponse.json({ error: "No organization found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 404 }
+      );
     }
 
     // Check if template exists and user has access
@@ -210,7 +222,10 @@ export async function DELETE(
     });
 
     if (!existingTemplate) {
-      return NextResponse.json({ error: "Template not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Template not found" },
+        { status: 404 }
+      );
     }
 
     // Delete template (cascade will handle related records)

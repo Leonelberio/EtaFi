@@ -111,3 +111,115 @@ export type InvoiceInput = z.infer<typeof invoiceSchema>;
 export type InvoiceLineInput = z.infer<typeof invoiceLineSchema>;
 export type ChartAccountInput = z.infer<typeof chartAccountSchema>;
 export type PostingMapInput = z.infer<typeof postingMapSchema>;
+
+// Project Template Schemas
+export const projectTemplateSchema = z.object({
+  name: z.string().min(2).max(200),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  industry: z.string().optional(),
+  totalBudget: z.number().min(0).optional(),
+  currency: z.string().default("CAD"),
+  isPublic: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+  activities: z
+    .array(
+      z.object({
+        code: z.string().min(3).max(20),
+        name: z.string().min(2).max(200),
+        description: z.string().optional(),
+        budgetAmount: z.number().min(0).optional(),
+        budgetM: z.number().min(0).optional(),
+        budgetS: z.number().min(0).optional(),
+        budgetD: z.number().min(0).optional(),
+        budgetE: z.number().min(0).optional(),
+        budgetMOD: z.number().min(0).optional(),
+        isActive: z.boolean().default(true),
+        sortOrder: z.number().default(0),
+        subActivities: z
+          .array(
+            z.object({
+              code: z.string().min(3).max(20),
+              name: z.string().min(2).max(200),
+              description: z.string().optional(),
+              budgetAmount: z.number().min(0).optional(),
+              budgetM: z.number().min(0).optional(),
+              budgetS: z.number().min(0).optional(),
+              budgetD: z.number().min(0).optional(),
+              budgetE: z.number().min(0).optional(),
+              budgetMOD: z.number().min(0).optional(),
+              isActive: z.boolean().default(true),
+              sortOrder: z.number().default(0),
+            })
+          )
+          .optional(),
+      })
+    )
+    .optional(),
+});
+
+export const applyTemplateSchema = z.object({
+  projectCode: z.string().min(3).max(20),
+  projectName: z.string().min(2).max(200),
+  projectDescription: z.string().optional(),
+  clientId: z.string().optional(),
+  managerId: z.string().optional(),
+  tempManagerId: z.string().optional(),
+  tempManagerEnd: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  totalBudget: z.number().min(0).optional(),
+  currency: z.string().default("CAD"),
+  kind: z.enum(["BILLABLE", "ADMIN"]).default("BILLABLE"),
+  status: z
+    .enum(["ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"])
+    .default("ACTIVE"),
+});
+
+// Budget Management Schemas
+export const budgetSchema = z.object({
+  name: z.string().min(2).max(200),
+  description: z.string().optional(),
+  budgetAmount: z.number().min(0),
+  currency: z.string().default("CAD"),
+  budgetM: z.number().min(0).optional(),
+  budgetS: z.number().min(0).optional(),
+  budgetD: z.number().min(0).optional(),
+  budgetE: z.number().min(0).optional(),
+  budgetMOD: z.number().min(0).optional(),
+  status: z.enum(["ACTIVE", "REVISED", "CLOSED"]).default("ACTIVE"),
+  isActive: z.boolean().default(true),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  projectId: z.string().min(1),
+  activityId: z.string().optional(),
+  subActivityId: z.string().optional(),
+});
+
+export const budgetRevisionSchema = z.object({
+  reason: z.string().min(2).max(200),
+  description: z.string().optional(),
+  newBudgetAmount: z.number().min(0),
+  newBudgetM: z.number().min(0).optional(),
+  newBudgetS: z.number().min(0).optional(),
+  newBudgetD: z.number().min(0).optional(),
+  newBudgetE: z.number().min(0).optional(),
+  newBudgetMOD: z.number().min(0).optional(),
+  budgetId: z.string().min(1),
+});
+
+export const budgetAlertSchema = z.object({
+  type: z.enum(["OVERRUN", "WARNING", "APPROACHING_LIMIT"]),
+  severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+  title: z.string().min(2).max(200),
+  message: z.string().min(2).max(500),
+  threshold: z.number().min(0).max(100).optional(),
+  budgetId: z.string().min(1),
+});
+
+// Types TypeScript dérivés des schémas
+export type ProjectTemplateInput = z.infer<typeof projectTemplateSchema>;
+export type ApplyTemplateInput = z.infer<typeof applyTemplateSchema>;
+export type BudgetInput = z.infer<typeof budgetSchema>;
+export type BudgetRevisionInput = z.infer<typeof budgetRevisionSchema>;
+export type BudgetAlertInput = z.infer<typeof budgetAlertSchema>;

@@ -19,6 +19,9 @@ import {
   TrendingUp,
   Shield,
   Truck,
+  DollarSign,
+  PieChart,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,69 +30,127 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-const navigation = [
+// Module-based navigation structure
+const navigationModules = [
   {
     name: "Tableau de Bord",
-    href: "/dashboard",
-    icon: Home,
+    items: [
+      {
+        name: "Accueil",
+        href: "/dashboard",
+        icon: Home,
+      },
+    ],
   },
   {
-    name: "Organisations",
-    href: "/dashboard/organizations",
-    icon: Building2,
+    name: "Organisation",
+    items: [
+      {
+        name: "Organisations",
+        href: "/dashboard/organizations",
+        icon: Building2,
+      },
+    ],
   },
   {
-    name: "Codes de Taxe",
-    href: "/dashboard/tax-codes",
-    icon: Receipt,
+    name: "Gestion des Projets",
+    items: [
+      {
+        name: "Projets",
+        href: "/dashboard/projects",
+        icon: Shield,
+      },
+      {
+        name: "Activités",
+        href: "/dashboard/activities",
+        icon: TrendingUp,
+      },
+      {
+        name: "Modèles de Projets",
+        href: "/dashboard/project-templates",
+        icon: FileText,
+      },
+    ],
   },
   {
-    name: "Clients",
-    href: "/dashboard/customers",
-    icon: Users,
+    name: "Budgétisation",
+    items: [
+      {
+        name: "Budgets",
+        href: "/dashboard/budgets",
+        icon: DollarSign,
+      },
+      {
+        name: "Rapports Budget",
+        href: "/dashboard/budget-reports",
+        icon: PieChart,
+      },
+      {
+        name: "Alertes Budget",
+        href: "/dashboard/budget-alerts",
+        icon: AlertTriangle,
+      },
+    ],
   },
   {
-    name: "Fournisseurs",
-    href: "/dashboard/vendors",
-    icon: Truck,
+    name: "Comptabilité",
+    items: [
+      {
+        name: "Plan Comptable",
+        href: "/dashboard/chart-of-accounts",
+        icon: Calculator,
+      },
+      {
+        name: "Codes de Taxe",
+        href: "/dashboard/tax-codes",
+        icon: Receipt,
+      },
+      {
+        name: "Catégories de Coûts",
+        href: "/dashboard/cost-categories",
+        icon: BarChart3,
+      },
+      {
+        name: "Grand Livre",
+        href: "/dashboard/ledger",
+        icon: BookOpen,
+      },
+    ],
   },
   {
-    name: "Factures",
-    href: "/dashboard/invoices",
-    icon: FileText,
+    name: "Clients & Fournisseurs",
+    items: [
+      {
+        name: "Clients",
+        href: "/dashboard/customers",
+        icon: Users,
+      },
+      {
+        name: "Fournisseurs",
+        href: "/dashboard/vendors",
+        icon: Truck,
+      },
+    ],
   },
   {
-    name: "Grand Livre",
-    href: "/dashboard/ledger",
-    icon: BookOpen,
+    name: "Facturation",
+    items: [
+      {
+        name: "Factures",
+        href: "/dashboard/invoices",
+        icon: FileText,
+      },
+    ],
   },
   {
-    name: "Plan Comptable",
-    href: "/dashboard/chart-of-accounts",
-    icon: Calculator,
-  },
-  {
-    name: "Catégories de Coûts",
-    href: "/dashboard/cost-categories",
-    icon: BarChart3,
-  },
-];
-
-const secondaryNavigation = [
-  {
-    name: "Activités",
-    href: "/dashboard/activities",
-    icon: TrendingUp,
-  },
-  {
-    name: "Projets",
-    href: "/dashboard/projects",
-    icon: Shield,
-  },
-  {
-    name: "Paramètres",
-    href: "/dashboard/settings",
-    icon: Settings,
+    name: "Système",
+    items: [
+      {
+        name: "Paramètres",
+        href: "/dashboard/settings",
+        icon: Settings,
+      },
+    ],
   },
 ];
 
@@ -132,82 +193,45 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 px-4 py-6 space-y-8">
-        {/* Primary Navigation */}
-        <div>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
-            Comptabilité
-          </h2>
-          <nav className="space-y-1">
-            {navigation.map((item) => {
-              const isActive = isNavigationActive(item.href);
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={onClose}
-                  className={cn(
-                    "group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
-                    isActive
-                      ? "bg-primary-50 text-primary-700 border border-primary-100"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  )}
-                >
-                  <item.icon
+      <div className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
+        {navigationModules.map((module) => (
+          <div key={module.name}>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
+              {module.name}
+            </h2>
+            <nav className="space-y-1">
+              {module.items.map((item) => {
+                const isActive = isNavigationActive(item.href);
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={onClose}
                     className={cn(
-                      "mr-3 h-5 w-5 transition-colors duration-200",
+                      "group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
                       isActive
-                        ? "text-primary-600"
-                        : "text-gray-400 group-hover:text-gray-600"
+                        ? "bg-primary-50 text-primary-700 border border-primary-100"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                     )}
-                  />
-                  {item.name}
-                  {isActive && (
-                    <div className="ml-auto h-2 w-2 bg-primary-500 rounded-full animate-pulse-soft" />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Secondary Navigation */}
-        <div>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
-            Gestion
-          </h2>
-          <nav className="space-y-1">
-            {secondaryNavigation.map((item) => {
-              const isActive = isNavigationActive(item.href);
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={onClose}
-                  className={cn(
-                    "group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
-                    isActive
-                      ? "bg-primary-50 text-primary-700 border border-primary-100"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  )}
-                >
-                  <item.icon
-                    className={cn(
-                      "mr-3 h-5 w-5 transition-colors duration-200",
-                      isActive
-                        ? "text-primary-600"
-                        : "text-gray-400 group-hover:text-gray-600"
+                  >
+                    <item.icon
+                      className={cn(
+                        "mr-3 h-5 w-5 transition-colors duration-200",
+                        isActive
+                          ? "text-primary-600"
+                          : "text-gray-400 group-hover:text-gray-600"
+                      )}
+                    />
+                    {item.name}
+                    {isActive && (
+                      <div className="ml-auto h-2 w-2 bg-primary-500 rounded-full animate-pulse-soft" />
                     )}
-                  />
-                  {item.name}
-                  {isActive && (
-                    <div className="ml-auto h-2 w-2 bg-primary-500 rounded-full animate-pulse-soft" />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        ))}
       </div>
 
       {/* Bottom Section */}

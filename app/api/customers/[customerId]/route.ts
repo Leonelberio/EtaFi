@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentOrgId } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { customerSchema } from "@/schemas";
 
 // GET: Fetch specific customer
@@ -16,7 +16,7 @@ export async function GET(
 
     const { customerId } = await params;
 
-    const customer = await prisma.customer.findFirst({
+    const customer = await db.customer.findFirst({
       where: {
         id: customerId,
         organizationId: orgId,
@@ -24,6 +24,15 @@ export async function GET(
       include: {
         receivableAccount: {
           select: { id: true, number: true, name: true },
+        },
+        projects: {
+          select: { id: true, name: true, code: true },
+        },
+        _count: {
+          select: {
+            projects: true,
+            journalLines: true,
+          },
         },
       },
     });
@@ -61,7 +70,7 @@ export async function PUT(
     const validatedData = customerSchema.parse(body);
 
     // Check if customer exists and belongs to organization
-    const existingCustomer = await prisma.customer.findFirst({
+    const existingCustomer = await db.customer.findFirst({
       where: {
         id: customerId,
         organizationId: orgId,
@@ -75,12 +84,18 @@ export async function PUT(
       );
     }
 
-    const updatedCustomer = await prisma.customer.update({
+    const updatedCustomer = await db.customer.update({
       where: { id: customerId },
       data: validatedData,
       include: {
         receivableAccount: {
           select: { id: true, number: true, name: true },
+        },
+        _count: {
+          select: {
+            projects: true,
+            journalLines: true,
+          },
         },
       },
     });
@@ -112,10 +127,18 @@ export async function DELETE(
     const { customerId } = await params;
 
     // Check if customer exists and belongs to organization
-    const existingCustomer = await prisma.customer.findFirst({
+    const existingCustomer = await db.customer.findFirst({
       where: {
         id: customerId,
         organizationId: orgId,
+      },
+      include: {
+        _count: {
+          select: {
+            projects: true,
+            journalLines: true,
+          },
+        },
       },
     });
 
@@ -126,7 +149,15 @@ export async function DELETE(
       );
     }
 
-    await prisma.customer.delete({
+    // Check if customer has associated transactions or projects
+    if (existingCustomer._count.journalLines > 0 || existingCustomer._count.projects > 0) {
+      return NextResponse.json(
+        { error: "Cannot delete customer with existing transactions or projects" },
+        { status: 400 }
+      );
+    }
+
+    await db.customer.delete({
       where: { id: customerId },
     });
 

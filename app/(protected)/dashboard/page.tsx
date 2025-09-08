@@ -12,6 +12,8 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Cell,
 } from "recharts";
 
 import {
@@ -34,35 +36,49 @@ import {
   Zap,
   Activity,
   Bell,
+  Shield,
+  AlertTriangle,
+  Target,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-// Data for the charts
-const financialData = [
-  { month: "Jan", revenue: 12000, expenses: 8000, profit: 4000 },
-  { month: "Fév", revenue: 15000, expenses: 9500, profit: 5500 },
-  { month: "Mar", revenue: 13000, expenses: 7000, profit: 6000 },
-  { month: "Avr", revenue: 18000, expenses: 11000, profit: 7000 },
-  { month: "Mai", revenue: 16000, expenses: 10000, profit: 6000 },
-  { month: "Juin", revenue: 20000, expenses: 12000, profit: 8000 },
+// ERP Project Performance Data
+const projectPerformanceData = [
+  { month: "Jan", budget: 45000, actual: 42000, variance: 3000 },
+  { month: "Fév", budget: 52000, actual: 48000, variance: 4000 },
+  { month: "Mar", budget: 48000, actual: 51000, variance: -3000 },
+  { month: "Avr", budget: 60000, actual: 55000, variance: 5000 },
+  { month: "Mai", budget: 55000, actual: 58000, variance: -3000 },
+  { month: "Juin", budget: 65000, actual: 62000, variance: 3000 },
 ];
 
-const employeeData = [
-  { month: "Jan", totalEmployees: 50, newHires: 5, turnover: 2 },
-  { month: "Fév", totalEmployees: 53, newHires: 4, turnover: 1 },
-  { month: "Mar", totalEmployees: 55, newHires: 6, turnover: 3 },
-  { month: "Avr", totalEmployees: 58, newHires: 5, turnover: 2 },
-  { month: "Mai", totalEmployees: 61, newHires: 4, turnover: 1 },
-  { month: "Juin", totalEmployees: 64, newHires: 3, turnover: 0 },
+// Cost Category Distribution
+const costCategoryData = [
+  { name: "Matériel", value: 35, amount: 125000, color: "#3B82F6" },
+  { name: "Sous-traitance", value: 25, amount: 89000, color: "#10B981" },
+  { name: "Main-d'œuvre", value: 20, amount: 72000, color: "#F59E0B" },
+  { name: "Équipement", value: 12, amount: 43000, color: "#8B5CF6" },
+  { name: "Divers", value: 8, amount: 28000, color: "#EF4444" },
+];
+
+// Project Status Distribution
+const projectStatusData = [
+  { status: "Actif", count: 8, percentage: 50 },
+  { status: "En Attente", count: 3, percentage: 19 },
+  { status: "Terminé", count: 4, percentage: 25 },
+  { status: "Annulé", count: 1, percentage: 6 },
 ];
 
 // Dashboard component
 export default function Page() {
-  const currentRevenue = 136000;
-  const currentProfit = 36500;
-  const currentEmployees = 64;
-  const growthRate = 12.5;
+  const totalProjects = 16;
+  const activeProjects = 8;
+  const totalBudget = 325000;
+  const actualCosts = 286000;
+  const budgetVariance = 39000;
+  const completionRate = 68;
 
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8">
@@ -71,15 +87,14 @@ export default function Page() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-2 mb-2">
-              <Building2 className="h-5 w-5 text-rose-500" />
+              <Shield className="h-5 w-5 text-rose-500" />
               <span className="text-sm font-medium text-gray-600">
-                Cabinet Comptable EtaFi
+                ERP Comptable - Comptabilité par Projet
               </span>
             </div>
             <h1 className="etafi-section-header">Tableau de Bord</h1>
             <p className="etafi-section-subtitle">
-              Vue d&apos;ensemble de vos clients et de leur performance
-              financière
+              Vue d&apos;ensemble de vos projets et de leur performance budgétaire
             </p>
           </div>
         </div>
@@ -94,12 +109,12 @@ export default function Page() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="dashboard-metric-label">Entreprises Clientes</p>
-                <p className="dashboard-metric-value">24</p>
-                <p className="text-sm text-green-600 font-medium">+3 ce mois</p>
+                <p className="dashboard-metric-label">Projets Totaux</p>
+                <p className="dashboard-metric-value">{totalProjects}</p>
+                <p className="text-sm text-green-600 font-medium">{activeProjects} actifs</p>
               </div>
               <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-white" />
+                <Shield className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
@@ -110,14 +125,21 @@ export default function Page() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="dashboard-metric-label">Exercices Actifs</p>
-                <p className="dashboard-metric-value">31</p>
+                <p className="dashboard-metric-label">Budget Total</p>
+                <p className="dashboard-metric-value">
+                  {new Intl.NumberFormat("fr-FR", {
+                    style: "currency",
+                    currency: "CAD",
+                    notation: "compact",
+                    maximumFractionDigits: 0,
+                  }).format(totalBudget)}
+                </p>
                 <p className="text-sm text-blue-600 font-medium">
-                  7 en clôture
+                  {completionRate}% complété
                 </p>
               </div>
               <div className="h-12 w-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-white" />
+                <DollarSign className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
@@ -128,14 +150,21 @@ export default function Page() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="dashboard-metric-label">États Financiers</p>
-                <p className="dashboard-metric-value">128</p>
+                <p className="dashboard-metric-label">Coûts Réels</p>
+                <p className="dashboard-metric-value">
+                  {new Intl.NumberFormat("fr-FR", {
+                    style: "currency",
+                    currency: "CAD",
+                    notation: "compact",
+                    maximumFractionDigits: 0,
+                  }).format(actualCosts)}
+                </p>
                 <p className="text-sm text-purple-600 font-medium">
-                  12 en attente
+                  vs budget
                 </p>
               </div>
               <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <FileText className="h-6 w-6 text-white" />
+                <Target className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
@@ -147,18 +176,18 @@ export default function Page() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="dashboard-metric-label">
-                  Chiffre d&apos;Affaires Total
+                  Écart Budgétaire
                 </p>
-                <p className="dashboard-metric-value">
-                  {new Intl.NumberFormat("fr-FR", {
+                <p className={`dashboard-metric-value ${budgetVariance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {budgetVariance >= 0 ? '+' : ''}{new Intl.NumberFormat("fr-FR", {
                     style: "currency",
-                    currency: "EUR",
+                    currency: "CAD",
                     notation: "compact",
-                    maximumFractionDigits: 1,
-                  }).format(currentRevenue * 1000)}
+                    maximumFractionDigits: 0,
+                  }).format(budgetVariance)}
                 </p>
                 <p className="text-sm text-orange-600 font-medium">
-                  Clients combinés
+                  {budgetVariance >= 0 ? 'Sous budget' : 'Dépassement'}
                 </p>
               </div>
               <div className="h-12 w-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
@@ -170,7 +199,7 @@ export default function Page() {
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-          {/* Revenue Chart */}
+          {/* Budget vs Actual Chart */}
           <Card
             className="etafi-card animate-fade-in-up"
             style={{ animationDelay: "0.5s" }}
@@ -178,16 +207,15 @@ export default function Page() {
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-rose-500" />
-                Performance des Clients
+                Performance Budgétaire
               </CardTitle>
               <CardDescription className="text-gray-600">
-                Chiffre d&apos;affaires agrégé de vos entreprises clientes sur 6
-                mois
+                Comparaison budget vs coûts réels sur 6 mois
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={financialData}>
+                <LineChart data={projectPerformanceData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis
                     dataKey="month"
@@ -201,7 +229,7 @@ export default function Page() {
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(value) => `${value}M€`}
+                    tickFormatter={(value) => `${value/1000}K$`}
                   />
                   <Tooltip
                     contentStyle={{
@@ -210,23 +238,37 @@ export default function Page() {
                       borderRadius: "8px",
                       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                     }}
-                    formatter={(value: any) => [`${value}M€`, ""]}
+                    formatter={(value: any) => [`${new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "CAD",
+                      maximumFractionDigits: 0,
+                    }).format(value)}`, ""]}
                     labelStyle={{ color: "#374151", fontWeight: "500" }}
                   />
                   <Line
                     type="monotone"
-                    dataKey="revenue"
-                    stroke="#f43f5e"
+                    dataKey="budget"
+                    stroke="#3B82F6"
                     strokeWidth={3}
-                    dot={{ fill: "#f43f5e", strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: "#f43f5e", strokeWidth: 2 }}
+                    dot={{ fill: "#3B82F6", strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: "#3B82F6", strokeWidth: 2 }}
+                    name="Budget"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="actual"
+                    stroke="#10B981"
+                    strokeWidth={3}
+                    dot={{ fill: "#10B981", strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: "#10B981", strokeWidth: 2 }}
+                    name="Coûts Réels"
                   />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Clients Overview */}
+          {/* Cost Category Distribution */}
           <Card
             className="etafi-card animate-fade-in-up"
             style={{ animationDelay: "0.6s" }}
@@ -234,71 +276,39 @@ export default function Page() {
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <PieChart className="h-5 w-5 text-rose-500" />
-                Répartition par Secteur
+                Répartition des Coûts
               </CardTitle>
               <CardDescription className="text-gray-600">
-                Distribution de vos entreprises clientes par secteur
-                d&apos;activité
+                Distribution des coûts par catégorie (5-group system)
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                {costCategoryData.map((category, index) => (
+                  <div key={category.name} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                      <div 
+                        className="w-4 h-4 rounded-full" 
+                        style={{ backgroundColor: category.color }}
+                      ></div>
                     <span className="text-sm font-medium text-gray-700">
-                      Services
+                        {category.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full w-20"></div>
+                        <div 
+                          className="h-2 rounded-full" 
+                          style={{ 
+                            backgroundColor: category.color,
+                            width: `${category.value}%`
+                          }}
+                        ></div>
                     </div>
-                    <span className="text-sm text-gray-600 w-8">35%</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Commerce
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full w-16"></div>
+                      <span className="text-sm text-gray-600 w-8">{category.value}%</span>
                     </div>
-                    <span className="text-sm text-gray-600 w-8">28%</span>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Industrie
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full w-12"></div>
-                    </div>
-                    <span className="text-sm text-gray-600 w-8">20%</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Agriculture
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div className="bg-orange-500 h-2 rounded-full w-10"></div>
-                    </div>
-                    <span className="text-sm text-gray-600 w-8">17%</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -317,7 +327,7 @@ export default function Page() {
                 Activité Récente
               </CardTitle>
               <CardDescription className="text-gray-600">
-                Dernières actions sur les dossiers clients
+                Dernières actions sur les projets et budgets
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -326,7 +336,7 @@ export default function Page() {
                   <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">
-                      Bilan finalisé pour TechStart SARL
+                      Projet &quot;Construction Résidentielle&quot; terminé
                     </p>
                     <p className="text-xs text-gray-500">Il y a 2 heures</p>
                   </div>
@@ -335,7 +345,7 @@ export default function Page() {
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">
-                      Nouveau client ajouté: Commerce Plus SA
+                      Nouveau budget créé pour &quot;Rénovation Commerciale&quot;
                     </p>
                     <p className="text-xs text-gray-500">Il y a 4 heures</p>
                   </div>
@@ -344,7 +354,7 @@ export default function Page() {
                   <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">
-                      Exercice 2024 ouvert pour AgriCorp
+                      Alerte budget: Dépassement 15% sur &quot;Infrastructure&quot;
                     </p>
                     <p className="text-xs text-gray-500">Hier</p>
                   </div>
@@ -353,7 +363,7 @@ export default function Page() {
                   <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">
-                      États financiers générés pour Service Pro
+                      Modèle de projet &quot;Maintenance&quot; appliqué
                     </p>
                     <p className="text-xs text-gray-500">Il y a 2 jours</p>
                   </div>
@@ -378,37 +388,37 @@ export default function Page() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-3">
-                <Link href="/dashboard/companies/new">
+                <Link href="/dashboard/projects/new">
                   <Button className="w-full etafi-button-primary justify-start">
                     <Plus className="h-4 w-4 mr-2" />
-                    Ajouter une Entreprise Cliente
+                    Créer un Nouveau Projet
                   </Button>
                 </Link>
-                <Link href="/dashboard/reports">
+                <Link href="/dashboard/budgets/new">
+                  <Button
+                    variant="outline"
+                    className="w-full etafi-button-secondary justify-start"
+                  >
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Créer un Budget
+                  </Button>
+                </Link>
+                <Link href="/dashboard/project-templates">
                   <Button
                     variant="outline"
                     className="w-full etafi-button-secondary justify-start"
                   >
                     <FileText className="h-4 w-4 mr-2" />
-                    Générer un État Financier
+                    Modèles de Projets
                   </Button>
                 </Link>
-                <Link href="/dashboard/reminders">
-                  <Button
-                    variant="outline"
-                    className="w-full etafi-button-secondary justify-start"
-                  >
-                    <Bell className="h-4 w-4 mr-2" />
-                    Créer un Rappel
-                  </Button>
-                </Link>
-                <Link href="/dashboard/analytics">
+                <Link href="/dashboard/budget-reports">
                   <Button
                     variant="outline"
                     className="w-full etafi-button-secondary justify-start"
                   >
                     <BarChart3 className="h-4 w-4 mr-2" />
-                    Voir les Analyses
+                    Rapports Budgétaires
                   </Button>
                 </Link>
               </div>

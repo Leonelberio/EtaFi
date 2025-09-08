@@ -42,17 +42,17 @@ export async function POST(
     });
 
     if (!membership) {
-      return NextResponse.json({ error: "No organization found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 404 }
+      );
     }
 
     // Get the template with activities
     const template = await db.projectTemplate.findFirst({
       where: {
         id: templateId,
-        OR: [
-          { organizationId: membership.organizationId },
-          { isPublic: true },
-        ],
+        OR: [{ organizationId: membership.organizationId }, { isPublic: true }],
         isActive: true,
       },
       include: {
@@ -70,7 +70,10 @@ export async function POST(
     });
 
     if (!template) {
-      return NextResponse.json({ error: "Template not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Template not found" },
+        { status: 404 }
+      );
     }
 
     // Create project and activities in a transaction
@@ -88,7 +91,9 @@ export async function POST(
           tempManagerEnd: tempManagerEnd ? new Date(tempManagerEnd) : null,
           startDate: startDate ? new Date(startDate) : null,
           endDate: endDate ? new Date(endDate) : null,
-          totalBudget: totalBudget ? parseFloat(totalBudget) : template.totalBudget,
+          totalBudget: totalBudget
+            ? parseFloat(totalBudget)
+            : template.totalBudget,
           currency,
           kind,
           status,

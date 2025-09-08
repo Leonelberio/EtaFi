@@ -29,9 +29,13 @@ model User {
   Organization Organization[]
 
   // Project management relations
-  managedProjects     Project[] @relation("ProjectManager")
-  tempManagedProjects Project[] @relation("TempProjectManager")
+  managedProjects     Project[]         @relation("ProjectManager")
+  tempManagedProjects Project[]         @relation("TempProjectManager")
   createdTemplates    ProjectTemplate[] @relation("TemplateCreator")
+
+  // Budget management relations
+  budgetApprovals   BudgetRevision[] @relation("BudgetApprover")
+  budgetResolutions BudgetAlert[]    @relation("BudgetResolver")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -109,9 +113,19 @@ model Organization {
   vendors   Vendor[]
 
   // Project management relations
-  activities    Activity[]
-  subActivities SubActivity[]
+  activities       Activity[]
+  subActivities    SubActivity[]
   projectTemplates ProjectTemplate[]
+
+  // Budget management relations
+  budgets         Budget[]
+  budgetRevisions BudgetRevision[]
+  budgetAlerts    BudgetAlert[]
+
+  // Invoice management relations
+  invoices        Invoice[]
+  invoiceLines    InvoiceLine[]
+  invoicePayments InvoicePayment[]
 
   // Accounting relations
   chartAccounts  ChartAccount[]
@@ -170,6 +184,13 @@ model Project {
   activities    Activity[]
   subActivities SubActivity[]
 
+  // Budget management relations
+  budgets Budget[]
+
+  // Invoice management relations
+  invoices      Invoice[]
+  invoiceLines  InvoiceLine[]
+
   // Accounting relations
   journalLines JournalLine[]
 
@@ -213,6 +234,8 @@ model Activity {
   organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   project       Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   subActivities SubActivity[]
+  budgets       Budget[]
+  invoiceLines  InvoiceLine[]
   journalLines  JournalLine[]
 
   @@unique([projectId, code])
@@ -256,6 +279,8 @@ model SubActivity {
   organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   activity     Activity      @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  budgets      Budget[]
+  invoiceLines InvoiceLine[]
   journalLines JournalLine[]
 
   @@unique([activityId, code])
@@ -271,8 +296,8 @@ model ProjectTemplate {
   organizationId String
   name           String
   description    String?
-  category       String?  // e.g., "Construction", "Renovation", "Maintenance"
-  industry       String?  // e.g., "Residential", "Commercial", "Industrial"
+  category       String? // e.g., "Construction", "Renovation", "Maintenance"
+  industry       String? // e.g., "Residential", "Commercial", "Industrial"
   totalBudget    Decimal? @db.Decimal(15, 2)
   currency       String   @default("CAD")
   isActive       Boolean  @default(true)
@@ -281,11 +306,11 @@ model ProjectTemplate {
   updatedAt      DateTime @updatedAt
 
   // Relations
-  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  templateActivities TemplateActivity[]
+  organization          Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  templateActivities    TemplateActivity[]
   templateSubActivities TemplateSubActivity[]
-  createdBy       User?            @relation("TemplateCreator", fields: [createdById], references: [id])
-  createdById     String?
+  createdBy             User?                 @relation("TemplateCreator", fields: [createdById], references: [id])
+  createdById           String?
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -297,27 +322,27 @@ model ProjectTemplate {
 
 // Template Activities (Predefined activities in templates)
 model TemplateActivity {
-  id             String   @id @default(cuid())
-  templateId     String
-  code           String   // Activity code (e.g., "01010", "01135", "01220")
-  name           String
-  description    String?
-  budgetAmount   Decimal? @db.Decimal(15, 2)
-  
+  id           String   @id @default(cuid())
+  templateId   String
+  code         String // Activity code (e.g., "01010", "01135", "01220")
+  name         String
+  description  String?
+  budgetAmount Decimal? @db.Decimal(15, 2)
+
   // 5-Group Budget Breakdown
-  budgetM        Decimal? @db.Decimal(15, 2) // Matériel
-  budgetS        Decimal? @db.Decimal(15, 2) // Sous-traitance
-  budgetD        Decimal? @db.Decimal(15, 2) // Divers
-  budgetE        Decimal? @db.Decimal(15, 2) // Équipement
-  budgetMOD      Decimal? @db.Decimal(15, 2) // Main-d'œuvre
-  
-  isActive       Boolean  @default(true)
-  sortOrder      Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  budgetM   Decimal? @db.Decimal(15, 2) // Matériel
+  budgetS   Decimal? @db.Decimal(15, 2) // Sous-traitance
+  budgetD   Decimal? @db.Decimal(15, 2) // Divers
+  budgetE   Decimal? @db.Decimal(15, 2) // Équipement
+  budgetMOD Decimal? @db.Decimal(15, 2) // Main-d'œuvre
+
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  template       ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template              ProjectTemplate       @relation(fields: [templateId], references: [id], onDelete: Cascade)
   templateSubActivities TemplateSubActivity[]
 
   @@unique([templateId, code])
@@ -328,29 +353,29 @@ model TemplateActivity {
 
 // Template Sub-Activities (Predefined sub-activities in templates)
 model TemplateSubActivity {
-  id             String   @id @default(cuid())
-  templateId     String
-  activityId     String
-  code           String   // Sub-activity code (e.g., "01010-01", "01010-02")
-  name           String
-  description    String?
-  budgetAmount   Decimal? @db.Decimal(15, 2)
-  
+  id           String   @id @default(cuid())
+  templateId   String
+  activityId   String
+  code         String // Sub-activity code (e.g., "01010-01", "01010-02")
+  name         String
+  description  String?
+  budgetAmount Decimal? @db.Decimal(15, 2)
+
   // 5-Group Budget Breakdown
-  budgetM        Decimal? @db.Decimal(15, 2) // Matériel
-  budgetS        Decimal? @db.Decimal(15, 2) // Sous-traitance
-  budgetD        Decimal? @db.Decimal(15, 2) // Divers
-  budgetE        Decimal? @db.Decimal(15, 2) // Équipement
-  budgetMOD      Decimal? @db.Decimal(15, 2) // Main-d'œuvre
-  
-  isActive       Boolean  @default(true)
-  sortOrder      Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  budgetM   Decimal? @db.Decimal(15, 2) // Matériel
+  budgetS   Decimal? @db.Decimal(15, 2) // Sous-traitance
+  budgetD   Decimal? @db.Decimal(15, 2) // Divers
+  budgetE   Decimal? @db.Decimal(15, 2) // Équipement
+  budgetMOD Decimal? @db.Decimal(15, 2) // Main-d'œuvre
+
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  template       ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  activity       TemplateActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  template ProjectTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  activity TemplateActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
   @@unique([activityId, code])
   @@index([templateId])
@@ -373,9 +398,11 @@ model Customer {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  projects     Project[]
-  // receivableAccount ChartAccount? @relation("CustomerReceivableAccount", fields: [receivableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  organization       Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  receivableAccount  ChartAccount? @relation("CustomerReceivableAccount", fields: [receivableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  projects           Project[]
+  invoices           Invoice[]
+  journalLines       JournalLine[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -395,8 +422,10 @@ model Vendor {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  // payableAccount  ChartAccount? @relation("VendorPayableAccount", fields: [payableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  payableAccount  ChartAccount? @relation("VendorPayableAccount", fields: [payableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  invoices        Invoice[]
+  journalLines    JournalLine[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -454,6 +483,10 @@ model ChartAccount {
 
   // Usage tracking
   journalLines JournalLine[]
+  
+  // Customer/Vendor relations
+  customerReceivables Customer[] @relation("CustomerReceivableAccount")
+  vendorPayables      Vendor[]   @relation("VendorPayableAccount")
 
   @@unique([organizationId, number])
   @@index([organizationId])
@@ -477,6 +510,7 @@ model TaxCode {
   // Relations
   organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   chartAccounts ChartAccount[]
+  invoiceLines  InvoiceLine[]
   journalLines  JournalLine[]
 
   @@unique([organizationId, code])
@@ -544,4 +578,294 @@ model CostCategory {
   @@unique([organizationId, code])
   @@index([organizationId])
   @@index([isActive])
+}
+
+// Budget Management System
+model Budget {
+  id             String  @id @default(cuid())
+  organizationId String
+  projectId      String
+  activityId     String?
+  subActivityId  String?
+
+  // Budget Details
+  name         String
+  description  String?
+  budgetAmount Decimal @db.Decimal(15, 2)
+  currency     String  @default("CAD")
+
+  // 5-Group Budget Breakdown
+  budgetM   Decimal? @db.Decimal(15, 2) // Matériel
+  budgetS   Decimal? @db.Decimal(15, 2) // Sous-traitance
+  budgetD   Decimal? @db.Decimal(15, 2) // Divers
+  budgetE   Decimal? @db.Decimal(15, 2) // Équipement
+  budgetMOD Decimal? @db.Decimal(15, 2) // Main-d'œuvre
+
+  // Actual vs Budget
+  actualAmount Decimal @default(0) @db.Decimal(15, 2)
+  actualM      Decimal @default(0) @db.Decimal(15, 2)
+  actualS      Decimal @default(0) @db.Decimal(15, 2)
+  actualD      Decimal @default(0) @db.Decimal(15, 2)
+  actualE      Decimal @default(0) @db.Decimal(15, 2)
+  actualMOD    Decimal @default(0) @db.Decimal(15, 2)
+
+  // Budget Status
+  status   String  @default("ACTIVE") // ACTIVE, REVISED, CLOSED
+  isActive Boolean @default(true)
+
+  // Dates
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  activity     Activity?        @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  subActivity  SubActivity?     @relation(fields: [subActivityId], references: [id], onDelete: Cascade)
+  revisions    BudgetRevision[]
+  alerts       BudgetAlert[]
+
+  @@unique([organizationId, projectId, activityId, subActivityId])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([activityId])
+  @@index([subActivityId])
+  @@index([status])
+  @@index([isActive])
+}
+
+// Budget Revisions for tracking changes
+model BudgetRevision {
+  id             String @id @default(cuid())
+  organizationId String
+  budgetId       String
+
+  // Revision Details
+  revisionNumber Int
+  reason         String
+  description    String?
+
+  // Previous Budget Values
+  previousBudgetAmount Decimal  @db.Decimal(15, 2)
+  previousBudgetM      Decimal? @db.Decimal(15, 2)
+  previousBudgetS      Decimal? @db.Decimal(15, 2)
+  previousBudgetD      Decimal? @db.Decimal(15, 2)
+  previousBudgetE      Decimal? @db.Decimal(15, 2)
+  previousBudgetMOD    Decimal? @db.Decimal(15, 2)
+
+  // New Budget Values
+  newBudgetAmount Decimal  @db.Decimal(15, 2)
+  newBudgetM      Decimal? @db.Decimal(15, 2)
+  newBudgetS      Decimal? @db.Decimal(15, 2)
+  newBudgetD      Decimal? @db.Decimal(15, 2)
+  newBudgetE      Decimal? @db.Decimal(15, 2)
+  newBudgetMOD    Decimal? @db.Decimal(15, 2)
+
+  // Change Amounts
+  changeAmount Decimal  @db.Decimal(15, 2)
+  changeM      Decimal? @db.Decimal(15, 2)
+  changeS      Decimal? @db.Decimal(15, 2)
+  changeD      Decimal? @db.Decimal(15, 2)
+  changeE      Decimal? @db.Decimal(15, 2)
+  changeMOD    Decimal? @db.Decimal(15, 2)
+
+  // Approval
+  status     String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedBy String?
+  approvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  budget       Budget       @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  approver     User?        @relation("BudgetApprover", fields: [approvedBy], references: [id])
+
+  @@unique([organizationId, budgetId, revisionNumber])
+  @@index([organizationId])
+  @@index([budgetId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Budget Alerts for overruns and warnings
+model BudgetAlert {
+  id             String @id @default(cuid())
+  organizationId String
+  budgetId       String
+
+  // Alert Details
+  type     String // OVERRUN, WARNING, APPROACHING_LIMIT
+  severity String // LOW, MEDIUM, HIGH, CRITICAL
+  title    String
+  message  String
+
+  // Thresholds
+  threshold     Decimal? @db.Decimal(5, 2) // Percentage threshold (e.g., 80.00 for 80%)
+  currentAmount Decimal  @db.Decimal(15, 2)
+  budgetAmount  Decimal  @db.Decimal(15, 2)
+  percentage    Decimal  @db.Decimal(5, 2) // Current percentage of budget used
+
+  // Alert Status
+  isActive   Boolean   @default(true)
+  isRead     Boolean   @default(false)
+  isResolved Boolean   @default(false)
+  resolvedAt DateTime?
+  resolvedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  budget       Budget       @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  resolver     User?        @relation("BudgetResolver", fields: [resolvedBy], references: [id])
+
+  @@index([organizationId])
+  @@index([budgetId])
+  @@index([type])
+  @@index([severity])
+  @@index([isActive])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// Invoice Management System
+model Invoice {
+  id             String   @id @default(cuid())
+  organizationId String
+  
+  // Invoice Details
+  number         String   // Invoice number (auto-generated or manual)
+  type           String   // SALES, PURCHASE
+  status         String   @default("DRAFT") // DRAFT, SENT, PAID, CANCELLED, OVERDUE
+  date           DateTime
+  dueDate        DateTime?
+  
+  // References
+  ref            String?  // External reference
+  poNumber       String?  // Purchase Order number
+  
+  // Parties
+  customerId     String?
+  vendorId       String?
+  projectId      String?
+  
+  // Financial
+  subtotal       Decimal  @default(0) @db.Decimal(15, 2)
+  taxAmount      Decimal  @default(0) @db.Decimal(15, 2)
+  total          Decimal  @default(0) @db.Decimal(15, 2)
+  paidAmount     Decimal  @default(0) @db.Decimal(15, 2)
+  currency       String   @default("CAD")
+  
+  // Payment Terms
+  paymentTerms   String?
+  discountPercent Decimal? @db.Decimal(5, 2)
+  discountAmount Decimal? @db.Decimal(15, 2)
+  
+  // Metadata
+  notes          String?
+  internalNotes  String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer       Customer?       @relation(fields: [customerId], references: [id])
+  vendor         Vendor?         @relation(fields: [vendorId], references: [id])
+  project        Project?        @relation(fields: [projectId], references: [id])
+  lines          InvoiceLine[]
+  payments       InvoicePayment[]
+  journalLines   JournalLine[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([projectId])
+  @@index([type])
+  @@index([status])
+  @@index([date])
+  @@index([dueDate])
+}
+
+// Invoice Line Items
+model InvoiceLine {
+  id             String   @id @default(cuid())
+  organizationId String
+  invoiceId      String
+  
+  // Line Details
+  description    String
+  quantity       Decimal  @db.Decimal(15, 4)
+  unitPrice      Decimal  @db.Decimal(15, 4)
+  amount         Decimal  @db.Decimal(15, 2)
+  
+  // Tax Information
+  taxCodeId      String?
+  taxRate        Decimal? @db.Decimal(5, 4)
+  taxAmount      Decimal  @default(0) @db.Decimal(15, 2)
+  totalAmount    Decimal  @db.Decimal(15, 2)
+  
+  // Project Tracking
+  projectId      String?
+  activityId     String?
+  subActivityId  String?
+  
+  // Cost Category (5-Group System)
+  costCategory   String?  // M, S, D, E, MOD
+  
+  // Metadata
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice        Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  taxCode        TaxCode?     @relation(fields: [taxCodeId], references: [id])
+  project        Project?     @relation(fields: [projectId], references: [id])
+  activity       Activity?    @relation(fields: [activityId], references: [id])
+  subActivity    SubActivity? @relation(fields: [subActivityId], references: [id])
+
+  @@index([organizationId])
+  @@index([invoiceId])
+  @@index([projectId])
+  @@index([activityId])
+  @@index([subActivityId])
+  @@index([costCategory])
+  @@index([sortOrder])
+}
+
+// Invoice Payments
+model InvoicePayment {
+  id             String   @id @default(cuid())
+  organizationId String
+  invoiceId      String
+  
+  // Payment Details
+  amount         Decimal  @db.Decimal(15, 2)
+  paymentDate    DateTime
+  paymentMethod  String?  // CASH, CHECK, TRANSFER, CARD, etc.
+  reference      String?  // Check number, transfer reference, etc.
+  
+  // Banking
+  bankAccountId  String?
+  
+  // Metadata
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice        Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  journalLines   JournalLine[]
+
+  @@index([organizationId])
+  @@index([invoiceId])
+  @@index([paymentDate])
 }
