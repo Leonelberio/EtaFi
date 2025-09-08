@@ -1,5 +1,5 @@
 import { getCurrentOrgId } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +28,7 @@ export default async function ProjectDetailPage({
   }
 
   // Fetch project data
-  const project = await prisma.project.findFirst({
+  const project = await db.project.findFirst({
     where: {
       id: projectId,
       organizationId: orgId,
@@ -60,7 +60,9 @@ export default async function ProjectDetailPage({
           id: true,
           code: true,
           name: true,
-          status: true,
+          isActive: true,
+          budgetAmount: true,
+          costToDate: true,
         },
         orderBy: { code: "asc" },
       },
@@ -205,15 +207,24 @@ export default async function ProjectDetailPage({
       {/* Activities */}
       <Card>
         <CardHeader>
-          <CardTitle>Activities</CardTitle>
-          <CardDescription>
-            {project._count.activities} activities in this project
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Project Activities</CardTitle>
+              <CardDescription>
+                {project._count.activities} activities with budget tracking
+              </CardDescription>
+            </div>
+            <Button asChild variant="outline">
+              <Link href={`/dashboard/projects/${project.id}/activities`}>
+                Manage Activities
+              </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {project.activities.length > 0 ? (
             <div className="space-y-2">
-              {project.activities.map((activity) => (
+              {project.activities.slice(0, 5).map((activity) => (
                 <div
                   key={activity.id}
                   className="flex items-center justify-between p-3 border rounded-lg"
@@ -223,17 +234,36 @@ export default async function ProjectDetailPage({
                       {activity.code} - {activity.name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {activity.status}
+                      Budget: ${activity.budgetAmount?.toLocaleString('en-CA') || '0'} CAD
+                      {activity.costToDate && (
+                        <> • Actual: ${activity.costToDate.toLocaleString('en-CA')} CAD</>
+                      )}
                     </p>
                   </div>
-                  <Badge className={getStatusColor(activity.status)}>
-                    {activity.status}
+                  <Badge variant={activity.isActive ? "default" : "secondary"}>
+                    {activity.isActive ? "Active" : "Inactive"}
                   </Badge>
                 </div>
               ))}
+              {project.activities.length > 5 && (
+                <div className="text-center pt-2">
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href={`/dashboard/projects/${project.id}/activities`}>
+                      View all {project.activities.length} activities
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
-            <p className="text-muted-foreground">No activities created yet.</p>
+            <div className="text-center py-6">
+              <p className="text-muted-foreground mb-4">No activities created yet.</p>
+              <Button asChild>
+                <Link href={`/dashboard/projects/${project.id}/activities/new`}>
+                  Create First Activity
+                </Link>
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

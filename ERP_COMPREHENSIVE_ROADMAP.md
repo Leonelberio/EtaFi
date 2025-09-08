@@ -98,11 +98,16 @@ Développer une application web complète de comptabilité et gestion par projet
   - [x] Type de projet (BILLABLE, ADMIN)
   - [x] Pages: Liste, Détail, Création, Édition
 
-- [ ] **Activités et Sous-activités**
-  - [ ] Création d'activités avec codes (ex: 01010, 01135, 01220)
-  - [ ] Sous-activités optionnelles (ex: 01010-01, 01010-02)
-  - [ ] Budget par activité/sous-activité
-  - [ ] Liens vers comptes GL
+- [x] **Activités et Sous-activités** ✅ *COMPLÉTÉ*
+  - [x] Création d'activités avec codes (ex: 01010, 01135, 01220)
+  - [x] Sous-activités optionnelles (ex: 01010-01, 01010-02)
+  - [x] Budget par activité/sous-activité avec ventilation 5 groupes
+  - [x] Liens vers comptes GL et écritures journal
+  - [x] **Composants UI**: ActivityForm & ActivityList avec interface professionnelle
+  - [x] **API routes**: /api/projects/[id]/activities (CRUD complet)
+  - [x] **Pages**: Gestion d'activités intégrée aux projets
+  - [x] **Suivi budgétaire**: Budget vs Réel par groupe de coûts (M, S, D, E, MOD)
+  - [x] **Hiérarchie**: Projet → Activités → Sous-activités → Écritures
 
 - [x] **Groupes de coûts (5 groupes universels)** ✅ *COMPLÉTÉ*
   - [x] **Matériel & Fournitures** (M) - 📦 Blue #3B82F6
