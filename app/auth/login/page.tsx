@@ -1,9 +1,7 @@
-import { LoginForm } from "@/components/auth/login-form";
+import { ModernAuthForm } from "@/components/auth/modern-auth-form";
 
 const LoginPage = () => {
-  return ( 
-    <LoginForm />
-  );
-}
- 
+  return <ModernAuthForm />;
+};
+
 export default LoginPage;

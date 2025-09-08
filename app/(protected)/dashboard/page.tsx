@@ -65,7 +65,7 @@ export default function Page() {
   const growthRate = 12.5;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8">
       {/* Header Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

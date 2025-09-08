@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import {
   Search,
@@ -41,32 +41,47 @@ interface Organization {
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [currentOrganization, setCurrentOrganization] =
+    useState<Organization | null>(null);
+  const [isLoadingOrgs, setIsLoadingOrgs] = useState(true);
 
-  // Mock organizations data - replace with actual API call
-  const organizations: Organization[] = [
-    {
-      id: "1",
-      name: "Cabinet Comptable EtaFi",
-      role: "Propriétaire",
-      logo: "",
-    },
-    {
-      id: "2",
-      name: "Expertise Financière Abidjan",
-      role: "Collaborateur",
-      logo: "",
-    },
-    {
-      id: "3",
-      name: "Conseil & Audit SARL",
-      role: "Expert-comptable",
-      logo: "",
-    },
-  ];
+  // Fetch real organizations data
+  useEffect(() => {
+    async function fetchOrganizations() {
+      try {
+        setIsLoadingOrgs(true);
+        const response = await fetch("/api/organizations");
+        if (response.ok) {
+          const data = await response.json();
+          const orgs = data.organizations.map((org: any) => ({
+            id: org.id,
+            name: org.name,
+            role:
+              org.members?.find((m: any) => m.userId === session?.user?.id)
+                ?.role || "MEMBER",
+            logo: org.logo || "",
+          }));
+          setOrganizations(orgs);
 
-  const [currentOrganization, setCurrentOrganization] = useState<Organization>(
-    organizations[0]
-  );
+          // Set the first organization as current if none is set
+          if (orgs.length > 0 && !currentOrganization) {
+            setCurrentOrganization(orgs[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching organizations:", error);
+        // Fallback to empty array
+        setOrganizations([]);
+      } finally {
+        setIsLoadingOrgs(false);
+      }
+    }
+
+    if (session?.user?.id) {
+      fetchOrganizations();
+    }
+  }, [session?.user?.id, currentOrganization]);
 
   const handleOrganizationSwitch = (org: Organization) => {
     setCurrentOrganization(org);
@@ -104,10 +119,12 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
                   </div>
                   <div className="hidden lg:block">
                     <p className="text-sm font-medium text-gray-900 truncate max-w-40">
-                      {currentOrganization.name}
+                      {isLoadingOrgs
+                        ? "Chargement..."
+                        : currentOrganization?.name || "Aucune organisation"}
                     </p>
                     <p className="text-xs text-gray-600">
-                      {currentOrganization.role}
+                      {isLoadingOrgs ? "..." : currentOrganization?.role || ""}
                     </p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400 hidden lg:block" />
@@ -127,34 +144,48 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
                 </div>
 
                 <div className="py-2">
-                  {organizations.map((org) => (
-                    <DropdownMenuItem
-                      key={org.id}
-                      className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleOrganizationSwitch(org)}
-                    >
-                      <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        {org.logo ? (
-                          <img
-                            src={org.logo}
-                            alt={org.name}
-                            className="h-6 w-6 rounded"
-                          />
-                        ) : (
-                          <Building className="h-5 w-5 text-white" />
+                  {isLoadingOrgs ? (
+                    <div className="flex items-center justify-center p-4">
+                      <p className="text-sm text-gray-600">
+                        Chargement des organisations...
+                      </p>
+                    </div>
+                  ) : organizations.length === 0 ? (
+                    <div className="flex items-center justify-center p-4">
+                      <p className="text-sm text-gray-600">
+                        Aucune organisation trouvée
+                      </p>
+                    </div>
+                  ) : (
+                    organizations.map((org) => (
+                      <DropdownMenuItem
+                        key={org.id}
+                        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleOrganizationSwitch(org)}
+                      >
+                        <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                          {org.logo ? (
+                            <img
+                              src={org.logo}
+                              alt={org.name}
+                              className="h-6 w-6 rounded"
+                            />
+                          ) : (
+                            <Building className="h-5 w-5 text-white" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {org.name}
+                          </p>
+                          <p className="text-xs text-gray-600">{org.role}</p>
+                        </div>
+                        {currentOrganization?.id === org.id && (
+                          <Check className="h-4 w-4 text-rose-500" />
                         )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {org.name}
-                        </p>
-                        <p className="text-xs text-gray-600">{org.role}</p>
-                      </div>
-                      {currentOrganization.id === org.id && (
-                        <Check className="h-4 w-4 text-rose-500" />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
+                      </DropdownMenuItem>
+                    ))
+                  )}
                 </div>
 
                 <DropdownMenuSeparator />

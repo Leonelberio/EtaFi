@@ -1,7 +1,11 @@
 "use server";
 
 import { currentRole } from "@/lib/auth";
-import { UserRole } from "@prisma/client";
+// UserRole enum values
+const UserRole = {
+  ADMIN: "ADMIN",
+  USER: "USER",
+} as const;
 
 export const admin = async () => {
   const role = await currentRole();
@@ -10,5 +14,5 @@ export const admin = async () => {
     return { success: "Allowed Server Action!" };
   }
 
-  return { error: "Forbidden Server Action!" }
+  return { error: "Forbidden Server Action!" };
 };

@@ -6,29 +6,90 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
+    return NextResponse.json(
+      { error: "User not authenticated" },
+      { status: 401 }
+    );
   }
 
-  const { name, description } = await req.json();
+  const {
+    name,
+    description,
+    address,
+    city,
+    postalCode,
+    country,
+    phone,
+    email,
+    website,
+    taxNumber,
+    gstNumber,
+    qstNumber,
+    fiscalYearEnd,
+  } = await req.json();
+
+  if (!name) {
+    return NextResponse.json(
+      { error: "Organization name is required" },
+      { status: 400 }
+    );
+  }
 
   try {
-    const neworganization = await db.organization.create({
+    // Check if user already has an organization with this name
+    const existingOrg = await db.organization.findFirst({
+      where: {
+        ownerId: session.user.id,
+        name: name,
+      },
+    });
+
+    if (existingOrg) {
+      return NextResponse.json(
+        { error: "You already have an organization with this name" },
+        { status: 400 }
+      );
+    }
+
+    const newOrganization = await db.organization.create({
       data: {
         name,
         description,
+        address,
+        city,
+        postalCode,
+        country,
+        phone,
+        email,
+        website,
+        taxNumber,
+        gstNumber,
+        qstNumber,
+        fiscalYearEnd,
         ownerId: session.user.id,
         members: {
           create: {
             userId: session.user.id,
-            role: 'OWNER',  // Creator becomes the OWNER
+            role: "OWNER", // Creator becomes the OWNER
           },
         },
       },
+      include: {
+        members: {
+          include: {
+            user: true,
+          },
+        },
+        owner: true,
+      },
     });
-    return NextResponse.json(neworganization);
+    return NextResponse.json(newOrganization);
   } catch (error) {
     console.error("Error creating organization:", error);
-    return NextResponse.json({ error: "Failed to create organization" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create organization" },
+      { status: 500 }
+    );
   }
 }
 
@@ -36,7 +97,10 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
+    return NextResponse.json(
+      { error: "User not authenticated" },
+      { status: 401 }
+    );
   }
 
   try {
@@ -49,13 +113,29 @@ export async function GET(req: NextRequest) {
         },
       },
       include: {
-        members: true,
-        companies: true,  // Optionally include companies linked to the organization
+        members: {
+          include: {
+            user: true,
+          },
+        },
+        owner: true,
+        projects: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
     return NextResponse.json({ organizations });
   } catch (error) {
     console.error("Error fetching organizations:", error);
-    return NextResponse.json({ error: "Failed to fetch organizations" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch organizations" },
+      { status: 500 }
+    );
   }
 }

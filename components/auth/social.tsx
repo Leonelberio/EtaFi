@@ -16,25 +16,27 @@ export const Social = () => {
     signIn(provider, {
       callbackUrl: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     });
-  }
+  };
 
   return (
-    <div className="flex items-center w-full gap-x-2">
+    <div className="flex items-center w-full gap-x-3">
       <Button
         size="lg"
-        className="w-full"
+        className="w-full bg-white border border-primary-200 text-gray-700 hover:bg-primary-50 hover:border-primary-300 transition-all duration-200 shadow-sm"
         variant="outline"
         onClick={() => onClick("google")}
       >
-        <FcGoogle className="h-5 w-5" />
+        <FcGoogle className="h-5 w-5 mr-2" />
+        Google
       </Button>
       <Button
         size="lg"
-        className="w-full"
+        className="w-full bg-white border border-primary-200 text-gray-700 hover:bg-primary-50 hover:border-primary-300 transition-all duration-200 shadow-sm"
         variant="outline"
         onClick={() => onClick("github")}
       >
-        <FaGithub className="h-5 w-5" />
+        <FaGithub className="h-5 w-5 mr-2" />
+        GitHub
       </Button>
     </div>
   );

@@ -13,10 +13,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "EtaFi - SYSCOHADA Financial Statements",
+  title: "Système de Comptabilité Multi-Organisations",
   description:
-    "Generate professional SYSCOHADA financial statements for West African businesses",
-  keywords: "SYSCOHADA, financial statements, OHADA, accounting, West Africa",
+    "Plateforme moderne de comptabilité multi-tenant avec gestion des factures, codes de taxe et génération automatique des écritures comptables",
+  keywords:
+    "comptabilité, multi-tenant, factures, codes de taxe, grand livre, Next.js, Prisma, PostgreSQL",
 };
 
 export default async function RootLayout({

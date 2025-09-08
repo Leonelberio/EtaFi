@@ -23,71 +23,71 @@ import { Badge } from "@/components/ui/badge";
 const features = [
   {
     icon: FileText,
-    title: "États Financiers SYSCOHADA",
+    title: "Système de Comptabilité Complet",
     description:
-      "Générez automatiquement vos bilans, comptes de résultat et tableaux de flux conformes aux normes SYSCOHADA.",
+      "Gérez vos factures, codes de taxe, activités et générez automatiquement les écritures comptables du Grand Livre.",
   },
   {
     icon: Building2,
-    title: "Multi-Entreprises",
+    title: "Multi-Organisations",
     description:
-      "Gérez plusieurs entreprises et leurs exercices financiers depuis une seule plateforme.",
+      "Gérez plusieurs organisations avec leurs comptes, fournisseurs, clients et projets depuis une seule plateforme.",
   },
   {
     icon: TrendingUp,
-    title: "Analyses Avancées",
+    title: "Posting Automatique",
     description:
-      "Obtenez des analyses financières détaillées et des ratios de performance automatiquement calculés.",
+      "Génération automatique des écritures comptables avec équilibre débit/crédit et mapping intelligent par groupe.",
   },
   {
     icon: Shield,
-    title: "Sécurisé & Conforme",
+    title: "Sécurisé & Multi-Tenant",
     description:
-      "Vos données sont protégées avec un chiffrement de niveau bancaire et une conformité RGPD.",
+      "Architecture multi-tenant sécurisée avec authentification NextAuth et validation des données Zod.",
   },
   {
     icon: Zap,
-    title: "Import CSV Rapide",
+    title: "Codes de Taxe & TVA",
     description:
-      "Importez vos balances comptables en quelques clics depuis votre logiciel de comptabilité.",
+      "Gestion complète des codes de taxe avec comptes 445xx et calcul automatique HT/TVA/TTC sur les factures.",
   },
   {
     icon: Globe,
-    title: "Norme Internationale",
+    title: "Grand Livre & Rapports",
     description:
-      "Respect total des normes OHADA et SYSCOHADA pour l&apos;Afrique de l&apos;Ouest et Centrale.",
+      "Grand livre complet avec filtres, soldes automatiques et export des données pour vos rapports financiers.",
   },
 ];
 
 const testimonials = [
   {
-    name: "Amadou Diallo",
-    role: "Directeur Financier, ABC SARL",
+    name: "Next.js 15 + App Router",
+    role: "Framework moderne et performant",
     content:
-      "EtaFi a révolutionné notre processus de reporting financier. Nous générons nos états SYSCOHADA en minutes au lieu de jours.",
+      "Architecture Next.js 15 avec App Router, Server Components et optimisation automatique des performances.",
     rating: 5,
   },
   {
-    name: "Marie Kouassi",
-    role: "Expert-Comptable, Cabinet KPMG Abidjan",
+    name: "Prisma + PostgreSQL",
+    role: "Base de données robuste",
     content:
-      "Un outil indispensable pour tous les cabinets comptables. La conformité SYSCOHADA est parfaite et les clients adorent.",
+      "ORM Prisma avec base PostgreSQL, migrations automatiques et relations optimisées pour la comptabilité.",
     rating: 5,
   },
   {
-    name: "Ibrahim Traore",
-    role: "PDG, XYZ Industries",
+    name: "shadcn/ui + Tailwind",
+    role: "Interface utilisateur moderne",
     content:
-      "Interface intuitive et résultats professionnels. Nos investisseurs sont impressionnés par la qualité de nos rapports.",
+      "Composants UI professionnels avec Tailwind CSS, design system cohérent et responsive design.",
     rating: 5,
   },
 ];
 
 const stats = [
-  { number: "500+", label: "Entreprises" },
-  { number: "12", label: "Pays OHADA" },
-  { number: "99.9%", label: "Conformité" },
-  { number: "5min", label: "Génération" },
+  { number: "Multi", label: "Organisations" },
+  { number: "100%", label: "Multi-Tenant" },
+  { number: "Auto", label: "Posting" },
+  { number: "Securisé", label: "NextAuth" },
 ];
 
 export default function LandingPage() {
@@ -98,12 +98,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center">
+              <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">E</span>
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">EtaFi</h1>
-                <p className="text-xs text-gray-500 font-medium">SYSCOHADA</p>
+                <p className="text-xs text-gray-500 font-medium">
+                  Comptabilité
+                </p>
               </div>
             </div>
 
@@ -118,18 +120,18 @@ export default function LandingPage() {
                 href="#testimonials"
                 className="text-gray-600 hover:text-gray-900 font-medium"
               >
-                Témoignages
+                Technologies
               </Link>
               <Link
-                href="#pricing"
+                href="/dashboard/tax-codes"
                 className="text-gray-600 hover:text-gray-900 font-medium"
               >
-                Tarifs
+                Démo
               </Link>
             </div>
 
             <div className="flex items-center gap-4">
-              <Link href="/auth/login">
+              <Link href="/auth">
                 <Button
                   variant="ghost"
                   className="text-gray-600 hover:text-gray-900"
@@ -137,7 +139,7 @@ export default function LandingPage() {
                   Se connecter
                 </Button>
               </Link>
-              <Link href="/auth/register">
+              <Link href="/auth">
                 <Button className="etafi-button-primary">
                   Commencer
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -152,28 +154,29 @@ export default function LandingPage() {
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-rose-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
           <div className="text-center">
-            <Badge className="inline-flex items-center gap-2 bg-rose-50 text-rose-700 border-rose-200 mb-6">
+            <Badge className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 border-blue-200 mb-6">
               <Star className="h-3 w-3" />
-              Conforme SYSCOHADA & OHADA
+              Système Comptable Multi-Tenant
             </Badge>
 
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Générez vos{" "}
-              <span className="bg-gradient-to-r from-rose-500 to-pink-600 bg-clip-text text-transparent">
-                États Financiers
+              Système de{" "}
+              <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                Comptabilité Complet
               </span>
               <br />
-              SYSCOHADA en minutes
+              Multi-Organisations & Multi-Tenant
             </h1>
 
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              La plateforme de référence pour créer des états financiers
-              conformes aux normes SYSCOHADA pour l&apos;Afrique de l&apos;Ouest
-              et Centrale. Simple, rapide et professionnel.
+              Plateforme moderne de comptabilité avec gestion des factures,
+              codes de taxe, activités et génération automatique des écritures
+              comptables. Architecture sécurisée multi-tenant prête pour la
+              production.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-              <Link href="/auth/register">
+              <Link href="/auth">
                 <Button
                   size="lg"
                   className="etafi-button-primary text-lg px-8 py-4"
@@ -210,7 +213,7 @@ export default function LandingPage() {
 
         {/* Decorative elements */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-r from-rose-100/50 to-pink-100/50 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-r from-blue-100/50 to-blue-200/50 rounded-full blur-3xl"></div>
         </div>
       </section>
 
@@ -223,12 +226,12 @@ export default function LandingPage() {
               Fonctionnalités Avancées
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Tout ce dont vous avez besoin pour vos états financiers
+              Système de comptabilité complet et moderne
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              EtaFi simplifie la création d&apos;états financiers conformes
-              SYSCOHADA avec des fonctionnalités pensées pour les entreprises
-              africaines.
+              Plateforme de comptabilité multi-organisations avec gestion des
+              factures, codes de taxe, activités et génération automatique des
+              écritures comptables.
             </p>
           </div>
 
@@ -236,7 +239,7 @@ export default function LandingPage() {
             {features.map((feature, index) => (
               <Card key={index} className="etafi-card hover:shadow-xl group">
                 <CardContent className="etafi-card-content">
-                  <div className="h-12 w-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <div className="h-12 w-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
                     <feature.icon className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-3">
@@ -252,21 +255,90 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Technical Features Section */}
+      <section className="py-20 md:py-28 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <Badge className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 border-blue-200 mb-6">
+              <Zap className="h-3 w-3" />
+              Technologies & Architecture
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Stack technique moderne et robuste
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Construit avec les meilleures technologies du marché pour une
+              performance et une sécurité optimales.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="etafi-card text-center p-6">
+              <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Building2 className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Next.js 15
+              </h3>
+              <p className="text-sm text-gray-600">
+                App Router, Server Components, Turbopack
+              </p>
+            </Card>
+
+            <Card className="etafi-card text-center p-6">
+              <div className="h-16 w-16 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                NextAuth
+              </h3>
+              <p className="text-sm text-gray-600">
+                Authentification sécurisée multi-tenant
+              </p>
+            </Card>
+
+            <Card className="etafi-card text-center p-6">
+              <div className="h-16 w-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Prisma
+              </h3>
+              <p className="text-sm text-gray-600">
+                ORM type-safe avec PostgreSQL
+              </p>
+            </Card>
+
+            <Card className="etafi-card text-center p-6">
+              <div className="h-16 w-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Globe className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                shadcn/ui
+              </h3>
+              <p className="text-sm text-gray-600">
+                Composants UI professionnels
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Screenshot/Demo Section */}
       <section className="py-20 md:py-28 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Interface moderne et intuitive
+              Dashboard de gestion comptable
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Découvrez notre interface conçue pour les comptables et dirigeants
-              d&apos;entreprise modernes.
+              Interface moderne pour gérer vos codes de taxe, activités,
+              factures et visualiser votre grand livre en temps réel.
             </p>
           </div>
 
           <div className="relative">
-            <div className="bg-gradient-to-r from-rose-500 to-pink-600 rounded-2xl p-8 shadow-2xl">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 shadow-2xl">
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-3 w-3 bg-red-400 rounded-full"></div>
@@ -282,9 +354,9 @@ export default function LandingPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-blue-600 font-medium">
-                          ENTREPRISES
+                          ORGANISATIONS
                         </p>
-                        <p className="text-2xl font-bold text-blue-900">24</p>
+                        <p className="text-2xl font-bold text-blue-900">12</p>
                       </div>
                       <Building2 className="h-8 w-8 text-blue-500" />
                     </div>
@@ -293,9 +365,9 @@ export default function LandingPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-green-600 font-medium">
-                          ÉTATS GÉNÉRÉS
+                          FACTURES
                         </p>
-                        <p className="text-2xl font-bold text-green-900">156</p>
+                        <p className="text-2xl font-bold text-green-900">89</p>
                       </div>
                       <FileText className="h-8 w-8 text-green-500" />
                     </div>
@@ -304,10 +376,10 @@ export default function LandingPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-purple-600 font-medium">
-                          CONFORMITÉ
+                          ÉCRITURES
                         </p>
                         <p className="text-2xl font-bold text-purple-900">
-                          100%
+                          234
                         </p>
                       </div>
                       <CheckCircle className="h-8 w-8 text-purple-500" />
@@ -318,7 +390,9 @@ export default function LandingPage() {
                 <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">Aperçu du tableau de bord</p>
+                    <p className="text-gray-500">
+                      Gestion des codes de taxe et factures
+                    </p>
                   </div>
                 </div>
               </div>
@@ -336,11 +410,11 @@ export default function LandingPage() {
               Témoignages Clients
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Ils nous font confiance
+              Architecture moderne et sécurisée
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Découvrez ce que nos clients disent d&apos;EtaFi et comment nous
-              les aidons à simplifier leur comptabilité.
+              Système de comptabilité multi-tenant avec authentification
+              NextAuth, validation Zod et base de données PostgreSQL optimisée.
             </p>
           </div>
 
@@ -373,21 +447,22 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-28 bg-gradient-to-br from-rose-500 to-pink-600">
+      <section className="py-20 md:py-28 bg-gradient-to-br from-blue-600 to-blue-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Prêt à révolutionner votre comptabilité ?
+            Prêt à utiliser le système de comptabilité moderne ?
           </h2>
-          <p className="text-xl text-rose-100 mb-8 max-w-3xl mx-auto">
-            Rejoignez des centaines d&apos;entreprises qui utilisent déjà EtaFi
-            pour générer leurs états financiers SYSCOHADA.
+          <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+            Système de comptabilité multi-organisations avec gestion des
+            factures, codes de taxe et génération automatique des écritures
+            comptables.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/auth/register">
+            <Link href="/auth">
               <Button
                 size="lg"
-                className="bg-white text-rose-600 hover:bg-gray-50 text-lg px-8 py-4 font-semibold"
+                className="bg-white text-blue-600 hover:bg-gray-50 text-lg px-8 py-4 font-semibold"
               >
                 <FileText className="mr-2 h-5 w-5" />
                 Commencer Maintenant
@@ -411,17 +486,19 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-8 w-8 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center">
+                <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">E</span>
                 </div>
                 <div>
                   <h1 className="text-xl font-bold">EtaFi</h1>
-                  <p className="text-xs text-gray-400 font-medium">SYSCOHADA</p>
+                  <p className="text-xs text-gray-400 font-medium">
+                    Comptabilité
+                  </p>
                 </div>
               </div>
               <p className="text-gray-400">
-                La plateforme de référence pour les états financiers SYSCOHADA
-                en Afrique.
+                Système de comptabilité multi-organisations moderne et sécurisé
+                avec architecture multi-tenant.
               </p>
             </div>
 

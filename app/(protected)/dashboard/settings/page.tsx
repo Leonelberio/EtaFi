@@ -15,12 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SettingsSchema } from "@/schemas";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { settings } from "@/actions/settings";
 import {
@@ -36,8 +31,12 @@ import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
-import { UserRole } from "@prisma/client";
-import Organizations from "../../_components/organizations";
+// UserRole enum values
+const UserRole = {
+  ADMIN: "ADMIN",
+  USER: "USER",
+} as const;
+import { OrganizationList } from "@/components/OrganizationList";
 
 // Assuming you have an organization component to display the user's organization info.
 
@@ -58,7 +57,7 @@ const SettingsPage = () => {
       email: user?.email || undefined,
       role: user?.role || undefined,
       isTwoFactorEnabled: user?.isTwoFactorEnabled || undefined,
-    }
+    },
   });
 
   const onSubmit = (values: z.infer<typeof SettingsSchema>) => {
@@ -76,10 +75,10 @@ const SettingsPage = () => {
         })
         .catch(() => setError("Quelque chose s'est mal passé !"));
     });
-  }
+  };
 
-  return ( 
-    <div className="container flex flex-col mx-auto p-6 gap-6">
+  return (
+    <div className="flex flex-col gap-6">
       {/* Account Settings Form */}
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
@@ -89,10 +88,7 @@ const SettingsPage = () => {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form 
-              className="space-y-6" 
-              onSubmit={form.handleSubmit(onSubmit)}
-            >
+            <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -205,9 +201,12 @@ const SettingsPage = () => {
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                         <div className="space-y-0.5">
-                          <FormLabel>Authentification à deux facteurs</FormLabel>
+                          <FormLabel>
+                            Authentification à deux facteurs
+                          </FormLabel>
                           <FormDescription>
-                            Activez l&apos;authentification à deux facteurs pour votre compte.
+                            Activez l&apos;authentification à deux facteurs pour
+                            votre compte.
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -224,10 +223,7 @@ const SettingsPage = () => {
               </div>
               <FormError message={error} />
               <FormSuccess message={success} />
-              <Button
-                disabled={isPending}
-                type="submit"
-              >
+              <Button disabled={isPending} type="submit">
                 Enregistrer
               </Button>
             </form>
@@ -237,15 +233,13 @@ const SettingsPage = () => {
 
       {/* organization Section */}
       <Card className="w-full max-w-4xl mx-auto p-6">
-       
         <CardHeader>
-          <p className="text-2xl font-semibold text-center">
-          🏢 organization          </p>
+          <p className="text-2xl font-semibold text-center">🏢 organization </p>
         </CardHeader>
-        <Organizations />
+        <OrganizationList />
       </Card>
     </div>
   );
-}
- 
+};
+
 export default SettingsPage;

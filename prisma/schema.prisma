@@ -1,22 +1,14 @@
-datasource db {
-  provider     = "postgresql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
-}
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
-enum UserRole {
-  ADMIN
-  USER
-}
-
-enum OrganizationRole {
-  OWNER
-  ADMIN
-  MEMBER
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model User {
@@ -26,17 +18,22 @@ model User {
   emailVerified         DateTime?
   image                 String?
   password              String?
-  role                  UserRole               @default(USER)
+  role                  String                 @default("USER")
   isTwoFactorEnabled    Boolean                @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
 
   accounts      Account[]
-  organizations OrganizationMembership[] // Memberships to organizations
+  organizations OrganizationMembership[]
   reminders     Reminder[]
 
   Organization Organization[]
 
-  Company Company[]
+  // Project management relations
+  managedProjects     Project[] @relation("ProjectManager")
+  tempManagedProjects Project[] @relation("TempProjectManager")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Account {
@@ -56,7 +53,255 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+}
+
+model TwoFactorConfirmation {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  dueDate     DateTime
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Organization {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+
+  // Business information (migrated from Company)
+  address    String?
+  city       String?
+  postalCode String?
+  country    String? @default("Canada")
+  phone      String?
+  email      String?
+  website    String?
+
+  // Canadian tax information
+  taxNumber     String? // Business Number (BN)
+  gstNumber     String? // GST/HST Registration Number
+  qstNumber     String? // QST Registration Number (Quebec)
+  fiscalYearEnd String? // Fiscal year end (e.g., "December 31")
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownerId   String
+  owner     User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members   OrganizationMembership[]
+  projects  Project[]
+  customers Customer[]
+  vendors   Vendor[]
+
+  // Project management relations
+  activities    Activity[]
+  subActivities SubActivity[]
+
+  // Accounting relations
+  chartAccounts  ChartAccount[]
+  taxCodes       TaxCode[]
+  journalLines   JournalLine[]
+  costCategories CostCategory[]
+
+  @@unique([ownerId, name])
+}
+
+model OrganizationMembership {
+  id             String    @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String    @default("MEMBER")
+  isActive       Boolean   @default(true)
+  joinedAt       DateTime  @default(now())
+  lastActiveAt   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
   @@index([userId])
+  @@index([role])
+}
+
+model Project {
+  id             String    @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  clientId       String?
+  managerId      String?
+  tempManagerId  String?
+  tempManagerEnd DateTime?
+  kind           String    @default("BILLABLE")
+  status         String    @default("ACTIVE")
+  totalBudget    Decimal?
+  currency       String    @default("CAD")
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  manager      User?        @relation("ProjectManager", fields: [managerId], references: [id])
+  tempManager  User?        @relation("TempProjectManager", fields: [tempManagerId], references: [id])
+
+  // Project structure relations
+  activities    Activity[]
+  subActivities SubActivity[]
+
+  // Accounting relations
+  journalLines JournalLine[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([managerId])
+}
+
+// Project Activities (Phases/Tasks within projects)
+model Activity {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String
+  code           String // Activity code (e.g., "01010", "01135", "01220")
+  name           String
+  description    String?
+  budgetAmount   Decimal? @db.Decimal(15, 2)
+  costToDate     Decimal? @default(0) @db.Decimal(15, 2)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+
+  // 5-group budget breakdown
+  budgetM   Decimal? @default(0) @db.Decimal(15, 2) // Matériel
+  budgetS   Decimal? @default(0) @db.Decimal(15, 2) // Sous-traitance
+  budgetD   Decimal? @default(0) @db.Decimal(15, 2) // Divers
+  budgetE   Decimal? @default(0) @db.Decimal(15, 2) // Équipement
+  budgetMOD Decimal? @default(0) @db.Decimal(15, 2) // Main-d'œuvre
+
+  // Actual costs by group (calculated from journal entries)
+  actualM   Decimal? @default(0) @db.Decimal(15, 2)
+  actualS   Decimal? @default(0) @db.Decimal(15, 2)
+  actualD   Decimal? @default(0) @db.Decimal(15, 2)
+  actualE   Decimal? @default(0) @db.Decimal(15, 2)
+  actualMOD Decimal? @default(0) @db.Decimal(15, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project       Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  subActivities SubActivity[]
+  journalLines  JournalLine[]
+
+  @@unique([projectId, code])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([isActive])
+}
+
+// Sub-Activities (Detailed breakdown of activities)
+model SubActivity {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String
+  activityId     String
+  code           String // Sub-activity code (e.g., "01010-01", "01010-02")
+  name           String
+  description    String?
+  budgetAmount   Decimal? @db.Decimal(15, 2)
+  costToDate     Decimal? @default(0) @db.Decimal(15, 2)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+
+  // 5-group budget breakdown
+  budgetM   Decimal? @default(0) @db.Decimal(15, 2)
+  budgetS   Decimal? @default(0) @db.Decimal(15, 2)
+  budgetD   Decimal? @default(0) @db.Decimal(15, 2)
+  budgetE   Decimal? @default(0) @db.Decimal(15, 2)
+  budgetMOD Decimal? @default(0) @db.Decimal(15, 2)
+
+  // Actual costs by group
+  actualM   Decimal? @default(0) @db.Decimal(15, 2)
+  actualS   Decimal? @default(0) @db.Decimal(15, 2)
+  actualD   Decimal? @default(0) @db.Decimal(15, 2)
+  actualE   Decimal? @default(0) @db.Decimal(15, 2)
+  actualMOD Decimal? @default(0) @db.Decimal(15, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  activity     Activity      @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  journalLines JournalLine[]
+
+  @@unique([activityId, code])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([activityId])
+  @@index([isActive])
+}
+
+model Customer {
+  id                  String   @id @default(cuid())
+  organizationId      String
+  name                String
+  email               String?
+  phone               String?
+  address             String?
+  city                String?
+  postalCode          String?
+  country             String?  @default("Canada")
+  receivableAccountId String? // Link to Chart of Accounts
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // receivableAccount ChartAccount? @relation("CustomerReceivableAccount", fields: [receivableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model Vendor {
+  id               String   @id @default(cuid())
+  organizationId   String
+  name             String
+  email            String?
+  phone            String?
+  address          String?
+  city             String?
+  postalCode       String?
+  country          String?  @default("Canada")
+  payableAccountId String? // Link to Chart of Accounts
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // payableAccount  ChartAccount? @relation("VendorPayableAccount", fields: [payableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
 }
 
 model VerificationToken {
@@ -65,7 +310,8 @@ model VerificationToken {
   token   String   @unique
   expires DateTime
 
-  @@unique([email, token])
+  @@index([email])
+  @@index([token])
 }
 
 model PasswordResetToken {
@@ -74,7 +320,8 @@ model PasswordResetToken {
   token   String   @unique
   expires DateTime
 
-  @@unique([email, token])
+  @@index([email])
+  @@index([token])
 }
 
 model TwoFactorToken {
@@ -83,157 +330,120 @@ model TwoFactorToken {
   token   String   @unique
   expires DateTime
 
-  @@unique([email, token])
+  @@index([email])
+  @@index([token])
 }
 
-model TwoFactorConfirmation {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+// Canadian Chart of Accounts (NCECF Compliant)
+model ChartAccount {
+  id                       String   @id @default(cuid())
+  organizationId           String
+  number                   String // Account number (e.g., "1000", "2000")
+  name                     String // Account name (e.g., "Cash", "Accounts Payable")
+  type                     String // ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE, TAX
+  description              String?
+  isActive                 Boolean  @default(true)
+  isSystem                 Boolean  @default(false) // System accounts can't be deleted
+  allowManualEntries       Boolean  @default(true)
+  requireProjectAllocation Boolean  @default(false)
+  defaultTaxCodeId         String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
-  @@unique([userId])
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  defaultTaxCode TaxCode?     @relation(fields: [defaultTaxCodeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  // Usage tracking
+  journalLines JournalLine[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([type])
 }
 
-model FinancialAccount {
-  id          String   @id @default(cuid())
-  accountCode String
-  accountName String
-  type        String
-  balance     Float    @default(0.0)
-  exerciceId  String
-  exercice    Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now()) // Automatically set to current time on creation
-  updatedAt DateTime @updatedAt // Automatically updated to current time on every update
-
-  @@index([exerciceId])
-}
-
-model Transaction {
-  id           String   @id @default(cuid())
-  date         DateTime
-  description  String?
-  debitAmount  Float    @default(0.0)
-  creditAmount Float    @default(0.0)
-  exerciceId   String
-  exercice     Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now()) // Automatically set to current time on creation
-  updatedAt DateTime @updatedAt // Automatically updated to current time on every update
-
-  @@index([exerciceId])
-}
-
-model AccountPlan {
+// Tax Codes for Canadian taxes (GST/HST, QST, etc.)
+model TaxCode {
   id             String   @id @default(cuid())
-  numero_compte  String   @unique
-  libelle_compte String
+  organizationId String
+  name           String // "GST 5%", "QST 9.975%", "HST 13%"
+  code           String // "GST", "QST", "HST"
+  rate           Decimal  @db.Decimal(5, 4) // Tax rate (e.g., 0.05 for 5%)
+  province       String? // Province for HST rates
+  isActive       Boolean  @default(true)
+  isCompound     Boolean  @default(false) // For compound taxes like QST on GST
+  description    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-}
 
-model Balance {
-  id         String   @id @default(cuid())
-  exerciceId String   @unique // One-to-one relation with Exercice
-  exercice   Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
-  data       Json // JSON to store the balance sheet data (can store account numbers, debits, credits, etc.)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-}
+  // Relations
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  chartAccounts ChartAccount[]
+  journalLines  JournalLine[]
 
-model Organization {
-  id          String                   @id @default(cuid())
-  description String?
-  name        String
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
-  ownerId     String // Owner of the organization (user who created it)
-  owner       User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  members     OrganizationMembership[] // Users that belong to this organization
-  companies   Company[] // Companies that belong to this organization
-
-  @@unique([ownerId, name]) // Ensure no duplicate organization names for the same owner
-}
-
-model OrganizationMembership {
-  id             String           @id @default(cuid())
-  userId         String // The user who is a member of the organization
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organizationId String // The organization the user belongs to
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  role           OrganizationRole @default(MEMBER) // Role in the organization
-  joinedAt       DateTime         @default(now())
-
-  @@unique([userId, organizationId]) // Ensure a user can't be a member of the same organization multiple times
+  @@unique([organizationId, code])
   @@index([organizationId])
+  @@index([isActive])
 }
 
-model Company {
-  id             String        @id @default(cuid())
+// Journal for all accounting entries
+model JournalLine {
+  id             String   @id @default(cuid())
+  organizationId String
+  accountId      String
+  projectId      String?
+  activityId     String?
+  subActivityId  String?
+  costGroup      String? // M, S, D, E, MOD for 5-group system
+  description    String
+  debitAmount    Decimal? @db.Decimal(12, 2)
+  creditAmount   Decimal? @db.Decimal(12, 2)
+  taxCodeId      String?
+  reference      String? // Reference number (invoice, PO, etc.)
+  entryDate      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account      ChartAccount @relation(fields: [accountId], references: [id])
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  activity     Activity?    @relation(fields: [activityId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  subActivity  SubActivity? @relation(fields: [subActivityId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  taxCode      TaxCode?     @relation(fields: [taxCodeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([organizationId])
+  @@index([accountId])
+  @@index([projectId])
+  @@index([activityId])
+  @@index([subActivityId])
+  @@index([entryDate])
+  @@index([costGroup])
+}
+
+// 5-Group Cost Category System for Canadian Project Accounting
+// M = Matériel & Fournitures
+// S = Sous-traitance & Services externes  
+// D = Frais généraux & Divers
+// E = Équipement & Immobilisations
+// MOD = Main-d'œuvre & Charges sociales
+model CostCategory {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String // M, S, D, E, MOD
   name           String
-  address        String
-  nif            String // Numéro d'Identification Fiscale
-  contact        String
-  logo           String?
-  userId         String? // User who created the company (optional if associated with organization)
-  organizationId String? // Link to the organization (optional if user-created)
-  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  exercices      Exercice[] // One company can have many exercices
-  documents      Document[] // One company can have many documents
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  description    String
+  color          String   @default("#6B7280")
+  icon           String? // Optional icon for UI
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  @@unique([organizationId, name]) // Ensure no duplicate company names within the same organization
-  @@index([userId])
-}
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-model Exercice {
-  id                String             @id @default(cuid())
-  name              Int
-  startDate         DateTime
-  endDate           DateTime
-  companyId         String // Link to the company
-  company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  documents         Document[] // One exercice can have many documents
-  financialAccounts FinancialAccount[] // One exercise can have many accounts
-  transactions      Transaction[] // One exercise can have many transactions
-  reminders         Reminder[] // Reminders related to this exercise
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-
-  Balance Balance[]
-
-  @@index([companyId])
-}
-
-model Document {
-  id         String    @id @default(cuid())
-  fileUrl    String // URL where the document is stored
-  fileName   String // Original file name
-  type       String // Type of document (PDF, Excel, Word, etc.)
-  companyId  String? // Optional relation with company
-  company    Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  exerciceId String? // Optional relation with exercise
-  exercice   Exercice? @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  @@index([companyId])
-  @@index([exerciceId])
-}
-
-model Reminder {
-  id         String   @id @default(cuid())
-  type       String // Type de rappel (ex. "impôts", "frais", etc.)
-  exerciceId String // L'exercice auquel ce rappel est lié
-  exercice   Exercice @relation(fields: [exerciceId], references: [id], onDelete: Cascade)
-  userId     String // L'utilisateur qui a créé ce rappel
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  alerts     Json // Détails des alertes (dates et montants pour chaque tranche)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([exerciceId])
-  @@index([userId])
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([isActive])
 }

@@ -1,9 +1,7 @@
-import { RegisterForm } from "@/components/auth/register-form";
+import { ModernAuthForm } from "@/components/auth/modern-auth-form";
 
 const RegisterPage = () => {
-  return ( 
-    <RegisterForm />
-  );
-}
- 
+  return <ModernAuthForm />;
+};
+
 export default RegisterPage;

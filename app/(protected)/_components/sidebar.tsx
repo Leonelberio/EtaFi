@@ -13,6 +13,12 @@ import {
   BarChart3,
   Calculator,
   HelpCircle,
+  Receipt,
+  CreditCard,
+  BookOpen,
+  TrendingUp,
+  Shield,
+  Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,19 +34,34 @@ const navigation = [
     icon: Home,
   },
   {
-    name: "Entreprises",
-    href: "/dashboard/companies",
+    name: "Organisations",
+    href: "/dashboard/organizations",
     icon: Building2,
   },
   {
-    name: "États Financiers",
-    href: "/dashboard/reports",
+    name: "Codes de Taxe",
+    href: "/dashboard/tax-codes",
+    icon: Receipt,
+  },
+  {
+    name: "Clients",
+    href: "/dashboard/customers",
+    icon: Users,
+  },
+  {
+    name: "Fournisseurs",
+    href: "/dashboard/vendors",
+    icon: Truck,
+  },
+  {
+    name: "Factures",
+    href: "/dashboard/invoices",
     icon: FileText,
   },
   {
-    name: "Analyses",
-    href: "/dashboard/analytics",
-    icon: BarChart3,
+    name: "Grand Livre",
+    href: "/dashboard/ledger",
+    icon: BookOpen,
   },
   {
     name: "Plan Comptable",
@@ -48,27 +69,27 @@ const navigation = [
     icon: Calculator,
   },
   {
-    name: "Rappels",
-    href: "/dashboard/reminders",
-    icon: Bell,
+    name: "Catégories de Coûts",
+    href: "/dashboard/cost-categories",
+    icon: BarChart3,
   },
 ];
 
 const secondaryNavigation = [
   {
-    name: "Utilisateurs",
-    href: "/dashboard/users",
-    icon: Users,
+    name: "Activités",
+    href: "/dashboard/activities",
+    icon: TrendingUp,
+  },
+  {
+    name: "Projets",
+    href: "/dashboard/projects",
+    icon: Shield,
   },
   {
     name: "Paramètres",
     href: "/dashboard/settings",
     icon: Settings,
-  },
-  {
-    name: "Aide",
-    href: "/dashboard/help",
-    icon: HelpCircle,
   },
 ];
 
@@ -100,12 +121,12 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-16 items-center px-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center">
+          <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">E</span>
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">EtaFi</h1>
-            <p className="text-xs text-gray-500 font-medium">SYSCOHADA</p>
+            <p className="text-xs text-gray-500 font-medium">Comptabilité</p>
           </div>
         </div>
       </div>
@@ -115,7 +136,7 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
         {/* Primary Navigation */}
         <div>
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
-            Principal
+            Comptabilité
           </h2>
           <nav className="space-y-1">
             {navigation.map((item) => {
@@ -128,7 +149,7 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                   className={cn(
                     "group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
                     isActive
-                      ? "bg-rose-50 text-rose-700 border border-rose-100"
+                      ? "bg-primary-50 text-primary-700 border border-primary-100"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   )}
                 >
@@ -136,13 +157,13 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                     className={cn(
                       "mr-3 h-5 w-5 transition-colors duration-200",
                       isActive
-                        ? "text-rose-600"
+                        ? "text-primary-600"
                         : "text-gray-400 group-hover:text-gray-600"
                     )}
                   />
                   {item.name}
                   {isActive && (
-                    <div className="ml-auto h-2 w-2 bg-rose-500 rounded-full animate-pulse-soft" />
+                    <div className="ml-auto h-2 w-2 bg-primary-500 rounded-full animate-pulse-soft" />
                   )}
                 </Link>
               );
@@ -153,7 +174,7 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
         {/* Secondary Navigation */}
         <div>
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
-            Administration
+            Gestion
           </h2>
           <nav className="space-y-1">
             {secondaryNavigation.map((item) => {
@@ -166,7 +187,7 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                   className={cn(
                     "group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
                     isActive
-                      ? "bg-rose-50 text-rose-700 border border-rose-100"
+                      ? "bg-primary-50 text-primary-700 border border-primary-100"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   )}
                 >
@@ -174,13 +195,13 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                     className={cn(
                       "mr-3 h-5 w-5 transition-colors duration-200",
                       isActive
-                        ? "text-rose-600"
+                        ? "text-primary-600"
                         : "text-gray-400 group-hover:text-gray-600"
                     )}
                   />
                   {item.name}
                   {isActive && (
-                    <div className="ml-auto h-2 w-2 bg-rose-500 rounded-full animate-pulse-soft" />
+                    <div className="ml-auto h-2 w-2 bg-primary-500 rounded-full animate-pulse-soft" />
                   )}
                 </Link>
               );
@@ -195,10 +216,8 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
         <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-600 font-medium">
-                Entreprises actives
-              </p>
-              <p className="text-lg font-bold text-gray-900">12</p>
+              <p className="text-xs text-gray-600 font-medium">Organisations</p>
+              <p className="text-lg font-bold text-gray-900">8</p>
             </div>
             <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
               <Building2 className="h-4 w-4 text-gray-600" />
