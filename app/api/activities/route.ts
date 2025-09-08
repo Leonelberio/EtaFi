@@ -1,57 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { getCurrentOrgId } from "@/lib/auth";
-import { activitySchema } from "@/lib/validations";
-import { createActivity, getActivities } from "@/lib/activities";
+import { requireRole } from "@/lib/rbac-middleware";
+import { db } from "@/lib/db";
 
-// GET - Récupérer toutes les activités de l'organisation
-export async function GET() {
+/**
+ * GET /api/activities
+ * Get all activities across all projects for the organization
+ */
+export const GET = requireRole("MEMBER")(async (request, context) => {
   try {
+    // Get current organization ID from auth context
+    const { getCurrentOrgId } = await import("@/lib/auth");
     const organizationId = await getCurrentOrgId();
+
     if (!organizationId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const activities = await getActivities(organizationId);
-    return NextResponse.json(activities);
-  } catch (error) {
-    console.error("Error fetching activities:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-// POST - Créer une nouvelle activité
-export async function POST(req: NextRequest) {
-  try {
-    const organizationId = await getCurrentOrgId();
-    if (!organizationId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = activitySchema.parse(await req.json());
-
-    const activity = await createActivity({
-      organizationId,
-      name: body.name,
-    });
-
-    return NextResponse.json(activity, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation error", details: error.errors },
+        { error: "Organization context required" },
         { status: 400 }
       );
     }
 
-    console.error("Error creating activity:", error);
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get("projectId");
+    const isActive = searchParams.get("isActive");
+
+    const whereClause: any = {
+      organizationId,
+    };
+
+    // Filter by project if specified
+    if (projectId) {
+      whereClause.projectId = projectId;
+    }
+
+    // Filter by active status if specified
+    if (isActive !== null) {
+      whereClause.isActive = isActive === "true";
+    }
+
+    const activities = await db.activity.findMany({
+      where: whereClause,
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            status: true,
+          },
+        },
+        subActivities: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+          orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+        },
+        _count: {
+          select: {
+            subActivities: true,
+            journalLines: true,
+          },
+        },
+      },
+      orderBy: [
+        { project: { name: "asc" } },
+        { sortOrder: "asc" },
+        { code: "asc" },
+      ],
+    });
+
+    return NextResponse.json(activities);
+  } catch (error) {
+    console.error("Error fetching activities:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch activities" },
       { status: 500 }
     );
   }
-}
+});

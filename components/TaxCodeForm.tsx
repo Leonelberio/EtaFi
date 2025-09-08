@@ -149,10 +149,16 @@ export function TaxCodeForm({
         : "/api/tax-codes";
       const method = isEditing ? "PUT" : "POST";
 
+      // Handle "none" values
+      const submitData = {
+        ...data,
+        province: data.province === "none" ? undefined : data.province,
+      };
+
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(submitData),
       });
 
       if (!response.ok) {
@@ -336,7 +342,7 @@ export function TaxCodeForm({
                     <SelectValue placeholder="Select province (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No specific province</SelectItem>
+                    <SelectItem value="none">No specific province</SelectItem>
                     {CANADIAN_PROVINCES.map((province) => (
                       <SelectItem key={province.code} value={province.code}>
                         <div className="flex items-center justify-between w-full">

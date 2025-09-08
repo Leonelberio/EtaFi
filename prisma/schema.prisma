@@ -31,6 +31,7 @@ model User {
   // Project management relations
   managedProjects     Project[] @relation("ProjectManager")
   tempManagedProjects Project[] @relation("TempProjectManager")
+  createdTemplates    ProjectTemplate[] @relation("TemplateCreator")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -110,6 +111,7 @@ model Organization {
   // Project management relations
   activities    Activity[]
   subActivities SubActivity[]
+  projectTemplates ProjectTemplate[]
 
   // Accounting relations
   chartAccounts  ChartAccount[]
@@ -160,6 +162,7 @@ model Project {
   updatedAt      DateTime  @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Customer?    @relation(fields: [clientId], references: [id])
   manager      User?        @relation("ProjectManager", fields: [managerId], references: [id])
   tempManager  User?        @relation("TempProjectManager", fields: [tempManagerId], references: [id])
 
@@ -262,6 +265,100 @@ model SubActivity {
   @@index([isActive])
 }
 
+// Project Templates (Reusable project structures)
+model ProjectTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  category       String?  // e.g., "Construction", "Renovation", "Maintenance"
+  industry       String?  // e.g., "Residential", "Commercial", "Industrial"
+  totalBudget    Decimal? @db.Decimal(15, 2)
+  currency       String   @default("CAD")
+  isActive       Boolean  @default(true)
+  isPublic       Boolean  @default(false) // Public templates available to all orgs
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  templateActivities TemplateActivity[]
+  templateSubActivities TemplateSubActivity[]
+  createdBy       User?            @relation("TemplateCreator", fields: [createdById], references: [id])
+  createdById     String?
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([category])
+  @@index([industry])
+  @@index([isActive])
+  @@index([isPublic])
+}
+
+// Template Activities (Predefined activities in templates)
+model TemplateActivity {
+  id             String   @id @default(cuid())
+  templateId     String
+  code           String   // Activity code (e.g., "01010", "01135", "01220")
+  name           String
+  description    String?
+  budgetAmount   Decimal? @db.Decimal(15, 2)
+  
+  // 5-Group Budget Breakdown
+  budgetM        Decimal? @db.Decimal(15, 2) // Matériel
+  budgetS        Decimal? @db.Decimal(15, 2) // Sous-traitance
+  budgetD        Decimal? @db.Decimal(15, 2) // Divers
+  budgetE        Decimal? @db.Decimal(15, 2) // Équipement
+  budgetMOD      Decimal? @db.Decimal(15, 2) // Main-d'œuvre
+  
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  template       ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateSubActivities TemplateSubActivity[]
+
+  @@unique([templateId, code])
+  @@index([templateId])
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+// Template Sub-Activities (Predefined sub-activities in templates)
+model TemplateSubActivity {
+  id             String   @id @default(cuid())
+  templateId     String
+  activityId     String
+  code           String   // Sub-activity code (e.g., "01010-01", "01010-02")
+  name           String
+  description    String?
+  budgetAmount   Decimal? @db.Decimal(15, 2)
+  
+  // 5-Group Budget Breakdown
+  budgetM        Decimal? @db.Decimal(15, 2) // Matériel
+  budgetS        Decimal? @db.Decimal(15, 2) // Sous-traitance
+  budgetD        Decimal? @db.Decimal(15, 2) // Divers
+  budgetE        Decimal? @db.Decimal(15, 2) // Équipement
+  budgetMOD      Decimal? @db.Decimal(15, 2) // Main-d'œuvre
+  
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  template       ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  activity       TemplateActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, code])
+  @@index([templateId])
+  @@index([activityId])
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
 model Customer {
   id                  String   @id @default(cuid())
   organizationId      String
@@ -277,6 +374,7 @@ model Customer {
   updatedAt           DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects     Project[]
   // receivableAccount ChartAccount? @relation("CustomerReceivableAccount", fields: [receivableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([organizationId, name])

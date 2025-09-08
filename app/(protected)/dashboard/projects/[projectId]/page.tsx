@@ -69,7 +69,6 @@ export default async function ProjectDetailPage({
       _count: {
         select: {
           activities: true,
-          invoices: true,
           journalLines: true,
         },
       },
@@ -234,9 +233,15 @@ export default async function ProjectDetailPage({
                       {activity.code} - {activity.name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Budget: ${activity.budgetAmount?.toLocaleString('en-CA') || '0'} CAD
+                      Budget: $
+                      {activity.budgetAmount?.toLocaleString("en-CA") || "0"}{" "}
+                      CAD
                       {activity.costToDate && (
-                        <> • Actual: ${activity.costToDate.toLocaleString('en-CA')} CAD</>
+                        <>
+                          {" "}
+                          • Actual: $
+                          {activity.costToDate.toLocaleString("en-CA")} CAD
+                        </>
                       )}
                     </p>
                   </div>
@@ -257,7 +262,9 @@ export default async function ProjectDetailPage({
             </div>
           ) : (
             <div className="text-center py-6">
-              <p className="text-muted-foreground mb-4">No activities created yet.</p>
+              <p className="text-muted-foreground mb-4">
+                No activities created yet.
+              </p>
               <Button asChild>
                 <Link href={`/dashboard/projects/${project.id}/activities/new`}>
                   Create First Activity

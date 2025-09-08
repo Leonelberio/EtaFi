@@ -133,10 +133,10 @@ export function ProjectForm({
         tempManagerEnd: data.tempManagerEnd
           ? new Date(data.tempManagerEnd).toISOString()
           : undefined,
-        // Remove empty string values
-        clientId: data.clientId || undefined,
-        managerId: data.managerId || undefined,
-        tempManagerId: data.tempManagerId || undefined,
+        // Remove empty string and "none" values
+        clientId: data.clientId && data.clientId !== "none" ? data.clientId : undefined,
+        managerId: data.managerId && data.managerId !== "none" ? data.managerId : undefined,
+        tempManagerId: data.tempManagerId && data.tempManagerId !== "none" ? data.tempManagerId : undefined,
       };
 
       const url = isEditing ? `/api/projects/${project?.id}` : "/api/projects";
@@ -330,7 +330,7 @@ export function ProjectForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No client</SelectItem>
+                          <SelectItem value="none">No client</SelectItem>
                           {clients.map((client) => (
                             <SelectItem key={client.id} value={client.id}>
                               {client.name}
@@ -359,7 +359,7 @@ export function ProjectForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No manager</SelectItem>
+                          <SelectItem value="none">No manager</SelectItem>
                           {managers.map((manager) => (
                             <SelectItem key={manager.id} value={manager.id}>
                               {manager.name}
@@ -391,7 +391,7 @@ export function ProjectForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No temporary manager</SelectItem>
+                          <SelectItem value="none">No temporary manager</SelectItem>
                           {managers.map((manager) => (
                             <SelectItem key={manager.id} value={manager.id}>
                               {manager.name}

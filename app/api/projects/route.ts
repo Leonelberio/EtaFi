@@ -85,13 +85,6 @@ export const GET = requireRole("MEMBER")(async (request, context) => {
     const projects = await db.project.findMany({
       where: whereClause,
       include: {
-        client: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
         manager: {
           select: {
             id: true,
@@ -125,7 +118,6 @@ export const GET = requireRole("MEMBER")(async (request, context) => {
         _count: {
           select: {
             activities: true,
-            invoices: true,
             journalLines: true,
           },
         },
@@ -289,13 +281,6 @@ export const POST = requireRole("ADMIN")(async (request, context) => {
           : null,
       },
       include: {
-        client: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
         manager: {
           select: {
             id: true,

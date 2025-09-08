@@ -1,11 +1,9 @@
-import { getServerSession } from "next-auth/next";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
 import { ModernAuthForm } from "@/components/auth/modern-auth-form";
-import type { Session } from "next-auth";
 
 export default async function AuthPage() {
-  const session = (await getServerSession(authOptions)) as Session | null;
+  const session = await auth();
 
   if (session) {
     redirect("/dashboard");

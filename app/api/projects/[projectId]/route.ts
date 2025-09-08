@@ -86,8 +86,6 @@ export const GET = requireRole("MEMBER")(async (request, context) => {
                 _count: {
                   select: {
                     journalLines: true,
-                    invoiceLines: true,
-                    timesheets: true,
                   },
                 },
               },
@@ -97,40 +95,15 @@ export const GET = requireRole("MEMBER")(async (request, context) => {
               select: {
                 subActivities: true,
                 journalLines: true,
-                invoiceLines: true,
-                timesheets: true,
               },
             },
           },
           orderBy: { code: "asc" },
         },
-        budgets: {
-          include: {
-            activity: {
-              select: {
-                id: true,
-                code: true,
-                name: true,
-              },
-            },
-            subActivity: {
-              select: {
-                id: true,
-                code: true,
-                name: true,
-              },
-            },
-          },
-          orderBy: [{ version: "desc" }, { createdAt: "desc" }],
-        },
         _count: {
           select: {
             activities: true,
-            invoices: true,
             journalLines: true,
-            purchaseOrders: true,
-            requisitions: true,
-            timesheets: true,
           },
         },
       },
@@ -472,9 +445,6 @@ export const DELETE = requireDelete("PROJECTS")(async (
           select: {
             activities: true,
             journalLines: true,
-            invoices: true,
-            purchaseOrders: true,
-            timesheets: true,
           },
         },
       },
