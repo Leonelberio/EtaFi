@@ -28,13 +28,23 @@ export const getOrgId = async (req: Request): Promise<string | null> => {
 
 export const getCurrentOrgId = async (): Promise<string | null> => {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user?.id) {
+    console.log("getCurrentOrgId: No session or user ID");
+    return null;
+  }
+
+  console.log("getCurrentOrgId: Getting org for user:", session.user.id);
 
   // First, try to get user's preferred current organization
   const user = await db.user.findUnique({
     where: { id: session.user.id },
     select: { currentOrganizationId: true },
   });
+
+  console.log(
+    "getCurrentOrgId: User current org preference:",
+    user?.currentOrganizationId
+  );
 
   // If user has a current organization preference, verify they still have access
   if (user?.currentOrganizationId) {
@@ -48,6 +58,10 @@ export const getCurrentOrgId = async (): Promise<string | null> => {
     });
 
     if (membership) {
+      console.log(
+        "getCurrentOrgId: Using preferred org:",
+        membership.organizationId
+      );
       return membership.organizationId;
     }
   }
@@ -61,6 +75,10 @@ export const getCurrentOrgId = async (): Promise<string | null> => {
     select: { organizationId: true },
   });
 
+  console.log(
+    "getCurrentOrgId: Using fallback org:",
+    fallbackMembership?.organizationId
+  );
   return fallbackMembership?.organizationId ?? null;
 };
 

@@ -12,7 +12,7 @@ export default async function ProjectsPage() {
   return (
     <div className="space-y-6">
       <Suspense fallback={<div>Loading projects...</div>}>
-        <ProjectList />
+        <ProjectList initialProjects={[]} />
       </Suspense>
     </div>
   );

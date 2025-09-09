@@ -87,8 +87,10 @@ export function useOrganizations(): UseOrganizationsReturn {
       // Update local state
       setCurrentOrganization(org);
 
-      // Refresh the page to reload all data with new organization context
-      window.location.reload();
+      // Force a hard refresh with a timestamp to bypass cache
+      const url = new URL(window.location.href);
+      url.searchParams.set("_t", Date.now().toString());
+      window.location.href = url.toString();
     } catch (error) {
       console.error("Error switching organization:", error);
       throw error;

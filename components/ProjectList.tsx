@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useOrganizationContext } from "@/contexts/OrganizationContext";
 import {
   Card,
   CardContent,
@@ -112,6 +113,7 @@ interface ProjectListProps {
 
 export function ProjectList({ initialProjects = [] }: ProjectListProps) {
   const router = useRouter();
+  const { currentOrganization } = useOrganizationContext();
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -147,10 +149,20 @@ export function ProjectList({ initialProjects = [] }: ProjectListProps) {
   };
 
   useEffect(() => {
-    if (initialProjects.length === 0) {
+    // Always fetch projects on mount and when filters change
+    fetchProjects();
+  }, [statusFilter, kindFilter]);
+
+  // 🆕 Re-fetch projects when organization changes
+  useEffect(() => {
+    if (currentOrganization) {
+      console.log(
+        "Organization changed, re-fetching projects for:",
+        currentOrganization.id
+      );
       fetchProjects();
     }
-  }, [statusFilter, kindFilter]);
+  }, [currentOrganization?.id]);
 
   // Filter projects based on search term
   const filteredProjects = projects.filter(
