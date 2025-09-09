@@ -25,10 +25,11 @@ export type Role = (typeof ROLES)[keyof typeof ROLES];
 // Simple permission checking
 export async function hasPermission(
   userId: string,
-  organizationId: string,
+  organizationId: string | undefined,
   requiredRole: Role
 ): Promise<boolean> {
   try {
+    if (!organizationId) return false;
     const membership = await prisma.organizationMembership.findFirst({
       where: {
         userId,
