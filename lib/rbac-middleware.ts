@@ -42,6 +42,12 @@ export function withRBAC(config: RBACConfig) {
             { status: 401 }
           );
         }
+        if (!user.id) {
+          return NextResponse.json(
+            { error: "Invalid session: missing user id" },
+            { status: 401 }
+          );
+        }
 
         // Get organization ID
         let organizationId: string | undefined;
@@ -133,6 +139,12 @@ export function requireRole(requiredRole: Role) {
         if (!user) {
           return NextResponse.json(
             { error: "Authentication required" },
+            { status: 401 }
+          );
+        }
+        if (!user.id) {
+          return NextResponse.json(
+            { error: "Invalid session: missing user id" },
             { status: 401 }
           );
         }

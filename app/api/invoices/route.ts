@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
         lines: {
           include: {
             activity: { select: { code: true, name: true } },
-            taxCode: { select: { code: true, label: true } },
+            taxCode: { select: { code: true, name: true } },
           },
         },
         project: { select: { name: true } },

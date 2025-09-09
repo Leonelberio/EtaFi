@@ -153,17 +153,33 @@ async function main() {
       await prisma.taxCode.create({
         data: {
           code: taxCode.code,
-          label: taxCode.label,
+          name: taxCode.label,
           rate: taxCode.rate,
           organizationId: organization.id,
-          accountCollectedId: collected?.id,
-          accountDeductibleId: deductible?.id,
+          // Note: TaxCode no longer stores collected/deductible account relations directly
+          // Link via ChartAccount.defaultTaxCodeId if needed elsewhere
         },
       });
     }
   }
 
   console.log("✅ Codes de taxe de base créés");
+
+  // S'assurer d'avoir un projet par défaut pour y rattacher les activités
+  let defaultProject = await prisma.project.findFirst({
+    where: { organizationId: organization.id, name: "Projet Administratif" },
+  });
+
+  if (!defaultProject) {
+    defaultProject = await prisma.project.create({
+      data: {
+        organizationId: organization.id,
+        name: "Projet Administratif",
+        code: "PRJ-ADMIN",
+        kind: "ADMIN",
+      },
+    });
+  }
 
   // Créer des activités de base
   const baseActivities = [
@@ -187,6 +203,7 @@ async function main() {
       await createActivity({
         name: activityName,
         organizationId: organization.id,
+        projectId: defaultProject.id,
       });
     }
   }
@@ -195,8 +212,8 @@ async function main() {
 
   // Créer des projets de base
   const baseProjects = [
-    { name: "Projet Administratif", kind: "ADMIN" },
-    { name: "Projet Commercial", kind: "BILLABLE" },
+    { name: "Projet Administratif", kind: "ADMIN", code: "PRJ-ADMIN" },
+    { name: "Projet Commercial", kind: "BILLABLE", code: "PRJ-COMM" },
   ];
 
   for (const project of baseProjects) {
@@ -235,7 +252,10 @@ async function main() {
 
     if (!existingVendor) {
       const account = await prisma.chartAccount.findFirst({
-        where: { organizationId: organization.id, number: vendor.accountNumber },
+        where: {
+          organizationId: organization.id,
+          number: vendor.accountNumber,
+        },
       });
 
       if (account) {
@@ -288,53 +308,10 @@ async function main() {
 
   console.log("✅ Clients de base créés");
 
-  // Créer des mappings de posting de base
-  const basePostingMaps = [
-    // Achats
-    { type: "PURCHASE", groupCode: "M", accountNumber: "601000" }, // Matériel
-    { type: "PURCHASE", groupCode: "S", accountNumber: "605000" }, // Sous-traitant
-    { type: "PURCHASE", groupCode: "D", accountNumber: "606000" }, // Divers
-    { type: "PURCHASE", groupCode: "E", accountNumber: "602000" }, // Equipements
-    { type: "PURCHASE", groupCode: "L", accountNumber: "641000" }, // Salaire
-    { type: "PURCHASE", groupCode: "R", accountNumber: "701000" }, // Revenus
-
-    // Ventes
-    { type: "SALES", groupCode: "M", accountNumber: "701000" }, // Matériel
-    { type: "SALES", groupCode: "S", accountNumber: "704000" }, // Sous-traitant
-    { type: "SALES", groupCode: "D", accountNumber: "704000" }, // Divers
-    { type: "SALES", groupCode: "E", accountNumber: "704000" }, // Equipements
-    { type: "SALES", groupCode: "L", accountNumber: "704000" }, // Salaire
-    { type: "SALES", groupCode: "R", accountNumber: "704000" }, // Revenus
-  ];
-
-  for (const map of basePostingMaps) {
-    const existingMap = await prisma.postingMap.findFirst({
-      where: {
-        organizationId: organization.id,
-        type: map.type,
-        groupCode: map.groupCode,
-      },
-    });
-
-    if (!existingMap) {
-      const account = await prisma.chartAccount.findFirst({
-        where: { organizationId: organization.id, number: map.accountNumber },
-      });
-
-      if (account) {
-        await prisma.postingMap.create({
-          data: {
-            type: map.type,
-            groupCode: map.groupCode,
-            organizationId: organization.id,
-            accountId: account.id,
-          },
-        });
-      }
-    }
-  }
-
-  console.log("✅ Mappings de posting de base créés");
+  // Le mapping des comptes par groupe est géré en mémoire dans lib/posting.ts
+  console.log(
+    "ℹ️  Mapping des comptes par groupe géré côté code (pas en base)"
+  );
 
   console.log("🎉 Seed terminé avec succès!");
 }
