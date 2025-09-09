@@ -62,11 +62,9 @@ export function useOrganizations(): UseOrganizationsReturn {
             orgToSet = orgs[0];
           }
 
-          // Only update if the organization actually changed
-          if (!currentOrganization || currentOrganization.id !== orgToSet.id) {
-            console.log("Setting current organization to:", orgToSet.name, orgToSet.id);
-            setCurrentOrganization(orgToSet);
-          }
+          // Always set the organization (let React handle the state update)
+          console.log("Setting current organization to:", orgToSet.name, orgToSet.id);
+          setCurrentOrganization(orgToSet);
         }
       }
     } catch (error) {
@@ -75,7 +73,7 @@ export function useOrganizations(): UseOrganizationsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [session?.user?.id, currentOrganization]);
+  }, [session?.user?.id]); // Remove currentOrganization from dependencies
 
   useEffect(() => {
     fetchOrganizations();
