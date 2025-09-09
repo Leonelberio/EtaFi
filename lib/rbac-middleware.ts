@@ -74,7 +74,8 @@ export function withRBAC(config: RBACConfig) {
           }
 
           // At this point, organizationId is guaranteed to be defined
-          const orgId = organizationId;
+          // We need to ensure TypeScript knows this
+          const orgId = organizationId as string;
           let hasRoleAccess = false;
 
           for (const role of config.allowedRoles) {
