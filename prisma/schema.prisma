@@ -37,6 +37,10 @@ model User {
   budgetApprovals   BudgetRevision[] @relation("BudgetApprover")
   budgetResolutions BudgetAlert[]    @relation("BudgetResolver")
 
+  // 🆕 Cost transfer relations
+  createdTransfers  CostTransfer[] @relation("TransferCreator")
+  approvedTransfers CostTransfer[] @relation("TransferApprover")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -133,6 +137,9 @@ model Organization {
   journalLines   JournalLine[]
   costCategories CostCategory[]
 
+  // 🆕 Project-specific cost group management
+  costTransfers CostTransfer[]
+
   @@unique([ownerId, name])
 }
 
@@ -194,6 +201,13 @@ model Project {
   // Accounting relations
   journalLines JournalLine[]
 
+  // 🆕 Project-specific cost group configuration
+  costGroupCodes ProjectCostGroupCode[]
+
+  // 🆕 Cost transfer relations
+  sourceTransfers CostTransfer[] @relation("SourceTransfers")
+  targetTransfers CostTransfer[] @relation("TargetTransfers")
+
   @@unique([organizationId, code])
   @@index([organizationId])
   @@index([clientId])
@@ -231,12 +245,17 @@ model Activity {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  project       Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization  Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project       Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
   subActivities SubActivity[]
   budgets       Budget[]
   invoiceLines  InvoiceLine[]
   journalLines  JournalLine[]
+  costGroups    ActivityCostGroup[] // 🆕 Multi-group support
+
+  // 🆕 Cost transfer relations
+  sourceActivityTransfers CostTransfer[] @relation("SourceActivityTransfers")
+  targetActivityTransfers CostTransfer[] @relation("TargetActivityTransfers")
 
   @@unique([projectId, code])
   @@index([organizationId])
@@ -276,12 +295,13 @@ model SubActivity {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  activity     Activity      @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  activity     Activity               @relation(fields: [activityId], references: [id], onDelete: Cascade)
   budgets      Budget[]
   invoiceLines InvoiceLine[]
   journalLines JournalLine[]
+  costGroups   SubActivityCostGroup[] // 🆕 Multi-group support
 
   @@unique([activityId, code])
   @@index([organizationId])
@@ -488,6 +508,11 @@ model ChartAccount {
   customerReceivables Customer[] @relation("CustomerReceivableAccount")
   vendorPayables      Vendor[]   @relation("VendorPayableAccount")
 
+  // 🆕 Cost group relations
+  activityCostGroups    ActivityCostGroup[]
+  subActivityCostGroups SubActivityCostGroup[]
+  projectCostGroupCodes ProjectCostGroupCode[]
+
   @@unique([organizationId, number])
   @@index([organizationId])
   @@index([type])
@@ -526,15 +551,23 @@ model JournalLine {
   projectId      String?
   activityId     String?
   subActivityId  String?
-  costGroup      String? // M, S, D, E, MOD for 5-group system
+  costGroup      String? // M, S, D, E, MOD for 5-group system (legacy - single group)
+  costGroups     Json? // 🆕 Multi-group support: [{"group": "M", "amount": 500}, {"group": "MOD", "amount": 300}]
   description    String
   debitAmount    Decimal? @db.Decimal(12, 2)
   creditAmount   Decimal? @db.Decimal(12, 2)
   taxCodeId      String?
   reference      String? // Reference number (invoice, PO, etc.)
-  entryDate      DateTime
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+
+  // 🆕 Cost transfer support
+  transferType      String? // "INTER_PROJECT", "INTER_ACTIVITY", "INTER_SUB_ACTIVITY"
+  transferSourceId  String? // ID source pour transferts
+  transferTargetId  String? // ID cible pour transferts
+  transferReference String? // Reference du transfert
+
+  entryDate DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -563,6 +596,9 @@ model JournalLine {
   @@index([subActivityId])
   @@index([entryDate])
   @@index([costGroup])
+  // 🆕 New indexes for enhanced functionality
+  @@index([transferType])
+  @@index([transferReference])
 }
 
 // 5-Group Cost Category System for Canadian Project Accounting
@@ -880,4 +916,126 @@ model InvoicePayment {
   @@index([organizationId])
   @@index([invoiceId])
   @@index([paymentDate])
+}
+
+// 🆕 Multi-Group Cost Management for Activities
+model ActivityCostGroup {
+  id          String   @id @default(cuid())
+  activityId  String
+  costGroup   String // M, S, D, E, MOD
+  percentage  Decimal  @db.Decimal(5, 2) // Pourcentage de répartition (0-100)
+  glAccountId String? // Compte GL spécifique pour ce groupe
+  isActive    Boolean  @default(true)
+  description String? // Description de l'affectation
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  activity  Activity      @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  glAccount ChartAccount? @relation(fields: [glAccountId], references: [id])
+
+  @@unique([activityId, costGroup])
+  @@index([activityId])
+  @@index([costGroup])
+  @@index([isActive])
+}
+
+// 🆕 Multi-Group Cost Management for Sub-Activities
+model SubActivityCostGroup {
+  id            String   @id @default(cuid())
+  subActivityId String
+  costGroup     String // M, S, D, E, MOD
+  percentage    Decimal  @db.Decimal(5, 2) // Pourcentage de répartition (0-100)
+  glAccountId   String? // Compte GL spécifique pour ce groupe
+  isActive      Boolean  @default(true)
+  description   String? // Description de l'affectation
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  subActivity SubActivity   @relation(fields: [subActivityId], references: [id], onDelete: Cascade)
+  glAccount   ChartAccount? @relation(fields: [glAccountId], references: [id])
+
+  @@unique([subActivityId, costGroup])
+  @@index([subActivityId])
+  @@index([costGroup])
+  @@index([isActive])
+}
+
+// 🆕 Cost Transfer System
+model CostTransfer {
+  id             String @id @default(cuid())
+  organizationId String
+
+  // Source
+  sourceType          String // PROJECT, ACTIVITY, SUB_ACTIVITY
+  sourceProjectId     String?
+  sourceActivityId    String?
+  sourceSubActivityId String?
+
+  // Target
+  targetType          String // PROJECT, ACTIVITY, SUB_ACTIVITY
+  targetProjectId     String?
+  targetActivityId    String?
+  targetSubActivityId String?
+
+  // Transfer Details
+  amount      Decimal @db.Decimal(15, 2)
+  costGroups  Json // Array: [{"group": "M", "amount": 500}, {"group": "MOD", "amount": 300}]
+  description String
+  reference   String? // Reference number
+
+  // Approval Workflow
+  status           String    @default("PENDING") // PENDING, APPROVED, REJECTED, POSTED
+  approvalRequired Boolean   @default(false)
+  approvedBy       String?
+  approvedAt       DateTime?
+  rejectionReason  String?
+
+  // Accounting
+  journalReference String? // Reference to journal entries created
+  postedAt         DateTime?
+
+  // Metadata
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sourceProject  Project?     @relation("SourceTransfers", fields: [sourceProjectId], references: [id])
+  targetProject  Project?     @relation("TargetTransfers", fields: [targetProjectId], references: [id])
+  sourceActivity Activity?    @relation("SourceActivityTransfers", fields: [sourceActivityId], references: [id])
+  targetActivity Activity?    @relation("TargetActivityTransfers", fields: [targetActivityId], references: [id])
+  creator        User         @relation("TransferCreator", fields: [createdBy], references: [id])
+  approver       User?        @relation("TransferApprover", fields: [approvedBy], references: [id])
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([sourceProjectId])
+  @@index([targetProjectId])
+}
+
+// 🆕 Project-Specific Cost Group Code Assignments
+model ProjectCostGroupCode {
+  id          String   @id @default(cuid())
+  projectId   String
+  costGroup   String // M, S, D, E, MOD
+  glAccountId String // Code GL assigné pour ce groupe dans ce projet
+  description String? // Description de l'assignation (ex: "Matériel - Chantier ABC")
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false) // Si c'est le code par défaut pour ce groupe
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  glAccount ChartAccount @relation(fields: [glAccountId], references: [id])
+
+  @@unique([projectId, costGroup, glAccountId])
+  @@index([projectId])
+  @@index([costGroup])
+  @@index([isActive])
+  @@index([isDefault])
 }

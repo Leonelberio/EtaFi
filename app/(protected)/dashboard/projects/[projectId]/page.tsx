@@ -10,7 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Calendar, DollarSign, Users, FolderOpen } from "lucide-react";
+import {
+  Edit,
+  Calendar,
+  DollarSign,
+  Users,
+  FolderOpen,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 
 interface ProjectDetailPageProps {
@@ -118,6 +125,12 @@ export default async function ProjectDetailPage({
             {project.status}
           </Badge>
           <Badge className={getKindColor(project.kind)}>{project.kind}</Badge>
+          <Button asChild variant="outline">
+            <Link href={`/dashboard/projects/${project.id}/cost-groups`}>
+              <Settings className="h-4 w-4 mr-2" />
+              Config Groupes
+            </Link>
+          </Button>
           <Button asChild>
             <Link href={`/dashboard/projects/${project.id}/edit`}>
               <Edit className="h-4 w-4 mr-2" />

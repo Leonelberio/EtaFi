@@ -217,9 +217,102 @@ export const budgetAlertSchema = z.object({
   budgetId: z.string().min(1),
 });
 
+// 🆕 Schémas pour les nouveaux modèles
+
+// Schéma pour les groupes de coûts d'activité
+export const activityCostGroupSchema = z.object({
+  costGroup: z.enum(["M", "S", "D", "E", "MOD"]),
+  percentage: z.number().min(0).max(100),
+  glAccountId: z.string().min(1).optional(),
+  description: z.string().optional(),
+  isActive: z.boolean().optional().default(true),
+});
+
+// Schéma pour l'assignation de codes GL par projet
+export const projectCostGroupCodeSchema = z.object({
+  costGroup: z.enum(["M", "S", "D", "E", "MOD"]),
+  glAccountId: z.string().min(1),
+  description: z.string().optional(),
+  isActive: z.boolean().optional().default(true),
+  isDefault: z.boolean().optional().default(false),
+});
+
+// Schéma pour les transferts de coûts
+export const costTransferSchema = z
+  .object({
+    sourceType: z.enum(["PROJECT", "ACTIVITY", "SUB_ACTIVITY"]),
+    sourceProjectId: z.string().optional(),
+    sourceActivityId: z.string().optional(),
+    sourceSubActivityId: z.string().optional(),
+
+    targetType: z.enum(["PROJECT", "ACTIVITY", "SUB_ACTIVITY"]),
+    targetProjectId: z.string().optional(),
+    targetActivityId: z.string().optional(),
+    targetSubActivityId: z.string().optional(),
+
+    amount: z.number().min(0.01),
+    costGroups: z.array(
+      z.object({
+        group: z.enum(["M", "S", "D", "E", "MOD"]),
+        amount: z.number().min(0.01),
+      })
+    ),
+    description: z.string().min(2).max(500),
+    reference: z.string().optional(),
+    approvalRequired: z.boolean().optional().default(false),
+  })
+  .refine(
+    (data) => {
+      // Validation : source et target doivent être différents
+      if (data.sourceType === data.targetType) {
+        if (
+          data.sourceType === "PROJECT" &&
+          data.sourceProjectId === data.targetProjectId
+        )
+          return false;
+        if (
+          data.sourceType === "ACTIVITY" &&
+          data.sourceActivityId === data.targetActivityId
+        )
+          return false;
+        if (
+          data.sourceType === "SUB_ACTIVITY" &&
+          data.sourceSubActivityId === data.targetSubActivityId
+        )
+          return false;
+      }
+      return true;
+    },
+    { message: "Source and target must be different" }
+  )
+  .refine(
+    (data) => {
+      // Validation : montants des groupes = montant total
+      const totalGroupAmount = data.costGroups.reduce(
+        (sum, group) => sum + group.amount,
+        0
+      );
+      return Math.abs(totalGroupAmount - data.amount) < 0.01;
+    },
+    { message: "Total of cost groups must equal transfer amount" }
+  );
+
+// Schéma pour l'activité mise à jour avec groupes multiples
+export const enhancedActivitySchema = activitySchema.extend({
+  costGroups: z.array(activityCostGroupSchema).optional(),
+});
+
 // Types TypeScript dérivés des schémas
 export type ProjectTemplateInput = z.infer<typeof projectTemplateSchema>;
 export type ApplyTemplateInput = z.infer<typeof applyTemplateSchema>;
 export type BudgetInput = z.infer<typeof budgetSchema>;
 export type BudgetRevisionInput = z.infer<typeof budgetRevisionSchema>;
 export type BudgetAlertInput = z.infer<typeof budgetAlertSchema>;
+
+// 🆕 Nouveaux types
+export type ActivityCostGroupInput = z.infer<typeof activityCostGroupSchema>;
+export type ProjectCostGroupCodeInput = z.infer<
+  typeof projectCostGroupCodeSchema
+>;
+export type CostTransferInput = z.infer<typeof costTransferSchema>;
+export type EnhancedActivityInput = z.infer<typeof enhancedActivitySchema>;

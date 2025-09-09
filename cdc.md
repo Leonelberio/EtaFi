@@ -32,6 +32,8 @@ Modules à développer
 ·   	Module de rapports incluant états financiers
 ·   	Module analyse financière détaillée
 ·   	Module de gestion de prévision de trésorerie
+
+
 3. Principes directeurs & conformité
 • Conformité NCECF : production de bilan, résultat, capitaux propres, flux de trésorerie; régularisations;
 • LPRPDE : minimisation des données, consentement, droit d’accès/suppression; journalisation des incidents; avis en cas d’atteinte.
@@ -71,6 +73,9 @@ o   État des flux de trésorerie
 o   Âge des comptes à payer
 o   Âge des comptes à recevoir
 o   Et autres
+
+
+
 6. Module de projets
 -          Fonctions
 o   Création et gestion des paramètres de projets et des activités/sous-activités (sous-sections dans un projet)
@@ -103,6 +108,9 @@ o   Rapports de budget vs coûts réels
 o   Compte à payer détaillé par projet
 o   Comptes à recevoir détaillé par projet
 o   Et autres rapports
+
+
+
 7. Module de paie simple (pour un début)
 On ne fera pas la paie directement dans le logiciel pour commencer. C’est assez complexe. La paie sera traitée à l’externe. Nous on viendra juste répartir les coûts reliés à la paie dans le logiciel. On a juste besoin du coût total par employé par semaine et en le mettant dans notre logiciel, étant donné qu’il y aura les heures par projet/activité et sous-activité, le calcul de la répartition se fera au prorata et aboutira aux états financiers.
 -          Création des employés

@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { activitySchema, type ActivityInput } from "@/lib/validations";
+import { MultiGroupSelector } from "@/components/MultiGroupSelector";
 import {
   ArrowLeft,
   Calculator,
@@ -31,6 +32,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Cost group definitions with icons and colors
 const COST_GROUPS = [
@@ -93,17 +95,19 @@ interface ActivityFormProps {
     sortOrder: number;
   };
   isEditing?: boolean;
-  onSuccess?: () => void;
 }
 
 export function ActivityForm({
   projectId,
   activity,
   isEditing = false,
-  onSuccess,
 }: ActivityFormProps) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [useDetailedBudget, setUseDetailedBudget] = useState(false);
+  const [useMultiGroups, setUseMultiGroups] = useState(false);
+  const [chartAccounts, setChartAccounts] = useState<any[]>([]);
+  const [costGroups, setCostGroups] = useState<any[]>([]);
 
   const form = useForm<ActivityInput>({
     resolver: zodResolver(activitySchema),
@@ -159,6 +163,36 @@ export function ActivityForm({
     }
   }, [useDetailedBudget, totalFromBreakdown, budgetAmount, form]);
 
+  // Load chart accounts and existing cost groups
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Load chart accounts
+        const accountsResponse = await fetch(`/api/chart-accounts`);
+        if (accountsResponse.ok) {
+          const accountsData = await accountsResponse.json();
+          setChartAccounts(accountsData.accounts || []);
+        }
+
+        // Load existing cost groups if editing
+        if (activity?.id) {
+          const groupsResponse = await fetch(
+            `/api/activities/${activity.id}/cost-groups`
+          );
+          if (groupsResponse.ok) {
+            const groupsData = await groupsResponse.json();
+            setCostGroups(groupsData.costGroups || []);
+            setUseMultiGroups(groupsData.costGroups?.length > 0);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
+
+    loadData();
+  }, [activity?.id]);
+
   const onSubmit = async (data: ActivityInput) => {
     try {
       setIsLoading(true);
@@ -187,9 +221,8 @@ export function ActivityForm({
           : "Activity created successfully!"
       );
 
-      if (onSuccess) {
-        onSuccess();
-      }
+      // Navigate back to activities list
+      router.push(`/dashboard/projects/${projectId}/activities`);
     } catch (error) {
       console.error(
         `Error ${isEditing ? "updating" : "creating"} activity:`,
@@ -402,6 +435,44 @@ export function ActivityForm({
                       </div>
                     </div>
                   </div>
+                )}
+              </div>
+
+              {/* 🆕 Multi-Group Cost Management */}
+              <Separator />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium">
+                      Gestion Multi-Groupes
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Assignez des pourcentages spécifiques aux groupes de coûts
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="multi-groups" className="text-sm">
+                      Groupes Multiples
+                    </Label>
+                    <Switch
+                      id="multi-groups"
+                      checked={useMultiGroups}
+                      onCheckedChange={setUseMultiGroups}
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                {useMultiGroups && (
+                  <MultiGroupSelector
+                    projectId={projectId}
+                    activityId={activity?.id}
+                    initialGroups={costGroups}
+                    chartAccounts={chartAccounts}
+                    onGroupsChange={setCostGroups}
+                    disabled={isLoading}
+                  />
                 )}
               </div>
 
