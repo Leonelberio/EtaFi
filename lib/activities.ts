@@ -2,9 +2,11 @@ import { prisma } from "./prisma";
 
 export async function createActivity({
   organizationId,
+  projectId,
   name,
 }: {
   organizationId: string;
+  projectId: string;
   name: string;
 }) {
   const last = await prisma.activity.findFirst({
@@ -19,6 +21,7 @@ export async function createActivity({
   return prisma.activity.create({
     data: {
       organizationId,
+      projectId,
       name,
       code,
     },

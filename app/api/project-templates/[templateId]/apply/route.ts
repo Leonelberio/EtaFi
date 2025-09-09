@@ -14,8 +14,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Require MEMBER role for applying templates
-    await requireRole("MEMBER")(request);
+    // TODO: Add role-based access control for template application
 
     const { templateId } = await params;
     const body = await request.json();

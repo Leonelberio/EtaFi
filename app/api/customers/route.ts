@@ -21,8 +21,8 @@ export async function GET(req: NextRequest) {
       organizationId: orgId,
       ...(search && {
         OR: [
-          { name: { contains: search, mode: "insensitive" } },
-          { email: { contains: search, mode: "insensitive" } },
+          { name: { contains: search, mode: "insensitive" as const } },
+          { email: { contains: search, mode: "insensitive" as const } },
         ],
       }),
     };
@@ -30,11 +30,6 @@ export async function GET(req: NextRequest) {
     const [customers, total] = await Promise.all([
       db.customer.findMany({
         where,
-        include: {
-          receivableAccount: {
-            select: { number: true, name: true },
-          },
-        },
         orderBy: { name: "asc" },
         skip,
         take: limit,

@@ -188,8 +188,8 @@ model Project {
   budgets Budget[]
 
   // Invoice management relations
-  invoices      Invoice[]
-  invoiceLines  InvoiceLine[]
+  invoices     Invoice[]
+  invoiceLines InvoiceLine[]
 
   // Accounting relations
   journalLines JournalLine[]
@@ -398,11 +398,11 @@ model Customer {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  organization       Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  receivableAccount  ChartAccount? @relation("CustomerReceivableAccount", fields: [receivableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  projects           Project[]
-  invoices           Invoice[]
-  journalLines       JournalLine[]
+  organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  receivableAccount ChartAccount? @relation("CustomerReceivableAccount", fields: [receivableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  projects          Project[]
+  invoices          Invoice[]
+  journalLines      JournalLine[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -422,10 +422,10 @@ model Vendor {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  payableAccount  ChartAccount? @relation("VendorPayableAccount", fields: [payableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  invoices        Invoice[]
-  journalLines    JournalLine[]
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  payableAccount ChartAccount? @relation("VendorPayableAccount", fields: [payableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  invoices       Invoice[]
+  journalLines   JournalLine[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -483,7 +483,7 @@ model ChartAccount {
 
   // Usage tracking
   journalLines JournalLine[]
-  
+
   // Customer/Vendor relations
   customerReceivables Customer[] @relation("CustomerReceivableAccount")
   vendorPayables      Vendor[]   @relation("VendorPayableAccount")
@@ -543,6 +543,18 @@ model JournalLine {
   activity     Activity?    @relation(fields: [activityId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   subActivity  SubActivity? @relation(fields: [subActivityId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   taxCode      TaxCode?     @relation(fields: [taxCodeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  // Invoice and payment relations
+  customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  vendor         Vendor?         @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  invoice        Invoice?        @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  invoicePayment InvoicePayment? @relation(fields: [invoicePaymentId], references: [id], onDelete: SetNull)
+
+  // Foreign keys for the new relations
+  customerId       String?
+  vendorId         String?
+  invoiceId        String?
+  invoicePaymentId String?
 
   @@index([organizationId])
   @@index([accountId])
@@ -734,52 +746,52 @@ model BudgetAlert {
 
 // Invoice Management System
 model Invoice {
-  id             String   @id @default(cuid())
+  id             String @id @default(cuid())
   organizationId String
-  
+
   // Invoice Details
-  number         String   // Invoice number (auto-generated or manual)
-  type           String   // SALES, PURCHASE
-  status         String   @default("DRAFT") // DRAFT, SENT, PAID, CANCELLED, OVERDUE
-  date           DateTime
-  dueDate        DateTime?
-  
+  number  String // Invoice number (auto-generated or manual)
+  type    String // SALES, PURCHASE
+  status  String    @default("DRAFT") // DRAFT, SENT, PAID, CANCELLED, OVERDUE
+  date    DateTime
+  dueDate DateTime?
+
   // References
-  ref            String?  // External reference
-  poNumber       String?  // Purchase Order number
-  
+  ref      String? // External reference
+  poNumber String? // Purchase Order number
+
   // Parties
-  customerId     String?
-  vendorId       String?
-  projectId      String?
-  
+  customerId String?
+  vendorId   String?
+  projectId  String?
+
   // Financial
-  subtotal       Decimal  @default(0) @db.Decimal(15, 2)
-  taxAmount      Decimal  @default(0) @db.Decimal(15, 2)
-  total          Decimal  @default(0) @db.Decimal(15, 2)
-  paidAmount     Decimal  @default(0) @db.Decimal(15, 2)
-  currency       String   @default("CAD")
-  
+  subtotal   Decimal @default(0) @db.Decimal(15, 2)
+  taxAmount  Decimal @default(0) @db.Decimal(15, 2)
+  total      Decimal @default(0) @db.Decimal(15, 2)
+  paidAmount Decimal @default(0) @db.Decimal(15, 2)
+  currency   String  @default("CAD")
+
   // Payment Terms
-  paymentTerms   String?
+  paymentTerms    String?
   discountPercent Decimal? @db.Decimal(5, 2)
-  discountAmount Decimal? @db.Decimal(15, 2)
-  
+  discountAmount  Decimal? @db.Decimal(15, 2)
+
   // Metadata
-  notes          String?
-  internalNotes  String?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  notes         String?
+  internalNotes String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  customer       Customer?       @relation(fields: [customerId], references: [id])
-  vendor         Vendor?         @relation(fields: [vendorId], references: [id])
-  project        Project?        @relation(fields: [projectId], references: [id])
-  lines          InvoiceLine[]
-  payments       InvoicePayment[]
-  journalLines   JournalLine[]
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?        @relation(fields: [customerId], references: [id])
+  vendor       Vendor?          @relation(fields: [vendorId], references: [id])
+  project      Project?         @relation(fields: [projectId], references: [id])
+  lines        InvoiceLine[]
+  payments     InvoicePayment[]
+  journalLines JournalLine[]
 
   @@unique([organizationId, number])
   @@index([organizationId])
@@ -794,42 +806,42 @@ model Invoice {
 
 // Invoice Line Items
 model InvoiceLine {
-  id             String   @id @default(cuid())
+  id             String @id @default(cuid())
   organizationId String
   invoiceId      String
-  
+
   // Line Details
-  description    String
-  quantity       Decimal  @db.Decimal(15, 4)
-  unitPrice      Decimal  @db.Decimal(15, 4)
-  amount         Decimal  @db.Decimal(15, 2)
-  
+  description String
+  quantity    Decimal @db.Decimal(15, 4)
+  unitPrice   Decimal @db.Decimal(15, 4)
+  amount      Decimal @db.Decimal(15, 2)
+
   // Tax Information
-  taxCodeId      String?
-  taxRate        Decimal? @db.Decimal(5, 4)
-  taxAmount      Decimal  @default(0) @db.Decimal(15, 2)
-  totalAmount    Decimal  @db.Decimal(15, 2)
-  
+  taxCodeId   String?
+  taxRate     Decimal? @db.Decimal(5, 4)
+  taxAmount   Decimal  @default(0) @db.Decimal(15, 2)
+  totalAmount Decimal  @db.Decimal(15, 2)
+
   // Project Tracking
-  projectId      String?
-  activityId     String?
-  subActivityId  String?
-  
+  projectId     String?
+  activityId    String?
+  subActivityId String?
+
   // Cost Category (5-Group System)
-  costCategory   String?  // M, S, D, E, MOD
-  
+  costCategory String? // M, S, D, E, MOD
+
   // Metadata
-  sortOrder      Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  invoice        Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  taxCode        TaxCode?     @relation(fields: [taxCodeId], references: [id])
-  project        Project?     @relation(fields: [projectId], references: [id])
-  activity       Activity?    @relation(fields: [activityId], references: [id])
-  subActivity    SubActivity? @relation(fields: [subActivityId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice      Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  taxCode      TaxCode?     @relation(fields: [taxCodeId], references: [id])
+  project      Project?     @relation(fields: [projectId], references: [id])
+  activity     Activity?    @relation(fields: [activityId], references: [id])
+  subActivity  SubActivity? @relation(fields: [subActivityId], references: [id])
 
   @@index([organizationId])
   @@index([invoiceId])
@@ -842,28 +854,28 @@ model InvoiceLine {
 
 // Invoice Payments
 model InvoicePayment {
-  id             String   @id @default(cuid())
+  id             String @id @default(cuid())
   organizationId String
   invoiceId      String
-  
+
   // Payment Details
-  amount         Decimal  @db.Decimal(15, 2)
-  paymentDate    DateTime
-  paymentMethod  String?  // CASH, CHECK, TRANSFER, CARD, etc.
-  reference      String?  // Check number, transfer reference, etc.
-  
+  amount        Decimal  @db.Decimal(15, 2)
+  paymentDate   DateTime
+  paymentMethod String? // CASH, CHECK, TRANSFER, CARD, etc.
+  reference     String? // Check number, transfer reference, etc.
+
   // Banking
-  bankAccountId  String?
-  
+  bankAccountId String?
+
   // Metadata
-  notes          String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  invoice        Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  journalLines   JournalLine[]
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  journalLines JournalLine[]
 
   @@index([organizationId])
   @@index([invoiceId])

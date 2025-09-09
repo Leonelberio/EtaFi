@@ -48,19 +48,11 @@ export async function GET(req: NextRequest) {
       prisma.journalLine.findMany({
         where,
         include: {
-          entry: {
-            select: {
-              date: true,
-              journal: true,
-              ref: true,
-              invoice: { select: { ref: true, type: true } },
-            },
-          },
           account: { select: { number: true, name: true } },
           project: { select: { name: true } },
           activity: { select: { code: true, name: true } },
         },
-        orderBy: { entry: { date: "desc" } },
+        orderBy: { entryDate: "desc" },
         skip: offset,
         take: limit,
       }),
@@ -72,14 +64,15 @@ export async function GET(req: NextRequest) {
       by: ["accountId"],
       where: { organizationId },
       _sum: {
-        debit: true,
-        credit: true,
+        debitAmount: true,
+        creditAmount: true,
       },
     });
 
     const accountBalances = balances.map((b) => ({
       accountId: b.accountId,
-      balance: Number(b._sum.debit || 0) - Number(b._sum.credit || 0),
+      balance:
+        Number(b._sum.debitAmount || 0) - Number(b._sum.creditAmount || 0),
     }));
 
     return NextResponse.json({

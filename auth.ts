@@ -17,7 +17,6 @@ export const {
   auth,
   signIn,
   signOut,
-  update,
 } = NextAuth({
   pages: {
     signIn: "/auth/login",
@@ -35,6 +34,8 @@ export const {
     async signIn({ user, account }) {
       // Allow OAuth without email verification
       if (account?.provider !== "credentials") return true;
+
+      if (!user.id) return false;
 
       const existingUser = await getUserById(user.id);
 
@@ -64,7 +65,7 @@ export const {
       }
 
       if (token.role && session.user) {
-        session.user.role = token.role as UserRole;
+        session.user.role = token.role as "ADMIN" | "USER";
       }
 
       if (session.user) {
@@ -72,8 +73,12 @@ export const {
       }
 
       if (session.user) {
-        session.user.name = token.name;
-        session.user.email = token.email;
+        if (typeof token.name === "string") {
+          session.user.name = token.name;
+        }
+        if (typeof token.email === "string") {
+          session.user.email = token.email;
+        }
         session.user.isOAuth = token.isOAuth as boolean;
       }
 

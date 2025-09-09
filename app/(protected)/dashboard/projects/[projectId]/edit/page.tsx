@@ -52,5 +52,31 @@ export default async function EditProjectPage({
     notFound();
   }
 
-  return <ProjectForm project={project} isEditing />;
+  return (
+    <ProjectForm
+      project={{
+        ...project,
+        description: project.description || undefined,
+        clientId: project.clientId || undefined,
+        managerId: project.managerId || undefined,
+        tempManagerId: project.tempManagerId || undefined,
+        tempManagerEnd:
+          project.tempManagerEnd?.toISOString().split("T")[0] || undefined,
+        startDate: project.startDate?.toISOString().split("T")[0] || undefined,
+        endDate: project.endDate?.toISOString().split("T")[0] || undefined,
+        kind: project.kind as "ADMIN" | "BILLABLE",
+        status: project.status as
+          | "ACTIVE"
+          | "ON_HOLD"
+          | "COMPLETED"
+          | "CANCELLED",
+        totalBudget: project.totalBudget
+          ? parseFloat(project.totalBudget.toString())
+          : undefined,
+      }}
+      clients={[]}
+      managers={[]}
+      isEditing
+    />
+  );
 }

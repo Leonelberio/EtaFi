@@ -234,13 +234,20 @@ export default async function ProjectDetailPage({
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Budget: $
-                      {activity.budgetAmount?.toLocaleString("en-CA") || "0"}{" "}
+                      {activity.budgetAmount
+                        ? parseFloat(
+                            activity.budgetAmount.toString()
+                          ).toLocaleString("en-CA")
+                        : "0"}{" "}
                       CAD
                       {activity.costToDate && (
                         <>
                           {" "}
                           • Actual: $
-                          {activity.costToDate.toLocaleString("en-CA")} CAD
+                          {parseFloat(
+                            activity.costToDate.toString()
+                          ).toLocaleString("en-CA")}{" "}
+                          CAD
                         </>
                       )}
                     </p>

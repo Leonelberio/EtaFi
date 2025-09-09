@@ -44,7 +44,10 @@ export default async function EditCostCategoryPage({
 
   return (
     <div className="p-6">
-      <CostCategoryForm category={categoryData} isEditing={true} />
+      <CostCategoryForm
+        category={{ ...categoryData, icon: categoryData.icon || undefined }}
+        isEditing={true}
+      />
     </div>
   );
 }

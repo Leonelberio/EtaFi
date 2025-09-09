@@ -4,7 +4,7 @@ import { postInvoice } from "@/lib/posting";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const organizationId = await getCurrentOrgId();
@@ -12,7 +12,8 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const result = await postInvoice(organizationId, params.id);
+    const { id } = await params;
+    const result = await postInvoice(organizationId, id);
     return NextResponse.json(result, { status: 200 });
   } catch (error: any) {
     console.error("Error posting invoice:", error);

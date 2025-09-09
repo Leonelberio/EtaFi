@@ -15,7 +15,7 @@ async function getOrganization(organizationId: string, userId: string) {
         some: {
           userId: userId,
           role: {
-            in: ['OWNER', 'ADMIN'],
+            in: ["OWNER", "ADMIN"],
           },
         },
       },
@@ -30,7 +30,9 @@ async function getOrganization(organizationId: string, userId: string) {
   return organization;
 }
 
-export default async function EditOrganizationPage({ params }: EditOrganizationPageProps) {
+export default async function EditOrganizationPage({
+  params,
+}: EditOrganizationPageProps) {
   const session = await auth();
   if (!session?.user?.id) {
     notFound();
@@ -44,9 +46,12 @@ export default async function EditOrganizationPage({ params }: EditOrganizationP
   }
 
   return (
-    <OrganizationForm 
-      organization={organization} 
-      isEditing={true} 
+    <OrganizationForm
+      organization={{
+        ...organization,
+        description: organization.description || undefined,
+      }}
+      isEditing={true}
     />
   );
 }

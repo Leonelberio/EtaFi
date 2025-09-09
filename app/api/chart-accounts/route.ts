@@ -188,13 +188,6 @@ export async function POST(request: NextRequest) {
         organizationId,
       },
       include: {
-        parent: {
-          select: {
-            id: true,
-            number: true,
-            name: true,
-          },
-        },
         defaultTaxCode: {
           select: {
             id: true,

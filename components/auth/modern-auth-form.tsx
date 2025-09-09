@@ -62,8 +62,8 @@ export function ModernAuthForm() {
 
       if (result?.error) {
         setError(result.error);
-      } else if (result?.success) {
-        setSuccess(result.success);
+      } else if ("success" in (result || {})) {
+        setSuccess((result as any).success);
       }
     } catch (error) {
       setError("Something went wrong. Please try again.");
@@ -82,8 +82,8 @@ export function ModernAuthForm() {
 
       if (result?.error) {
         setError(result.error);
-      } else if (result?.success) {
-        setSuccess(result.success);
+      } else if ("success" in (result || {})) {
+        setSuccess((result as any).success);
         // Switch to login mode after successful registration
         setTimeout(() => {
           setAuthMode("login");

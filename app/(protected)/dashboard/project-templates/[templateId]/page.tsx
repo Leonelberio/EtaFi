@@ -231,7 +231,10 @@ export default async function ProjectTemplatePage({
                 Total Budget
               </span>
               <span className="text-lg font-semibold">
-                {formatCurrency(template.totalBudget, template.currency)}
+                {formatCurrency(
+                  parseFloat(template.totalBudget?.toString() || "0"),
+                  template.currency
+                )}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -300,7 +303,9 @@ export default async function ProjectTemplatePage({
                       <div className="text-right">
                         <div className="text-sm font-medium">
                           {formatCurrency(
-                            activity.budgetAmount,
+                            parseFloat(
+                              activity.budgetAmount?.toString() || "0"
+                            ),
                             template.currency
                           )}
                         </div>
@@ -341,7 +346,10 @@ export default async function ProjectTemplatePage({
                                   {subActivity.budgetAmount && (
                                     <span className="text-xs font-medium">
                                       {formatCurrency(
-                                        subActivity.budgetAmount,
+                                        parseFloat(
+                                          subActivity.budgetAmount?.toString() ||
+                                            "0"
+                                        ),
                                         template.currency
                                       )}
                                     </span>

@@ -13,11 +13,6 @@ async function getCustomer(customerId: string, orgId: string) {
       id: customerId,
       organizationId: orgId,
     },
-    include: {
-      receivableAccount: {
-        select: { id: true, number: true, name: true },
-      },
-    },
   });
 
   return customer;
@@ -83,7 +78,16 @@ export default async function EditCustomerPage({
 
       <CustomerForm
         chartAccounts={chartAccounts}
-        customer={customerData}
+        customer={{
+          ...customerData,
+          email: customerData.email || undefined,
+          phone: customerData.phone || undefined,
+          address: customerData.address || undefined,
+          city: customerData.city || undefined,
+          postalCode: customerData.postalCode || undefined,
+          country: customerData.country || undefined,
+          receivableAccountId: customerData.receivableAccountId || "",
+        }}
         isEditing={true}
       />
     </div>
