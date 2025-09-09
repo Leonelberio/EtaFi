@@ -73,10 +73,12 @@ export function withRBAC(config: RBACConfig) {
             );
           }
 
+          // At this point, organizationId is guaranteed to be defined
+          const orgId = organizationId;
           let hasRoleAccess = false;
 
           for (const role of config.allowedRoles) {
-            if (await hasPermission(user.id, organizationId as string, role)) {
+            if (await hasPermission(user.id, orgId, role)) {
               hasRoleAccess = true;
               break;
             }
