@@ -43,7 +43,7 @@ export async function postInvoice(
   for (const l of invoice.lines) {
     // Use default group code since InvoiceLine doesn't have groupCode field
     const groupCode = "D" as const; // Default to "Divers" group
-    
+
     const mapAccountId = await resolveAccountForGroup({
       organizationId,
       type: invoice.type as "PURCHASE" | "SALES",
@@ -69,7 +69,9 @@ export async function postInvoice(
       if (Number(l.taxAmount) > 0) {
         // TODO: Implement proper tax account mapping
         // For now, skip tax handling until TaxCode model is updated
-        console.warn(`Tax amount ${l.taxAmount} not posted - tax account mapping not implemented`);
+        console.warn(
+          `Tax amount ${l.taxAmount} not posted - tax account mapping not implemented`
+        );
       }
     } else {
       // SALES
@@ -87,7 +89,9 @@ export async function postInvoice(
       if (Number(l.taxAmount) > 0) {
         // TODO: Implement proper tax account mapping
         // For now, skip tax handling until TaxCode model is updated
-        console.warn(`Tax amount ${l.taxAmount} not posted - tax account mapping not implemented`);
+        console.warn(
+          `Tax amount ${l.taxAmount} not posted - tax account mapping not implemented`
+        );
       }
     }
   }
@@ -102,8 +106,7 @@ export async function postInvoice(
       accountId: invoice.vendor.payableAccountId,
       debitAmount: 0,
       creditAmount: totalTTC,
-      partnerId: invoice.vendor.id,
-      partnerType: "VENDOR",
+      vendorId: invoice.vendor.id,
       description: `Facture ${invoice.ref}`,
       entryDate: invoice.date,
     });
@@ -115,28 +118,24 @@ export async function postInvoice(
       accountId: invoice.customer.receivableAccountId,
       debitAmount: totalTTC,
       creditAmount: 0,
-      partnerId: invoice.customer.id,
-      partnerType: "CUSTOMER",
+      customerId: invoice.customer.id,
       description: `Facture ${invoice.ref}`,
       entryDate: invoice.date,
     });
   }
 
-  // Crée la pièce + lignes atomiquement
-  const entry = await prisma.$transaction(async (tx) => {
-    const e = await tx.journalEntry.create({
-      data: {
-        organizationId,
-        invoiceId: invoice.id,
-        date: invoice.date,
-        journal,
-        ref: invoice.ref,
-      },
-    });
+  // Crée les lignes d'écriture atomiquement
+  const entryId = `entry_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+  const entry = await prisma.$transaction(async (tx) => {
+    // Create journal lines directly (no JournalEntry model in simplified schema)
     for (const line of jl) {
       await tx.journalLine.create({
-        data: { ...line, entryId: e.id },
+        data: {
+          ...line,
+          reference: invoice.ref,
+          entryDate: invoice.date,
+        },
       });
     }
 
@@ -145,16 +144,26 @@ export async function postInvoice(
       data: { status: "POSTED" },
     });
 
-    return e;
+    return { id: entryId };
   });
 
-  // Vérif équilibre (optionnel)
+  // Vérif équilibre (optionnel) - check lines by reference
   const lines = await prisma.journalLine.findMany({
-    where: { entryId: entry.id },
+    where: {
+      organizationId,
+      reference: invoice.ref,
+      entryDate: invoice.date,
+    },
   });
 
-  const totalDebit = lines.reduce((sum, line) => sum + Number(line.debitAmount), 0);
-  const totalCredit = lines.reduce((sum, line) => sum + Number(line.creditAmount), 0);
+  const totalDebit = lines.reduce(
+    (sum, line) => sum + Number(line.debitAmount || 0),
+    0
+  );
+  const totalCredit = lines.reduce(
+    (sum, line) => sum + Number(line.creditAmount || 0),
+    0
+  );
 
   if (Math.abs(totalDebit - totalCredit) > 0.01) {
     throw new Error(
@@ -170,11 +179,43 @@ async function resolveAccountForGroup(params: {
   type: "PURCHASE" | "SALES";
   groupCode: "M" | "S" | "D" | "E" | "L" | "R";
 }) {
-  // Récupère le mapping depuis la table PostingMap
-  const map = await prisma.postingMap.findFirst({
-    where: params,
+  // For now, use a simple mapping based on type and group
+  // In a full implementation, this would come from a PostingMap table
+
+  // Default account mappings for Canadian accounting
+  const accountMappings: Record<string, string> = {
+    // Purchase accounts (expenses)
+    "PURCHASE_M": "6000", // Matériel - Supplies
+    "PURCHASE_S": "6100", // Sous-traitance - Subcontracting
+    "PURCHASE_D": "6200", // Divers - Miscellaneous
+    "PURCHASE_E": "6300", // Équipement - Equipment
+    "PURCHASE_MOD": "6400", // Main-d'œuvre - Labor
+
+    // Sales accounts (revenue)
+    "SALES_M": "4000", // Matériel - Materials Revenue
+    "SALES_S": "4100", // Sous-traitance - Services Revenue
+    "SALES_D": "4200", // Divers - Other Revenue
+    "SALES_E": "4300", // Équipement - Equipment Revenue
+    "SALES_MOD": "4400", // Main-d'œuvre - Labor Revenue
+  };
+
+  const key = `${params.type}_${params.groupCode}`;
+  const accountNumber = accountMappings[key];
+
+  if (!accountNumber) {
+    return null;
+  }
+
+  // Find the account by number in the organization
+  const account = await prisma.chartAccount.findFirst({
+    where: {
+      organizationId: params.organizationId,
+      number: accountNumber,
+      isActive: true,
+    },
   });
-  return map?.accountId ?? null;
+
+  return account?.id ?? null;
 }
 
 // Récupère les paramètres de posting de l'organisation
