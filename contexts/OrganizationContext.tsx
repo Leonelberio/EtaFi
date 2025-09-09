@@ -14,6 +14,7 @@ interface OrganizationContextType {
   organizations: Organization[];
   currentOrganization: Organization | null;
   isLoading: boolean;
+  isSwitching: boolean;
   refreshOrganizations: () => Promise<void>;
   switchOrganization: (org: Organization) => Promise<void>;
   setCurrentOrganization: (org: Organization) => void;

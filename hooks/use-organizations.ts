@@ -14,6 +14,7 @@ interface UseOrganizationsReturn {
   organizations: Organization[];
   currentOrganization: Organization | null;
   isLoading: boolean;
+  isSwitching: boolean;
   refreshOrganizations: () => Promise<void>;
   switchOrganization: (org: Organization) => Promise<void>;
   setCurrentOrganization: (org: Organization) => void;
@@ -25,6 +26,7 @@ export function useOrganizations(): UseOrganizationsReturn {
   const [currentOrganization, setCurrentOrganization] =
     useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSwitching, setIsSwitching] = useState(false);
 
   const fetchOrganizations = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -85,6 +87,8 @@ export function useOrganizations(): UseOrganizationsReturn {
 
   const switchOrganization = useCallback(async (org: Organization) => {
     try {
+      setIsSwitching(true);
+      
       // Call API to persist organization switch
       const response = await fetch("/api/organizations/switch", {
         method: "POST",
@@ -99,12 +103,16 @@ export function useOrganizations(): UseOrganizationsReturn {
       // Update local state
       setCurrentOrganization(org);
 
+      // Add a small delay to show the loading animation
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       // Force a hard refresh with a timestamp to bypass cache
       const url = new URL(window.location.href);
       url.searchParams.set("_t", Date.now().toString());
       window.location.href = url.toString();
     } catch (error) {
       console.error("Error switching organization:", error);
+      setIsSwitching(false);
       throw error;
     }
   }, []);
@@ -113,6 +121,7 @@ export function useOrganizations(): UseOrganizationsReturn {
     organizations,
     currentOrganization,
     isLoading,
+    isSwitching,
     refreshOrganizations,
     switchOrganization,
     setCurrentOrganization,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useOrganizationContext } from "@/contexts/OrganizationContext";
+import { OrganizationSwitchLoading } from "@/components/OrganizationSwitchLoading";
 
 interface Organization {
   id: string;
@@ -42,21 +43,25 @@ interface HeaderProps {
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
+  const [switchingToOrg, setSwitchingToOrg] = useState<Organization | null>(null);
 
   // 🆕 Use organization context for real-time updates
   const {
     organizations,
     currentOrganization,
     isLoading: isLoadingOrgs,
+    isSwitching,
     switchOrganization,
   } = useOrganizationContext();
 
   // Organization switching with persistence
   const handleOrganizationSwitch = async (org: Organization) => {
     try {
+      setSwitchingToOrg(org);
       await switchOrganization(org);
     } catch (error) {
       console.error("Failed to switch organization:", error);
+      setSwitchingToOrg(null);
       // You could show a toast error here
     }
   };
@@ -369,6 +374,13 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           </div>
         </div>
       </div>
+
+      {/* Organization Switch Loading Screen */}
+      <OrganizationSwitchLoading
+        fromOrgName={currentOrganization?.name || ""}
+        toOrgName={switchingToOrg?.name || ""}
+        isVisible={isSwitching}
+      />
     </header>
   );
 }
