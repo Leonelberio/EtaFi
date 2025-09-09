@@ -45,13 +45,25 @@ export function useOrganizations(): UseOrganizationsReturn {
 
         setOrganizations(orgs);
 
-        // Set the first organization as current if none is set or current doesn't exist
+        // Use the user's preferred current organization if available
         if (orgs.length > 0) {
-          if (
-            !currentOrganization ||
-            !orgs.find((o: Organization) => o.id === currentOrganization.id)
-          ) {
-            setCurrentOrganization(orgs[0]);
+          const preferredOrgId = data.currentOrganizationId;
+          let orgToSet = null;
+
+          if (preferredOrgId) {
+            // Try to find the preferred organization
+            orgToSet = orgs.find((o: Organization) => o.id === preferredOrgId);
+          }
+
+          // If preferred org not found or doesn't exist, use the first one
+          if (!orgToSet) {
+            orgToSet = orgs[0];
+          }
+
+          // Only update if the organization actually changed
+          if (!currentOrganization || currentOrganization.id !== orgToSet.id) {
+            console.log("Setting current organization to:", orgToSet.name, orgToSet.id);
+            setCurrentOrganization(orgToSet);
           }
         }
       }

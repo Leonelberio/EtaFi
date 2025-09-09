@@ -104,6 +104,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Get user's current organization preference
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { currentOrganizationId: true },
+    });
+
     const organizations = await db.organization.findMany({
       where: {
         members: {
@@ -130,7 +136,11 @@ export async function GET(req: NextRequest) {
         createdAt: "desc",
       },
     });
-    return NextResponse.json({ organizations });
+
+    return NextResponse.json({ 
+      organizations,
+      currentOrganizationId: user?.currentOrganizationId || null
+    });
   } catch (error) {
     console.error("Error fetching organizations:", error);
     return NextResponse.json(
