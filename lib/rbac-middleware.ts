@@ -44,7 +44,7 @@ export function withRBAC(config: RBACConfig) {
         }
 
         // Get organization ID
-        let organizationId: string;
+        let organizationId: string | undefined;
 
         if (config.requireOrgId !== false) {
           // Try to get from query params first
@@ -66,10 +66,17 @@ export function withRBAC(config: RBACConfig) {
 
         // Check role-based access if specified
         if (config.allowedRoles && config.allowedRoles.length > 0) {
+          if (!organizationId) {
+            return NextResponse.json(
+              { error: "Organization context required for role checking" },
+              { status: 400 }
+            );
+          }
+
           let hasRoleAccess = false;
 
           for (const role of config.allowedRoles) {
-            if (await hasPermission(user.id, organizationId!, role)) {
+            if (await hasPermission(user.id, organizationId as string, role)) {
               hasRoleAccess = true;
               break;
             }
@@ -96,8 +103,8 @@ export function withRBAC(config: RBACConfig) {
         // Call the handler with auth context
         return await handler(request, context, {
           user,
-          organizationId: organizationId!,
-          membership: { organizationId: organizationId! },
+          organizationId: organizationId || "",
+          membership: { organizationId: organizationId || "" },
         });
       } catch (error) {
         console.error("RBAC middleware error:", error);
