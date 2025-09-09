@@ -30,12 +30,38 @@ export const getCurrentOrgId = async (): Promise<string | null> => {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const membership = await db.organizationMembership.findFirst({
-    where: { userId: session.user.id },
+  // First, try to get user's preferred current organization
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { currentOrganizationId: true },
+  });
+
+  // If user has a current organization preference, verify they still have access
+  if (user?.currentOrganizationId) {
+    const membership = await db.organizationMembership.findFirst({
+      where: {
+        userId: session.user.id,
+        organizationId: user.currentOrganizationId,
+        isActive: true,
+      },
+      select: { organizationId: true },
+    });
+
+    if (membership) {
+      return membership.organizationId;
+    }
+  }
+
+  // Fallback: get the first organization they're a member of
+  const fallbackMembership = await db.organizationMembership.findFirst({
+    where: {
+      userId: session.user.id,
+      isActive: true,
+    },
     select: { organizationId: true },
   });
 
-  return membership?.organizationId ?? null;
+  return fallbackMembership?.organizationId ?? null;
 };
 
 export const requireOrgId = async (): Promise<string> => {

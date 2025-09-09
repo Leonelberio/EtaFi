@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
+import { useOrganizationContext } from "@/contexts/OrganizationContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +61,9 @@ export function OrganizationForm({
 }: OrganizationFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  
+  // 🆕 Get refresh function from context
+  const { refreshOrganizations } = useOrganizationContext();
 
   const form = useForm({
     resolver: zodResolver(organizationSchema),
@@ -109,6 +113,9 @@ export function OrganizationForm({
           ? "Organization updated successfully!"
           : "Organization created successfully!"
       );
+
+      // 🆕 Refresh organizations list in real-time
+      await refreshOrganizations();
 
       router.push("/dashboard/organizations");
       router.refresh();

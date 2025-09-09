@@ -22,6 +22,9 @@ model User {
   isTwoFactorEnabled    Boolean                @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
 
+  // 🆕 Current organization preference
+  currentOrganizationId String?
+
   accounts      Account[]
   organizations OrganizationMembership[]
   reminders     Reminder[]

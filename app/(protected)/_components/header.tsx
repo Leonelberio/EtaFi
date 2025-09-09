@@ -1,7 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { useOrganizationContext } from "@/contexts/OrganizationContext";
+
+interface Organization {
+  id: string;
+  name: string;
+  role: string;
+  logo?: string;
+}
 import {
   Search,
   Bell,
@@ -31,63 +39,26 @@ interface HeaderProps {
   onMobileMenuToggle?: () => void;
 }
 
-interface Organization {
-  id: string;
-  name: string;
-  role: string;
-  logo?: string;
-}
-
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [currentOrganization, setCurrentOrganization] =
-    useState<Organization | null>(null);
-  const [isLoadingOrgs, setIsLoadingOrgs] = useState(true);
 
-  // Fetch real organizations data
-  useEffect(() => {
-    async function fetchOrganizations() {
-      try {
-        setIsLoadingOrgs(true);
-        const response = await fetch("/api/organizations");
-        if (response.ok) {
-          const data = await response.json();
-          const orgs = data.organizations.map((org: any) => ({
-            id: org.id,
-            name: org.name,
-            role:
-              org.members?.find((m: any) => m.userId === session?.user?.id)
-                ?.role || "MEMBER",
-            logo: org.logo || "",
-          }));
-          setOrganizations(orgs);
+  // 🆕 Use organization context for real-time updates
+  const {
+    organizations,
+    currentOrganization,
+    isLoading: isLoadingOrgs,
+    switchOrganization,
+  } = useOrganizationContext();
 
-          // Set the first organization as current if none is set
-          if (orgs.length > 0 && !currentOrganization) {
-            setCurrentOrganization(orgs[0]);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching organizations:", error);
-        // Fallback to empty array
-        setOrganizations([]);
-      } finally {
-        setIsLoadingOrgs(false);
-      }
+  // Organization switching with persistence
+  const handleOrganizationSwitch = async (org: Organization) => {
+    try {
+      await switchOrganization(org);
+    } catch (error) {
+      console.error("Failed to switch organization:", error);
+      // You could show a toast error here
     }
-
-    if (session?.user?.id) {
-      fetchOrganizations();
-    }
-  }, [session?.user?.id, currentOrganization]);
-
-  const handleOrganizationSwitch = (org: Organization) => {
-    setCurrentOrganization(org);
-    // Here you would typically update the global state and refetch data
-    // You might also want to redirect to refresh the dashboard
-    window.location.reload(); // Simple approach for now
   };
 
   return (
