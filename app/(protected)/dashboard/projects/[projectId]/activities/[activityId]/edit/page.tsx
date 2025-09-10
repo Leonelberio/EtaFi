@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ActivityForm } from "@/components/ActivityForm";
 import { Loader2 } from "lucide-react";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { auth } from "@/auth";
 
 interface EditActivityPageProps {
   params: Promise<{ projectId: string; activityId: string }>;
