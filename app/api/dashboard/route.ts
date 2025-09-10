@@ -28,148 +28,196 @@ export async function GET() {
     const orgId = user.currentOrganizationId;
 
     // Fetch organization-specific data
-    const [
-      projects,
-      activities,
-      journalLines,
-      invoices,
-      recentActivities,
-    ] = await Promise.all([
-      // Projects data
-      db.project.findMany({
-        where: { organizationId: orgId },
-        select: {
-          id: true,
-          name: true,
-          status: true,
-          kind: true,
-          totalBudget: true,
-          startDate: true,
-          endDate: true,
-          createdAt: true,
-          updatedAt: true,
-          _count: {
-            select: {
-              activities: true,
-              invoices: true,
-              journalLines: true,
+    const [projects, activities, journalLines, invoices, recentActivities] =
+      await Promise.all([
+        // Projects data
+        db.project.findMany({
+          where: { organizationId: orgId },
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            kind: true,
+            totalBudget: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            _count: {
+              select: {
+                activities: true,
+                invoices: true,
+                journalLines: true,
+              },
             },
           },
-        },
-        orderBy: { updatedAt: "desc" },
-      }),
+          orderBy: { updatedAt: "desc" },
+        }),
 
-      // Activities data
-      db.activity.findMany({
-        where: { 
-          project: { organizationId: orgId } 
-        },
-        select: {
-          id: true,
-          name: true,
-          isActive: true,
-          projectId: true,
-          project: {
-            select: { name: true },
+        // Activities data
+        db.activity.findMany({
+          where: {
+            project: { organizationId: orgId },
           },
-          createdAt: true,
-          updatedAt: true,
-        },
-        orderBy: { updatedAt: "desc" },
-        take: 10,
-      }),
-
-      // Journal lines for financial data
-      db.journalLine.findMany({
-        where: { 
-          organizationId: orgId 
-        },
-        select: {
-          id: true,
-          debitAmount: true,
-          creditAmount: true,
-          createdAt: true,
-          projectId: true,
-          activityId: true,
-          costGroup: true,
-        },
-      }),
-
-      // Invoices data
-      db.invoice.findMany({
-        where: { organizationId: orgId },
-        select: {
-          id: true,
-          total: true,
-          status: true,
-          dueDate: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: "desc" },
-        take: 10,
-      }),
-
-      // Recent activities (from journal lines and project updates)
-      db.journalLine.findMany({
-        where: { 
-          organizationId: orgId 
-        },
-        select: {
-          id: true,
-          description: true,
-          debitAmount: true,
-          creditAmount: true,
-          createdAt: true,
-          project: {
-            select: { name: true },
+          select: {
+            id: true,
+            name: true,
+            isActive: true,
+            projectId: true,
+            project: {
+              select: { name: true },
+            },
+            createdAt: true,
+            updatedAt: true,
           },
-          activity: {
-            select: { name: true },
+          orderBy: { updatedAt: "desc" },
+          take: 10,
+        }),
+
+        // Journal lines for financial data
+        db.journalLine.findMany({
+          where: {
+            organizationId: orgId,
           },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      }),
-    ]);
+          select: {
+            id: true,
+            debitAmount: true,
+            creditAmount: true,
+            createdAt: true,
+            projectId: true,
+            activityId: true,
+            costGroup: true,
+          },
+        }),
+
+        // Invoices data
+        db.invoice.findMany({
+          where: { organizationId: orgId },
+          select: {
+            id: true,
+            total: true,
+            status: true,
+            dueDate: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "desc" },
+          take: 10,
+        }),
+
+        // Recent activities (from journal lines and project updates)
+        db.journalLine.findMany({
+          where: {
+            organizationId: orgId,
+          },
+          select: {
+            id: true,
+            description: true,
+            debitAmount: true,
+            creditAmount: true,
+            createdAt: true,
+            project: {
+              select: { name: true },
+            },
+            activity: {
+              select: { name: true },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        }),
+      ]);
 
     // Calculate KPIs
     const totalProjects = projects.length;
-    const activeProjects = projects.filter(p => p.status === "ACTIVE").length;
-    const completedProjects = projects.filter(p => p.status === "COMPLETED").length;
-    
-    const totalBudget = projects.reduce((sum, p) => sum + Number(p.totalBudget || 0), 0);
-    const totalActualCosts = journalLines.reduce((sum, jl) => sum + Number(jl.debitAmount || 0), 0);
+    const activeProjects = projects.filter((p) => p.status === "ACTIVE").length;
+    const completedProjects = projects.filter(
+      (p) => p.status === "COMPLETED"
+    ).length;
+
+    const totalBudget = projects.reduce(
+      (sum, p) => sum + Number(p.totalBudget || 0),
+      0
+    );
+    const totalActualCosts = journalLines.reduce(
+      (sum, jl) => sum + Number(jl.debitAmount || 0),
+      0
+    );
     const budgetVariance = totalBudget - totalActualCosts;
-    const completionRate = totalBudget > 0 ? Math.round((totalActualCosts / totalBudget) * 100) : 0;
+    const completionRate =
+      totalBudget > 0 ? Math.round((totalActualCosts / totalBudget) * 100) : 0;
 
     // Calculate cost distribution by cost groups
-    const costGroupTotals = journalLines.reduce((acc, jl) => {
-      const group = jl.costGroup || "OTHER";
-      acc[group] = (acc[group] || 0) + Number(jl.debitAmount || 0);
-      return acc;
-    }, {} as Record<string, number>);
+    const costGroupTotals = journalLines.reduce(
+      (acc, jl) => {
+        const group = jl.costGroup || "OTHER";
+        acc[group] = (acc[group] || 0) + Number(jl.debitAmount || 0);
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
-    const totalCosts = Object.values(costGroupTotals).reduce((sum, val) => sum + val, 0);
-    const costCategoryData = Object.entries(costGroupTotals).map(([group, amount]) => ({
-      name: group,
-      value: totalCosts > 0 ? Math.round((amount / totalCosts) * 100) : 0,
-      amount: amount,
-      color: getCostGroupColor(group),
-    }));
+    const totalCosts = Object.values(costGroupTotals).reduce(
+      (sum, val) => sum + val,
+      0
+    );
+    const costCategoryData = Object.entries(costGroupTotals).map(
+      ([group, amount]) => ({
+        name: group,
+        value: totalCosts > 0 ? Math.round((amount / totalCosts) * 100) : 0,
+        amount: amount,
+        color: getCostGroupColor(group),
+      })
+    );
 
     // Project status distribution
     const projectStatusData = [
-      { status: "Actif", count: activeProjects, percentage: totalProjects > 0 ? Math.round((activeProjects / totalProjects) * 100) : 0 },
-      { status: "En Attente", count: projects.filter(p => p.status === "ON_HOLD").length, percentage: totalProjects > 0 ? Math.round((projects.filter(p => p.status === "ON_HOLD").length / totalProjects) * 100) : 0 },
-      { status: "Terminé", count: completedProjects, percentage: totalProjects > 0 ? Math.round((completedProjects / totalProjects) * 100) : 0 },
-      { status: "Annulé", count: projects.filter(p => p.status === "CANCELLED").length, percentage: totalProjects > 0 ? Math.round((projects.filter(p => p.status === "CANCELLED").length / totalProjects) * 100) : 0 },
+      {
+        status: "Actif",
+        count: activeProjects,
+        percentage:
+          totalProjects > 0
+            ? Math.round((activeProjects / totalProjects) * 100)
+            : 0,
+      },
+      {
+        status: "En Attente",
+        count: projects.filter((p) => p.status === "ON_HOLD").length,
+        percentage:
+          totalProjects > 0
+            ? Math.round(
+                (projects.filter((p) => p.status === "ON_HOLD").length /
+                  totalProjects) *
+                  100
+              )
+            : 0,
+      },
+      {
+        status: "Terminé",
+        count: completedProjects,
+        percentage:
+          totalProjects > 0
+            ? Math.round((completedProjects / totalProjects) * 100)
+            : 0,
+      },
+      {
+        status: "Annulé",
+        count: projects.filter((p) => p.status === "CANCELLED").length,
+        percentage:
+          totalProjects > 0
+            ? Math.round(
+                (projects.filter((p) => p.status === "CANCELLED").length /
+                  totalProjects) *
+                  100
+              )
+            : 0,
+      },
     ];
 
     // Monthly performance data (last 6 months)
     const monthlyData = generateMonthlyPerformanceData(journalLines, projects);
 
     // Recent activity feed
-    const recentActivityFeed = recentActivities.map(activity => ({
+    const recentActivityFeed = recentActivities.map((activity) => ({
       id: activity.id,
       type: "transaction",
       title: activity.description || "Transaction comptable",
@@ -180,7 +228,7 @@ export async function GET() {
     }));
 
     // Add project updates to recent activity
-    const projectUpdates = projects.slice(0, 3).map(project => ({
+    const projectUpdates = projects.slice(0, 3).map((project) => ({
       id: `project-${project.id}`,
       type: "project",
       title: `Projet "${project.name}"`,
@@ -246,22 +294,26 @@ function getStatusLabel(status: string): string {
 function generateMonthlyPerformanceData(journalLines: any[], projects: any[]) {
   const months = [];
   const now = new Date();
-  
+
   for (let i = 5; i >= 0; i--) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const monthName = date.toLocaleDateString("fr-FR", { month: "short" });
-    
+
     // Calculate budget for this month (simplified - using total budget / 6)
-    const monthlyBudget = projects.reduce((sum, p) => sum + Number(p.totalBudget || 0), 0) / 6;
-    
+    const monthlyBudget =
+      projects.reduce((sum, p) => sum + Number(p.totalBudget || 0), 0) / 6;
+
     // Calculate actual costs for this month
     const monthlyActual = journalLines
-      .filter(jl => {
+      .filter((jl) => {
         const jlDate = new Date(jl.createdAt);
-        return jlDate.getMonth() === date.getMonth() && jlDate.getFullYear() === date.getFullYear();
+        return (
+          jlDate.getMonth() === date.getMonth() &&
+          jlDate.getFullYear() === date.getFullYear()
+        );
       })
       .reduce((sum, jl) => sum + Number(jl.debitAmount || 0), 0);
-    
+
     months.push({
       month: monthName,
       budget: Math.round(monthlyBudget),
@@ -269,6 +321,6 @@ function generateMonthlyPerformanceData(journalLines: any[], projects: any[]) {
       variance: Math.round(monthlyBudget - monthlyActual),
     });
   }
-  
+
   return months;
 }
