@@ -31,16 +31,19 @@ export default async function EditActivityPage({
     notFound();
   }
 
-  // Convert Decimal fields to numbers for client component
+  // Convert Decimal fields to numbers and null to undefined for client component
   const activityForClient = {
     ...activity,
-    budgetAmount: activity.budgetAmount ? Number(activity.budgetAmount) : 0,
+    description: activity.description || undefined,
+    budgetAmount: activity.budgetAmount
+      ? Number(activity.budgetAmount)
+      : undefined,
     costToDate: activity.costToDate ? Number(activity.costToDate) : 0,
-    budgetM: activity.budgetM ? Number(activity.budgetM) : 0,
-    budgetS: activity.budgetS ? Number(activity.budgetS) : 0,
-    budgetD: activity.budgetD ? Number(activity.budgetD) : 0,
-    budgetE: activity.budgetE ? Number(activity.budgetE) : 0,
-    budgetMOD: activity.budgetMOD ? Number(activity.budgetMOD) : 0,
+    budgetM: activity.budgetM ? Number(activity.budgetM) : undefined,
+    budgetS: activity.budgetS ? Number(activity.budgetS) : undefined,
+    budgetD: activity.budgetD ? Number(activity.budgetD) : undefined,
+    budgetE: activity.budgetE ? Number(activity.budgetE) : undefined,
+    budgetMOD: activity.budgetMOD ? Number(activity.budgetMOD) : undefined,
     actualM: activity.actualM ? Number(activity.actualM) : 0,
     actualS: activity.actualS ? Number(activity.actualS) : 0,
     actualD: activity.actualD ? Number(activity.actualD) : 0,
