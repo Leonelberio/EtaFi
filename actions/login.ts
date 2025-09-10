@@ -96,7 +96,7 @@ export const login = async (
       password,
       redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     });
-    
+
     // If we reach here, the signIn was successful
     return { success: "Login successful!" };
   } catch (error) {

@@ -137,15 +137,15 @@ export async function GET() {
     const activeProjects = projects.filter(p => p.status === "ACTIVE").length;
     const completedProjects = projects.filter(p => p.status === "COMPLETED").length;
     
-    const totalBudget = projects.reduce((sum, p) => sum + (p.totalBudget || 0), 0);
-    const totalActualCosts = journalLines.reduce((sum, jl) => sum + (jl.debitAmount || 0), 0);
+    const totalBudget = projects.reduce((sum, p) => sum + Number(p.totalBudget || 0), 0);
+    const totalActualCosts = journalLines.reduce((sum, jl) => sum + Number(jl.debitAmount || 0), 0);
     const budgetVariance = totalBudget - totalActualCosts;
     const completionRate = totalBudget > 0 ? Math.round((totalActualCosts / totalBudget) * 100) : 0;
 
     // Calculate cost distribution by cost groups
     const costGroupTotals = journalLines.reduce((acc, jl) => {
       const group = jl.costGroup || "OTHER";
-      acc[group] = (acc[group] || 0) + (jl.debitAmount || 0);
+      acc[group] = (acc[group] || 0) + Number(jl.debitAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 
@@ -174,7 +174,7 @@ export async function GET() {
       type: "transaction",
       title: activity.description || "Transaction comptable",
       description: `Projet: ${activity.project?.name || "N/A"}${activity.activity?.name ? ` - Activité: ${activity.activity.name}` : ""}`,
-      amount: activity.debitAmount || activity.creditAmount || 0,
+      amount: Number(activity.debitAmount || activity.creditAmount || 0),
       date: activity.createdAt,
       status: "completed",
     }));
@@ -185,7 +185,7 @@ export async function GET() {
       type: "project",
       title: `Projet "${project.name}"`,
       description: `Statut: ${getStatusLabel(project.status)}`,
-      amount: project.totalBudget || 0,
+      amount: Number(project.totalBudget || 0),
       date: project.updatedAt,
       status: project.status.toLowerCase(),
     }));
@@ -252,7 +252,7 @@ function generateMonthlyPerformanceData(journalLines: any[], projects: any[]) {
     const monthName = date.toLocaleDateString("fr-FR", { month: "short" });
     
     // Calculate budget for this month (simplified - using total budget / 6)
-    const monthlyBudget = projects.reduce((sum, p) => sum + (p.totalBudget || 0), 0) / 6;
+    const monthlyBudget = projects.reduce((sum, p) => sum + Number(p.totalBudget || 0), 0) / 6;
     
     // Calculate actual costs for this month
     const monthlyActual = journalLines
@@ -260,7 +260,7 @@ function generateMonthlyPerformanceData(journalLines: any[], projects: any[]) {
         const jlDate = new Date(jl.createdAt);
         return jlDate.getMonth() === date.getMonth() && jlDate.getFullYear() === date.getFullYear();
       })
-      .reduce((sum, jl) => sum + (jl.debitAmount || 0), 0);
+      .reduce((sum, jl) => sum + Number(jl.debitAmount || 0), 0);
     
     months.push({
       month: monthName,
