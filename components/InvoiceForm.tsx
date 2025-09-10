@@ -273,23 +273,26 @@ export function InvoiceForm({
       if (response.ok) {
         const result = await response.json();
         toast.success("✅ Facture postée avec succès!", {
-          description: "Les écritures de journal ont été créées automatiquement",
+          description:
+            "Les écritures de journal ont été créées automatiquement",
           duration: 4000,
         });
-        
+
         // Small delay to show success message before redirect
         setTimeout(() => {
           router.push("/dashboard/invoices");
         }, 1000);
       } else {
         const errorData = await response.json();
-        const errorMessage = errorData.error || `Erreur ${response.status}: ${response.statusText}`;
-        
+        const errorMessage =
+          errorData.error ||
+          `Erreur ${response.status}: ${response.statusText}`;
+
         toast.error("❌ Erreur lors du posting", {
           description: errorMessage,
           duration: 6000,
         });
-        
+
         console.error("Invoice post error:", {
           status: response.status,
           statusText: response.statusText,
@@ -559,7 +562,9 @@ export function InvoiceForm({
 
       // Validate required fields
       if (!data.customerId && !data.vendorId) {
-        setFormErrors({ customer: "Veuillez sélectionner un client ou un fournisseur" });
+        setFormErrors({
+          customer: "Veuillez sélectionner un client ou un fournisseur",
+        });
         toast.error("Veuillez sélectionner un client ou un fournisseur");
         return;
       }
@@ -571,7 +576,9 @@ export function InvoiceForm({
       }
 
       if (!data.lines || data.lines.length === 0) {
-        setFormErrors({ lines: "Veuillez ajouter au moins une ligne de facture" });
+        setFormErrors({
+          lines: "Veuillez ajouter au moins une ligne de facture",
+        });
         toast.error("Veuillez ajouter au moins une ligne de facture");
         return;
       }
@@ -581,10 +588,12 @@ export function InvoiceForm({
       for (let i = 0; i < data.lines.length; i++) {
         const line = data.lines[i];
         if (!line.activityId) {
-          lineErrors[`line_${i}_activity`] = `Veuillez sélectionner une activité pour la ligne: ${line.description || 'Sans description'}`;
+          lineErrors[`line_${i}_activity`] =
+            `Veuillez sélectionner une activité pour la ligne: ${line.description || "Sans description"}`;
         }
         if (!line.costCategory) {
-          lineErrors[`line_${i}_costCategory`] = `Veuillez sélectionner un groupe de coût pour la ligne: ${line.description || 'Sans description'}`;
+          lineErrors[`line_${i}_costCategory`] =
+            `Veuillez sélectionner un groupe de coût pour la ligne: ${line.description || "Sans description"}`;
         }
       }
 
@@ -612,20 +621,22 @@ export function InvoiceForm({
           description: `Numéro: ${result.number || data.number}`,
           duration: 4000,
         });
-        
+
         // Small delay to show success message before redirect
         setTimeout(() => {
           router.push("/dashboard/invoices");
         }, 1000);
       } else {
         const errorData = await response.json();
-        const errorMessage = errorData.error || `Erreur ${response.status}: ${response.statusText}`;
-        
+        const errorMessage =
+          errorData.error ||
+          `Erreur ${response.status}: ${response.statusText}`;
+
         toast.error("❌ Erreur lors de la sauvegarde", {
           description: errorMessage,
           duration: 6000,
         });
-        
+
         console.error("Invoice save error:", {
           status: response.status,
           statusText: response.statusText,
@@ -786,7 +797,9 @@ export function InvoiceForm({
                     clearFormErrors();
                   }}
                 >
-                  <SelectTrigger className={`bg-white ${formErrors.customer ? 'border-red-500' : ''}`}>
+                  <SelectTrigger
+                    className={`bg-white ${formErrors.customer ? "border-red-500" : ""}`}
+                  >
                     <SelectValue placeholder="Sélectionner un client" />
                   </SelectTrigger>
                   <SelectContent>
@@ -811,7 +824,9 @@ export function InvoiceForm({
                     clearFormErrors();
                   }}
                 >
-                  <SelectTrigger className={`bg-white ${formErrors.customer ? 'border-red-500' : ''}`}>
+                  <SelectTrigger
+                    className={`bg-white ${formErrors.customer ? "border-red-500" : ""}`}
+                  >
                     <SelectValue placeholder="Sélectionner un fournisseur" />
                   </SelectTrigger>
                   <SelectContent>
@@ -837,7 +852,9 @@ export function InvoiceForm({
                   clearFormErrors();
                 }}
               >
-                <SelectTrigger className={`bg-white ${formErrors.project ? 'border-red-500' : ''}`}>
+                <SelectTrigger
+                  className={`bg-white ${formErrors.project ? "border-red-500" : ""}`}
+                >
                   <SelectValue placeholder="Sélectionner un projet" />
                 </SelectTrigger>
                 <SelectContent>
@@ -959,7 +976,9 @@ export function InvoiceForm({
                         clearFormErrors();
                       }}
                     >
-                      <SelectTrigger className={`bg-white ${formErrors[`line_${index}_activity`] ? 'border-red-500' : ''}`}>
+                      <SelectTrigger
+                        className={`bg-white ${formErrors[`line_${index}_activity`] ? "border-red-500" : ""}`}
+                      >
                         <SelectValue placeholder="Activité" />
                       </SelectTrigger>
                       <SelectContent>
@@ -971,7 +990,9 @@ export function InvoiceForm({
                       </SelectContent>
                     </Select>
                     {formErrors[`line_${index}_activity`] && (
-                      <p className="text-xs text-red-500 mt-1">{formErrors[`line_${index}_activity`]}</p>
+                      <p className="text-xs text-red-500 mt-1">
+                        {formErrors[`line_${index}_activity`]}
+                      </p>
                     )}
                   </TableCell>
                   <TableCell>
@@ -985,7 +1006,9 @@ export function InvoiceForm({
                         clearFormErrors();
                       }}
                     >
-                      <SelectTrigger className={`bg-white ${formErrors[`line_${index}_costCategory`] ? 'border-red-500' : ''}`}>
+                      <SelectTrigger
+                        className={`bg-white ${formErrors[`line_${index}_costCategory`] ? "border-red-500" : ""}`}
+                      >
                         <SelectValue placeholder="Groupe" />
                       </SelectTrigger>
                       <SelectContent>
@@ -997,7 +1020,9 @@ export function InvoiceForm({
                       </SelectContent>
                     </Select>
                     {formErrors[`line_${index}_costCategory`] && (
-                      <p className="text-xs text-red-500 mt-1">{formErrors[`line_${index}_costCategory`]}</p>
+                      <p className="text-xs text-red-500 mt-1">
+                        {formErrors[`line_${index}_costCategory`]}
+                      </p>
                     )}
                   </TableCell>
                   <TableCell>
@@ -1121,8 +1146,10 @@ export function InvoiceForm({
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               Sauvegarde...
             </>
+          ) : invoiceId ? (
+            "Mettre à jour"
           ) : (
-            invoiceId ? "Mettre à jour" : "Créer"
+            "Créer"
           )}
         </Button>
       </div>
