@@ -57,8 +57,8 @@ export default async function EditActivityPage({
           </div>
         }
       >
-        <ActivityForm 
-          projectId={projectId} 
+        <ActivityForm
+          projectId={projectId}
           activity={activityForClient}
           isEditing={true}
         />
