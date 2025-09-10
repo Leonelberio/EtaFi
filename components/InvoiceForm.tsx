@@ -244,7 +244,7 @@ export function InvoiceForm({
   // Generate invoice number function
   const generateInvoiceNumber = async () => {
     if (isEditing) return; // Don't regenerate for existing invoices
-    
+
     setIsGeneratingNumber(true);
     try {
       const response = await fetch("/api/invoices/generate-number");
@@ -261,7 +261,7 @@ export function InvoiceForm({
 
   const handlePost = async () => {
     if (!invoiceId) return;
-    
+
     setSaving(true);
     try {
       const response = await fetch(`/api/invoices/${invoiceId}/post`, {
@@ -981,9 +981,9 @@ export function InvoiceForm({
           Annuler
         </Button>
         {isEditing && invoice?.status === "DRAFT" && (
-          <Button 
-            type="button" 
-            variant="secondary" 
+          <Button
+            type="button"
+            variant="secondary"
             onClick={handlePost}
             disabled={saving}
           >
