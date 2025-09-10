@@ -47,7 +47,7 @@ export default async function EditInvoicePage({
       }),
       db.chartAccount.findMany({
         where: { organizationId: orgId },
-        select: { id: true, number: true, name: true },
+        select: { id: true, number: true, name: true, type: true },
         orderBy: { number: "asc" },
       }),
       db.customer.findMany({
@@ -65,11 +65,18 @@ export default async function EditInvoicePage({
         select: { id: true, code: true, name: true },
         orderBy: { code: "asc" },
       }),
-      db.taxCode.findMany({
-        where: { organizationId: orgId },
-        select: { id: true, code: true, name: true, rate: true },
-        orderBy: { code: "asc" },
-      }),
+      db.taxCode
+        .findMany({
+          where: { organizationId: orgId },
+          select: { id: true, code: true, name: true, rate: true },
+          orderBy: { code: "asc" },
+        })
+        .then((taxCodes) =>
+          taxCodes.map((tc) => ({
+            ...tc,
+            rate: Number(tc.rate),
+          }))
+        ),
     ]);
 
   if (!invoice) {

@@ -228,9 +228,18 @@ export function InvoiceForm({
     name: "lines",
   });
 
-  // Watch all form values for real-time calculation
-  const watchedValues = form.watch();
+  // Watch lines for calculation
   const watchedLines = form.watch("lines");
+
+  // State to force re-renders when calculations change
+  const [calculatedValues, setCalculatedValues] = useState({
+    lines: [] as Array<{
+      amount: number;
+      taxAmount: number;
+      totalAmount: number;
+    }>,
+    totals: { subtotal: 0, totalTax: 0, total: 0 },
+  });
 
   // Generate invoice number function
   const generateInvoiceNumber = async () => {
@@ -250,25 +259,32 @@ export function InvoiceForm({
     }
   };
 
-  // Calculate line totals in real-time using useMemo
-  const calculatedLines = useMemo(() => {
-    if (!watchedLines) return [];
+  // Calculate totals whenever lines change
+  useEffect(() => {
+    if (!watchedLines || watchedLines.length === 0) {
+      setCalculatedValues({
+        lines: [],
+        totals: { subtotal: 0, totalTax: 0, total: 0 },
+      });
+      return;
+    }
 
-    return watchedLines.map((line) => {
-      const lineAmount = (line.quantity || 0) * (line.unitPrice || 0);
-      const lineTax = lineAmount * (line.taxRate || 0);
+    const calculatedLines = watchedLines.map((line) => {
+      const quantity = Number(line.quantity) || 0;
+      const unitPrice = Number(line.unitPrice) || 0;
+      const taxRate = Number(line.taxRate) || 0;
+
+      const lineAmount = quantity * unitPrice;
+      const lineTax = lineAmount * taxRate;
       const lineTotal = lineAmount + lineTax;
 
       return {
-        amount: lineAmount,
-        taxAmount: lineTax,
-        totalAmount: lineTotal,
+        amount: Number(lineAmount.toFixed(2)),
+        taxAmount: Number(lineTax.toFixed(2)),
+        totalAmount: Number(lineTotal.toFixed(2)),
       };
     });
-  }, [watchedLines]);
 
-  // Calculate invoice totals in real-time using useMemo
-  const calculatedTotals = useMemo(() => {
     const subtotal = calculatedLines.reduce(
       (sum, line) => sum + line.amount,
       0
@@ -279,11 +295,17 @@ export function InvoiceForm({
     );
     const total = subtotal + totalTax;
 
-    return { subtotal, totalTax, total };
-  }, [calculatedLines]);
+    // Update state to trigger re-render
+    setCalculatedValues({
+      lines: calculatedLines,
+      totals: {
+        subtotal: Number(subtotal.toFixed(2)),
+        totalTax: Number(totalTax.toFixed(2)),
+        total: Number(total.toFixed(2)),
+      },
+    });
 
-  // Update form values when calculations change
-  useEffect(() => {
+    // Also update form values for form submission
     calculatedLines.forEach((calc, index) => {
       form.setValue(`lines.${index}.amount`, calc.amount, {
         shouldValidate: false,
@@ -296,14 +318,14 @@ export function InvoiceForm({
       });
     });
 
-    form.setValue("subtotal", calculatedTotals.subtotal, {
+    form.setValue("subtotal", Number(subtotal.toFixed(2)), {
       shouldValidate: false,
     });
-    form.setValue("taxAmount", calculatedTotals.totalTax, {
+    form.setValue("taxAmount", Number(totalTax.toFixed(2)), {
       shouldValidate: false,
     });
-    form.setValue("total", calculatedTotals.total, { shouldValidate: false });
-  }, [calculatedLines, calculatedTotals, form]);
+    form.setValue("total", Number(total.toFixed(2)), { shouldValidate: false });
+  }, [watchedLines, form]);
 
   // Generate invoice number on mount for new invoices
   useEffect(() => {
@@ -743,12 +765,6 @@ export function InvoiceForm({
                       {...form.register(`lines.${index}.quantity`, {
                         valueAsNumber: true,
                       })}
-                      onChange={(e) => {
-                        form.setValue(
-                          `lines.${index}.quantity`,
-                          parseFloat(e.target.value) || 0
-                        );
-                      }}
                       className="bg-white"
                     />
                   </TableCell>
@@ -759,12 +775,6 @@ export function InvoiceForm({
                       {...form.register(`lines.${index}.unitPrice`, {
                         valueAsNumber: true,
                       })}
-                      onChange={(e) => {
-                        form.setValue(
-                          `lines.${index}.unitPrice`,
-                          parseFloat(e.target.value) || 0
-                        );
-                      }}
                       className="bg-white"
                     />
                   </TableCell>
@@ -772,7 +782,7 @@ export function InvoiceForm({
                     <Input
                       type="number"
                       step="0.01"
-                      value={calculatedLines[index]?.amount || 0}
+                      value={calculatedValues.lines[index]?.amount || 0}
                       readOnly
                       className="bg-gray-50"
                     />
@@ -805,7 +815,7 @@ export function InvoiceForm({
                     <Input
                       type="number"
                       step="0.01"
-                      value={calculatedLines[index]?.totalAmount || 0}
+                      value={calculatedValues.lines[index]?.totalAmount || 0}
                       readOnly
                       className="bg-gray-50"
                     />
@@ -889,7 +899,7 @@ export function InvoiceForm({
             <div className="space-y-2">
               <Label>Sous-total</Label>
               <Input
-                value={formatCurrency(calculatedTotals.subtotal)}
+                value={formatCurrency(calculatedValues.totals.subtotal)}
                 readOnly
                 className="bg-gray-50"
               />
@@ -897,7 +907,7 @@ export function InvoiceForm({
             <div className="space-y-2">
               <Label>Taxes</Label>
               <Input
-                value={formatCurrency(calculatedTotals.totalTax)}
+                value={formatCurrency(calculatedValues.totals.totalTax)}
                 readOnly
                 className="bg-gray-50"
               />
@@ -905,7 +915,7 @@ export function InvoiceForm({
             <div className="space-y-2">
               <Label>Total</Label>
               <Input
-                value={formatCurrency(calculatedTotals.total)}
+                value={formatCurrency(calculatedValues.totals.total)}
                 readOnly
                 className="bg-gray-50 font-bold"
               />
