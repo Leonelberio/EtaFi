@@ -83,6 +83,23 @@ export default async function EditInvoicePage({
     notFound();
   }
 
+  // Convert Decimal fields to numbers for client component
+  const invoiceForClient = {
+    ...invoice,
+    subtotal: Number(invoice.subtotal),
+    taxAmount: Number(invoice.taxAmount),
+    total: Number(invoice.total),
+    paidAmount: Number(invoice.paidAmount),
+    lines: invoice.lines.map((line) => ({
+      ...line,
+      quantity: Number(line.quantity),
+      unitPrice: Number(line.unitPrice),
+      amount: Number(line.amount),
+      taxAmount: Number(line.taxAmount),
+      totalAmount: Number(line.totalAmount),
+    })),
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -104,7 +121,7 @@ export default async function EditInvoicePage({
           vendors={vendors}
           projects={projects}
           taxCodes={taxCodes}
-          invoice={invoice}
+          invoice={invoiceForClient}
           isEditing={true}
         />
       </Suspense>

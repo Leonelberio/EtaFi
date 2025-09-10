@@ -88,7 +88,7 @@ export async function POST(
 
       if (invoice.type === "SALES") {
         // Sales Invoice: Debit Accounts Receivable, Credit Revenue accounts
-        
+
         // 1. Debit Accounts Receivable (or Cash if paid)
         const receivableAccount = await tx.chartAccount.findFirst({
           where: {
@@ -118,10 +118,30 @@ export async function POST(
           })
         );
 
-        // 2. Credit Revenue accounts for each line
+        // 2. Credit Revenue accounts for each line (using cost group's GL account)
         for (const line of invoice.lines) {
-          if (!line.revenueAccountId) {
-            throw new Error(`Revenue account not specified for line: ${line.description}`);
+          if (!line.activityId || !line.costCategory) {
+            throw new Error(
+              `Activity and cost group must be specified for line: ${line.description}`
+            );
+          }
+
+          // Get the GL account for this cost group in this activity
+          const activityCostGroup = await tx.activityCostGroup.findFirst({
+            where: {
+              activityId: line.activityId,
+              costGroup: line.costCategory,
+              isActive: true,
+            },
+            include: {
+              glAccount: true,
+            },
+          });
+
+          if (!activityCostGroup?.glAccountId) {
+            throw new Error(
+              `No GL account configured for cost group ${line.costCategory} in activity ${line.activityId}`
+            );
           }
 
           journalLines.push(
@@ -129,7 +149,7 @@ export async function POST(
               data: {
                 organizationId,
                 journalId: journal.id,
-                accountId: line.revenueAccountId,
+                accountId: activityCostGroup.glAccountId,
                 description: line.description,
                 creditAmount: line.totalAmount,
                 projectId: line.projectId,
@@ -170,10 +190,9 @@ export async function POST(
             );
           }
         }
-
       } else {
         // Purchase Invoice: Debit Expense accounts, Credit Accounts Payable
-        
+
         // 1. Credit Accounts Payable
         const payableAccount = await tx.chartAccount.findFirst({
           where: {
@@ -206,7 +225,9 @@ export async function POST(
         // 2. Debit Expense accounts for each line
         for (const line of invoice.lines) {
           if (!line.revenueAccountId) {
-            throw new Error(`Expense account not specified for line: ${line.description}`);
+            throw new Error(
+              `Expense account not specified for line: ${line.description}`
+            );
           }
 
           journalLines.push(

@@ -50,7 +50,7 @@ const invoiceLineSchema = z.object({
   totalAmount: z.number().min(0, "Total amount must be positive"),
   activityId: z.string().optional(),
   subActivityId: z.string().optional(),
-  costCategory: z.enum(["M", "S", "D", "E", "MOD"]).optional(),
+  costCategory: z.enum(["M", "S", "D", "E", "MOD"]),
   revenueAccountId: z.string().optional(),
   sortOrder: z.number().default(0),
 });
@@ -188,6 +188,7 @@ export function InvoiceForm({
           unitPrice: 0,
           amount: 0,
           totalAmount: 0,
+          costCategory: "M",
           sortOrder: 0,
         },
       ],
@@ -513,6 +514,7 @@ export function InvoiceForm({
       unitPrice: 0,
       amount: 0,
       totalAmount: 0,
+      costCategory: "M",
       sortOrder: fields.length,
     });
   };
