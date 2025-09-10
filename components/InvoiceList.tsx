@@ -74,35 +74,33 @@ interface InvoiceListProps {
 
 export function InvoiceList({ projectId }: InvoiceListProps) {
   const router = useRouter();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
+  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filtering, setFiltering] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
   const fetchInvoices = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: "10",
+        limit: "1000", // Fetch all invoices for client-side filtering
       });
 
-      if (searchTerm) params.append("search", searchTerm);
-      if (typeFilter && typeFilter !== "ALL") params.append("type", typeFilter);
-      if (statusFilter && statusFilter !== "ALL")
-        params.append("status", statusFilter);
       if (projectId) params.append("projectId", projectId);
 
       const response = await fetch(`/api/invoices?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setInvoices(data.invoices || []);
-        setTotalPages(data.totalPages || 1);
-        setTotalCount(data.totalCount || 0);
+        setAllInvoices(data.invoices || []);
+        setFilteredInvoices(data.invoices || []);
+        setTotalCount(data.invoices?.length || 0);
       } else {
         toast.error("Erreur lors du chargement des factures");
       }
@@ -114,9 +112,65 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
     }
   };
 
+  // Client-side filtering function
+  const applyFilters = () => {
+    setFiltering(true);
+    
+    let filtered = [...allInvoices];
+
+    // Search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (invoice) =>
+          invoice.number.toLowerCase().includes(searchLower) ||
+          invoice.ref?.toLowerCase().includes(searchLower) ||
+          invoice.customer?.name.toLowerCase().includes(searchLower) ||
+          invoice.vendor?.name.toLowerCase().includes(searchLower) ||
+          invoice.project?.name.toLowerCase().includes(searchLower) ||
+          invoice.project?.code.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Type filter
+    if (typeFilter && typeFilter !== "ALL") {
+      filtered = filtered.filter((invoice) => invoice.type === typeFilter);
+    }
+
+    // Status filter
+    if (statusFilter && statusFilter !== "ALL") {
+      filtered = filtered.filter((invoice) => invoice.status === statusFilter);
+    }
+
+    setFilteredInvoices(filtered);
+    setTotalCount(filtered.length);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(1); // Reset to first page when filtering
+    
+    // Simulate a small delay for skeleton effect
+    setTimeout(() => {
+      setFiltering(false);
+    }, 300);
+  };
+
+  // Fetch invoices only on mount and when projectId changes
   useEffect(() => {
     fetchInvoices();
-  }, [currentPage, searchTerm, typeFilter, statusFilter, projectId]);
+  }, [projectId]);
+
+  // Apply filters when search terms or filters change
+  useEffect(() => {
+    if (allInvoices.length > 0) {
+      applyFilters();
+    }
+  }, [searchTerm, typeFilter, statusFilter, allInvoices]);
+
+  // Get paginated invoices
+  const getPaginatedInvoices = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredInvoices.slice(startIndex, endIndex);
+  };
 
   const handleDelete = async (invoiceId: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette facture ?")) {
@@ -130,7 +184,10 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
 
       if (response.ok) {
         toast.success("Facture supprimée");
-        fetchInvoices();
+        // Remove from both arrays
+        setAllInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+        setFilteredInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+        setTotalCount(prev => prev - 1);
       } else {
         const error = await response.json();
         toast.error(error.error || "Erreur lors de la suppression");
@@ -149,7 +206,17 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
 
       if (response.ok) {
         toast.success("Facture postée - Écritures de journal créées");
-        fetchInvoices();
+        // Update the invoice status in both arrays
+        setAllInvoices(prev => 
+          prev.map(inv => 
+            inv.id === invoiceId ? { ...inv, status: "POSTED" } : inv
+          )
+        );
+        setFilteredInvoices(prev => 
+          prev.map(inv => 
+            inv.id === invoiceId ? { ...inv, status: "POSTED" } : inv
+          )
+        );
       } else {
         const error = await response.json();
         toast.error(error.error || "Erreur lors du posting");
@@ -243,6 +310,21 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
       </div>
     );
   }
+
+  // Skeleton component for filtering
+  const InvoiceSkeleton = () => (
+    <TableRow>
+      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div></TableCell>
+      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div></TableCell>
+      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div></TableCell>
+      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div></TableCell>
+      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div></TableCell>
+      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div></TableCell>
+      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div></TableCell>
+      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div></TableCell>
+      <TableCell><div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div></TableCell>
+    </TableRow>
+  );
 
   return (
     <div className="space-y-6">
@@ -346,7 +428,13 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
+              {filtering ? (
+                // Show skeleton loading during filtering
+                Array.from({ length: 5 }).map((_, index) => (
+                  <InvoiceSkeleton key={index} />
+                ))
+              ) : (
+                getPaginatedInvoices().map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell>
                     <div className="font-medium">{invoice.number}</div>
@@ -440,11 +528,12 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                ))
+              )}
             </TableBody>
           </Table>
 
-          {invoices.length === 0 && (
+          {!filtering && getPaginatedInvoices().length === 0 && (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-500">Aucune facture trouvée</p>
