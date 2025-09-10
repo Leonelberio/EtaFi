@@ -576,7 +576,7 @@ export function InvoiceForm({
 
       const url = invoiceId ? `/api/invoices/${invoiceId}` : "/api/invoices";
       const method = invoiceId ? "PUT" : "POST";
-      
+
       console.log("Making API call:", { url, method, data });
 
       const response = await fetch(url, {
