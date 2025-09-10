@@ -44,6 +44,14 @@ model User {
   createdTransfers  CostTransfer[] @relation("TransferCreator")
   approvedTransfers CostTransfer[] @relation("TransferApprover")
 
+  // Journal relations
+  postedJournals   Journal[] @relation("PostedByUser")
+  reversedJournals Journal[] @relation("ReversedByUser")
+
+  // Invoice relations
+  createdInvoices  Invoice[] @relation("InvoiceCreator")
+  approvedInvoices Invoice[] @relation("InvoiceApprover")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -137,6 +145,7 @@ model Organization {
   // Accounting relations
   chartAccounts  ChartAccount[]
   taxCodes       TaxCode[]
+  journals       Journal[]
   journalLines   JournalLine[]
   costCategories CostCategory[]
 
@@ -515,6 +524,9 @@ model ChartAccount {
   activityCostGroups    ActivityCostGroup[]
   subActivityCostGroups SubActivityCostGroup[]
   projectCostGroupCodes ProjectCostGroupCode[]
+  
+  // Invoice relations
+  invoiceRevenueAccounts InvoiceLine[] @relation("InvoiceRevenueAccount")
 
   @@unique([organizationId, number])
   @@index([organizationId])
@@ -547,8 +559,39 @@ model TaxCode {
 }
 
 // Journal for all accounting entries
+model Journal {
+  id             String    @id @default(cuid())
+  organizationId String
+  journalType    String // "PURCHASE", "SALES", "CASH_RECEIPTS", "CASH_DISBURSEMENTS", "GENERAL"
+  entryDate      DateTime
+  reference      String? // Journal reference number
+  description    String
+  totalAmount    Decimal   @db.Decimal(12, 2) // Total debit amount (should equal total credit)
+  status         String    @default("DRAFT") // "DRAFT", "POSTED", "REVERSED"
+  postedAt       DateTime?
+  postedBy       String?
+  reversedAt     DateTime?
+  reversedBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lines          JournalLine[]
+  postedByUser   User?         @relation("PostedByUser", fields: [postedBy], references: [id])
+  reversedByUser User?         @relation("ReversedByUser", fields: [reversedBy], references: [id])
+
+  @@index([organizationId])
+  @@index([journalType])
+  @@index([entryDate])
+  @@index([status])
+  @@map("journals")
+}
+
 model JournalLine {
   id             String   @id @default(cuid())
+  journalId      String
   organizationId String
   accountId      String
   projectId      String?
@@ -573,6 +616,7 @@ model JournalLine {
   updatedAt DateTime @updatedAt
 
   // Relations
+  journal      Journal      @relation(fields: [journalId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   account      ChartAccount @relation(fields: [accountId], references: [id])
   project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -592,6 +636,7 @@ model JournalLine {
   invoiceId        String?
   invoicePaymentId String?
 
+  @@index([journalId])
   @@index([organizationId])
   @@index([accountId])
   @@index([projectId])
@@ -602,6 +647,7 @@ model JournalLine {
   // 🆕 New indexes for enhanced functionality
   @@index([transferType])
   @@index([transferReference])
+  @@map("journal_lines")
 }
 
 // 5-Group Cost Category System for Canadian Project Accounting
@@ -820,6 +866,13 @@ model Invoice {
   notes         String?
   internalNotes String?
   isActive      Boolean  @default(true)
+  
+  // Audit trail
+  createdBy      String?
+  approvedBy     String?
+  postedAt       DateTime?
+  paidAt         DateTime?
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -831,6 +884,10 @@ model Invoice {
   lines        InvoiceLine[]
   payments     InvoicePayment[]
   journalLines JournalLine[]
+  
+  // User relations
+  creator      User?            @relation("InvoiceCreator", fields: [createdBy], references: [id])
+  approver     User?            @relation("InvoiceApprover", fields: [approvedBy], references: [id])
 
   @@unique([organizationId, number])
   @@index([organizationId])
@@ -869,6 +926,9 @@ model InvoiceLine {
   // Cost Category (5-Group System)
   costCategory String? // M, S, D, E, MOD
 
+  // GL Account mapping (for automatic journal entry generation)
+  revenueAccountId String? // Which GL account to credit for revenue
+
   // Metadata
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
@@ -881,6 +941,7 @@ model InvoiceLine {
   project      Project?     @relation(fields: [projectId], references: [id])
   activity     Activity?    @relation(fields: [activityId], references: [id])
   subActivity  SubActivity? @relation(fields: [subActivityId], references: [id])
+  revenueAccount ChartAccount? @relation("InvoiceRevenueAccount", fields: [revenueAccountId], references: [id])
 
   @@index([organizationId])
   @@index([invoiceId])
@@ -1042,3 +1103,4 @@ model ProjectCostGroupCode {
   @@index([isActive])
   @@index([isDefault])
 }
+

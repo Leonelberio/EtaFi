@@ -50,6 +50,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
     });
 
+    console.log(`Found ${activities.length} activities for project ${projectId}`);
     return NextResponse.json(activities);
   } catch (error) {
     console.error("Error fetching activities:", error);

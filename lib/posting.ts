@@ -4,7 +4,8 @@ type PostResult = { entryId: string };
 
 export async function postInvoice(
   organizationId: string,
-  invoiceId: string
+  invoiceId: string,
+  journalId: string
 ): Promise<PostResult> {
   const invoice = await prisma.invoice.findFirst({
     where: { id: invoiceId, organizationId },
@@ -57,6 +58,7 @@ export async function postInvoice(
     if (invoice.type === "PURCHASE") {
       jl.push({
         organizationId,
+        journalId,
         accountId: mapAccountId,
         debitAmount: l.amount,
         creditAmount: 0,
@@ -77,6 +79,7 @@ export async function postInvoice(
       // SALES
       jl.push({
         organizationId,
+        journalId,
         accountId: mapAccountId,
         debitAmount: 0,
         creditAmount: l.amount,
@@ -103,6 +106,7 @@ export async function postInvoice(
       throw new Error("Fournisseur sans compte 401");
     jl.push({
       organizationId,
+      journalId,
       accountId: invoice.vendor.payableAccountId,
       debitAmount: 0,
       creditAmount: totalTTC,
@@ -115,6 +119,7 @@ export async function postInvoice(
       throw new Error("Client sans compte 411");
     jl.push({
       organizationId,
+      journalId,
       accountId: invoice.customer.receivableAccountId,
       debitAmount: totalTTC,
       creditAmount: 0,

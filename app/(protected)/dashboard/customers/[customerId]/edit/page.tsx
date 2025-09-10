@@ -58,7 +58,16 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
       <Suspense fallback={<div>Loading form...</div>}>
         <CustomerForm 
           chartAccounts={chartAccounts} 
-          customer={customer}
+          customer={{
+            ...customer,
+            email: customer.email || undefined,
+            phone: customer.phone || undefined,
+            address: customer.address || undefined,
+            city: customer.city || undefined,
+            postalCode: customer.postalCode || undefined,
+            country: customer.country || undefined,
+            receivableAccountId: customer.receivableAccountId || "",
+          }}
           isEditing={true}
         />
       </Suspense>

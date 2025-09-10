@@ -263,12 +263,26 @@ async function postCostTransfer(transferId: string) {
 
   const journalReference = `TRANSFER-${transfer.reference}`;
 
+  // Create a journal entry first
+  const journal = await db.journal.create({
+    data: {
+      organizationId: transfer.organizationId,
+      journalType: "GENERAL",
+      reference: journalReference,
+      description: `Cost Transfer: ${transfer.description}`,
+      status: "POSTED",
+      entryDate: new Date(),
+      totalAmount: 0, // Will be calculated from lines
+    },
+  });
+
   // For each cost group, create debit and credit entries
   for (const group of transfer.costGroups as any[]) {
     // Credit source (reduce cost)
     await db.journalLine.create({
       data: {
         organizationId: transfer.organizationId,
+        journalId: journal.id,
         accountId: "default-account-id", // This should be determined by project/activity GL mapping
         projectId: transfer.sourceProjectId,
         activityId: transfer.sourceActivityId,
@@ -289,6 +303,7 @@ async function postCostTransfer(transferId: string) {
     await db.journalLine.create({
       data: {
         organizationId: transfer.organizationId,
+        journalId: journal.id,
         accountId: "default-account-id", // This should be determined by project/activity GL mapping
         projectId: transfer.targetProjectId,
         activityId: transfer.targetActivityId,

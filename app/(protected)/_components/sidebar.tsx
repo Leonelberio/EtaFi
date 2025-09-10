@@ -101,6 +101,11 @@ const navigationModules = [
         icon: Calculator,
       },
       {
+        name: "Écritures de Journal",
+        href: "/dashboard/journals",
+        icon: BookOpen,
+      },
+      {
         name: "Codes de Taxe",
         href: "/dashboard/tax-codes",
         icon: Receipt,

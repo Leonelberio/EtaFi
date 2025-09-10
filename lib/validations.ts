@@ -77,6 +77,71 @@ export const customerSchema = z.object({
   receivableAccountId: z.string().optional(),
 });
 
+// Journal Entry Schemas
+export const journalLineSchema = z
+  .object({
+    accountId: z.string().min(1, "Account is required"),
+    description: z.string().min(1, "Description is required"),
+    debitAmount: z.number().min(0).optional(),
+    creditAmount: z.number().min(0).optional(),
+    projectId: z.string().optional(),
+    activityId: z.string().optional(),
+    subActivityId: z.string().optional(),
+    costGroup: z.string().optional(),
+    taxCodeId: z.string().optional(),
+    reference: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // Must have either debit or credit, but not both
+      const hasDebit = data.debitAmount !== undefined && data.debitAmount > 0;
+      const hasCredit =
+        data.creditAmount !== undefined && data.creditAmount > 0;
+      return (hasDebit && !hasCredit) || (!hasDebit && hasCredit);
+    },
+    {
+      message:
+        "Each line must have either a debit or credit amount, but not both",
+      path: ["debitAmount"],
+    }
+  );
+
+export const journalSchema = z
+  .object({
+    journalType: z.enum([
+      "PURCHASE",
+      "SALES",
+      "CASH_RECEIPTS",
+      "CASH_DISBURSEMENTS",
+      "GENERAL",
+    ]),
+    entryDate: z.string().min(1, "Entry date is required"),
+    reference: z.string().optional(),
+    description: z.string().min(1, "Description is required"),
+    lines: z
+      .array(journalLineSchema)
+      .min(2, "At least 2 journal lines are required"),
+  })
+  .refine(
+    (data) => {
+      // Check that total debits equal total credits
+      const totalDebits = data.lines.reduce(
+        (sum, line) => sum + (line.debitAmount || 0),
+        0
+      );
+      const totalCredits = data.lines.reduce(
+        (sum, line) => sum + (line.creditAmount || 0),
+        0
+      );
+
+      return Math.abs(totalDebits - totalCredits) < 0.01; // Allow for rounding errors
+    },
+    {
+      message: "Total debits must equal total credits",
+      path: ["lines"],
+    }
+  );
+
 // Schéma pour une ligne de facture
 export const invoiceLineSchema = z.object({
   activityId: z.string().cuid(),

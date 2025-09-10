@@ -58,7 +58,16 @@ export default async function EditVendorPage({ params }: EditVendorPageProps) {
       <Suspense fallback={<div>Loading form...</div>}>
         <VendorForm 
           chartAccounts={chartAccounts} 
-          vendor={vendor}
+          vendor={{
+            ...vendor,
+            email: vendor.email || undefined,
+            phone: vendor.phone || undefined,
+            address: vendor.address || undefined,
+            city: vendor.city || undefined,
+            postalCode: vendor.postalCode || undefined,
+            country: vendor.country || undefined,
+            payableAccountId: vendor.payableAccountId || "",
+          }}
           isEditing={true}
         />
       </Suspense>
