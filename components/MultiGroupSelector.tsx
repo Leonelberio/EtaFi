@@ -119,7 +119,7 @@ export function MultiGroupSelector({
 
   // Calculate total percentage
   const totalPercentage = groups.reduce(
-    (sum, group) => sum + group.percentage,
+    (sum, group) => sum + (Number(group.percentage) || 0),
     0
   );
   const isValid = Math.abs(totalPercentage - 100) < 0.01;
@@ -254,7 +254,7 @@ export function MultiGroupSelector({
           <div className="text-right">
             <div className="text-2xl font-bold">
               <span className={isValid ? "text-green-600" : "text-red-600"}>
-                {totalPercentage.toFixed(1)}%
+                {Number(totalPercentage || 0).toFixed(1)}%
               </span>
             </div>
             <div className="text-xs text-muted-foreground">
@@ -290,9 +290,9 @@ export function MultiGroupSelector({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               {totalPercentage > 100
-                ? `Le total dépasse 100% de ${(totalPercentage - 100).toFixed(1)}%`
+                ? `Le total dépasse 100% de ${Number(totalPercentage - 100).toFixed(1)}%`
                 : totalPercentage < 100
-                  ? `Il reste ${(100 - totalPercentage).toFixed(1)}% à répartir`
+                  ? `Il reste ${Number(100 - totalPercentage).toFixed(1)}% à répartir`
                   : "La répartition est équilibrée"}
             </AlertDescription>
           </Alert>
