@@ -14,6 +14,7 @@ import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import { login } from "@/actions/login";
 import { register } from "@/actions/register";
+import { signIn } from "next-auth/react";
 
 const LoginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -58,12 +59,17 @@ export function ModernAuthForm() {
     setSuccess("");
 
     try {
-      const result = await login(values);
+      const result = await signIn("credentials", {
+        email: values.email,
+        password: values.password,
+        redirect: false,
+      });
 
       if (result?.error) {
-        setError(result.error);
-      } else if ("success" in (result || {})) {
-        setSuccess((result as any).success);
+        setError("Invalid credentials!");
+      } else if (result?.ok) {
+        // Login successful, redirect to dashboard
+        window.location.href = "/dashboard";
       }
     } catch (error) {
       setError("Something went wrong. Please try again.");
