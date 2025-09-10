@@ -121,12 +121,16 @@ export function ChartAccountList() {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
+      console.log("Fetching chart accounts...");
       const response = await fetch("/api/chart-accounts");
+      console.log("Response status:", response.status);
       if (!response.ok) {
         throw new Error("Failed to fetch accounts");
       }
       const data = await response.json();
-      setAccounts(data.chartAccounts || []);
+      console.log("API response data:", data);
+      console.log("Accounts in response:", data.accounts?.length || 0);
+      setAccounts(data.accounts || []);
     } catch (error) {
       toast.error("Failed to fetch chart accounts");
       console.error("Error fetching accounts:", error);

@@ -5,8 +5,11 @@ import { getCurrentOrgId } from "@/lib/auth";
 // GET /api/chart-accounts - Get chart of accounts for organization
 export async function GET(req: NextRequest) {
   try {
+    console.log("Chart accounts API called");
     const organizationId = await getCurrentOrgId();
+    console.log("Organization ID:", organizationId);
     if (!organizationId) {
+      console.log("No organization ID found, returning 401");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -57,25 +60,23 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: [
-        { number: "asc" },
-      ],
+      orderBy: [{ number: "asc" }],
     });
 
     // Group accounts by type for easier consumption
     const groupedAccounts = {
-      ASSET: accounts.filter(a => a.type === "ASSET"),
-      LIABILITY: accounts.filter(a => a.type === "LIABILITY"),
-      EQUITY: accounts.filter(a => a.type === "EQUITY"),
-      REVENUE: accounts.filter(a => a.type === "REVENUE"),
-      EXPENSE: accounts.filter(a => a.type === "EXPENSE"),
-      TAX: accounts.filter(a => a.type === "TAX"),
+      ASSET: accounts.filter((a) => a.type === "ASSET"),
+      LIABILITY: accounts.filter((a) => a.type === "LIABILITY"),
+      EQUITY: accounts.filter((a) => a.type === "EQUITY"),
+      REVENUE: accounts.filter((a) => a.type === "REVENUE"),
+      EXPENSE: accounts.filter((a) => a.type === "EXPENSE"),
+      TAX: accounts.filter((a) => a.type === "TAX"),
     };
 
     // Count by type
     const summary = {
       total: accounts.length,
-      active: accounts.filter(a => a.isActive).length,
+      active: accounts.filter((a) => a.isActive).length,
       byType: {
         ASSET: groupedAccounts.ASSET.length,
         LIABILITY: groupedAccounts.LIABILITY.length,

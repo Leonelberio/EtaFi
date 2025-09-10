@@ -172,6 +172,11 @@ export function ActivityForm({
         if (accountsResponse.ok) {
           const accountsData = await accountsResponse.json();
           setChartAccounts(accountsData.accounts || []);
+        } else {
+          console.error(
+            "Failed to load chart accounts:",
+            accountsResponse.status
+          );
         }
 
         // Load existing cost groups if editing

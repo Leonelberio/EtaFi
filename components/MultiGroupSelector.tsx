@@ -197,8 +197,9 @@ export function MultiGroupSelector({
         groupCodes.some((code) => code.glAccountId === account.id)
       );
     }
-    // Fallback to all expense accounts if no specific mapping
-    return chartAccounts.filter((account) => account.type === "EXPENSE");
+    // Show all accounts for project cost allocation (not just EXPENSE)
+    // Users can select appropriate accounts for each cost group
+    return chartAccounts;
   };
 
   const saveGroups = async () => {
