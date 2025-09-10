@@ -33,6 +33,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { ApplyTemplateModal } from "@/components/ApplyTemplateModal";
 
 interface ProjectTemplate {
   id: string;
@@ -83,6 +84,15 @@ export default function ProjectTemplateList({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [industryFilter, setIndustryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<ProjectTemplate | null>(null);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [clients, setClients] = useState<Array<{ id: string; name: string }>>(
+    []
+  );
+  const [managers, setManagers] = useState<
+    Array<{ id: string; name: string; email: string }>
+  >([]);
 
   const categories = [
     "Construction",
@@ -101,6 +111,8 @@ export default function ProjectTemplateList({
 
   useEffect(() => {
     fetchTemplates();
+    fetchClients();
+    fetchManagers();
   }, [categoryFilter, industryFilter, statusFilter]);
 
   const fetchTemplates = async () => {
@@ -124,6 +136,54 @@ export default function ProjectTemplateList({
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const response = await fetch("/api/customers");
+      if (response.ok) {
+        const data = await response.json();
+        setClients(data.customers || []);
+      }
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+    }
+  };
+
+  const fetchManagers = async () => {
+    try {
+      const response = await fetch("/api/organizations");
+      if (response.ok) {
+        const data = await response.json();
+        // Extract managers from organization members
+        const managers =
+          data.organizations?.flatMap(
+            (org: any) =>
+              org.members?.map((member: any) => ({
+                id: member.user.id,
+                name: member.user.name,
+                email: member.user.email,
+              })) || []
+          ) || [];
+        setManagers(managers);
+      }
+    } catch (error) {
+      console.error("Error fetching managers:", error);
+    }
+  };
+
+  const handleApplyTemplate = (template: ProjectTemplate) => {
+    setSelectedTemplate(template);
+    setIsApplyModalOpen(true);
+  };
+
+  const handleTemplateApplied = (project: any) => {
+    // Call the original onApply if provided
+    if (onApply) {
+      onApply(selectedTemplate!);
+    }
+    // Optionally refresh the templates list
+    fetchTemplates();
   };
 
   const handleDelete = async (templateId: string) => {
@@ -388,7 +448,7 @@ export default function ProjectTemplateList({
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => onApply(template)}
+                        onClick={() => handleApplyTemplate(template)}
                       >
                         <Copy className="w-4 h-4 mr-1" />
                         Apply
@@ -423,6 +483,19 @@ export default function ProjectTemplateList({
           ))}
         </div>
       )}
+
+      {/* Apply Template Modal */}
+      <ApplyTemplateModal
+        template={selectedTemplate}
+        isOpen={isApplyModalOpen}
+        onClose={() => {
+          setIsApplyModalOpen(false);
+          setSelectedTemplate(null);
+        }}
+        onSuccess={handleTemplateApplied}
+        clients={clients}
+        managers={managers}
+      />
     </div>
   );
 }
