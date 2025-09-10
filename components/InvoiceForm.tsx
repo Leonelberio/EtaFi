@@ -158,6 +158,7 @@ export function InvoiceForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Data states
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
@@ -270,15 +271,37 @@ export function InvoiceForm({
       });
 
       if (response.ok) {
-        toast.success("Facture postée - Écritures de journal créées");
-        router.push("/dashboard/invoices");
+        const result = await response.json();
+        toast.success("✅ Facture postée avec succès!", {
+          description: "Les écritures de journal ont été créées automatiquement",
+          duration: 4000,
+        });
+        
+        // Small delay to show success message before redirect
+        setTimeout(() => {
+          router.push("/dashboard/invoices");
+        }, 1000);
       } else {
-        const error = await response.json();
-        toast.error(error.error || "Erreur lors du posting");
+        const errorData = await response.json();
+        const errorMessage = errorData.error || `Erreur ${response.status}: ${response.statusText}`;
+        
+        toast.error("❌ Erreur lors du posting", {
+          description: errorMessage,
+          duration: 6000,
+        });
+        
+        console.error("Invoice post error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData,
+        });
       }
     } catch (error) {
       console.error("Error posting invoice:", error);
-      toast.error("Erreur lors du posting");
+      toast.error("❌ Erreur de connexion", {
+        description: "Vérifiez votre connexion internet et réessayez",
+        duration: 6000,
+      });
     } finally {
       setSaving(false);
     }
@@ -525,9 +548,51 @@ export function InvoiceForm({
     }
   };
 
+  const clearFormErrors = () => {
+    setFormErrors({});
+  };
+
   const onSubmit = async (data: InvoiceFormData) => {
     try {
       setSaving(true);
+      clearFormErrors();
+
+      // Validate required fields
+      if (!data.customerId && !data.vendorId) {
+        setFormErrors({ customer: "Veuillez sélectionner un client ou un fournisseur" });
+        toast.error("Veuillez sélectionner un client ou un fournisseur");
+        return;
+      }
+
+      if (!data.projectId) {
+        setFormErrors({ project: "Veuillez sélectionner un projet" });
+        toast.error("Veuillez sélectionner un projet");
+        return;
+      }
+
+      if (!data.lines || data.lines.length === 0) {
+        setFormErrors({ lines: "Veuillez ajouter au moins une ligne de facture" });
+        toast.error("Veuillez ajouter au moins une ligne de facture");
+        return;
+      }
+
+      // Validate each line
+      const lineErrors: Record<string, string> = {};
+      for (let i = 0; i < data.lines.length; i++) {
+        const line = data.lines[i];
+        if (!line.activityId) {
+          lineErrors[`line_${i}_activity`] = `Veuillez sélectionner une activité pour la ligne: ${line.description || 'Sans description'}`;
+        }
+        if (!line.costCategory) {
+          lineErrors[`line_${i}_costCategory`] = `Veuillez sélectionner un groupe de coût pour la ligne: ${line.description || 'Sans description'}`;
+        }
+      }
+
+      if (Object.keys(lineErrors).length > 0) {
+        setFormErrors(lineErrors);
+        toast.error("Veuillez corriger les erreurs dans les lignes de facture");
+        return;
+      }
 
       const url = invoiceId ? `/api/invoices/${invoiceId}` : "/api/invoices";
       const method = invoiceId ? "PUT" : "POST";
@@ -542,15 +607,37 @@ export function InvoiceForm({
 
       if (response.ok) {
         const result = await response.json();
-        toast.success(invoiceId ? "Facture mise à jour" : "Facture créée");
-        router.push("/dashboard/invoices");
+        const action = invoiceId ? "mise à jour" : "créée";
+        toast.success(`✅ Facture ${action} avec succès!`, {
+          description: `Numéro: ${result.number || data.number}`,
+          duration: 4000,
+        });
+        
+        // Small delay to show success message before redirect
+        setTimeout(() => {
+          router.push("/dashboard/invoices");
+        }, 1000);
       } else {
-        const error = await response.json();
-        toast.error(error.error || "Erreur lors de la sauvegarde");
+        const errorData = await response.json();
+        const errorMessage = errorData.error || `Erreur ${response.status}: ${response.statusText}`;
+        
+        toast.error("❌ Erreur lors de la sauvegarde", {
+          description: errorMessage,
+          duration: 6000,
+        });
+        
+        console.error("Invoice save error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData,
+        });
       }
     } catch (error) {
       console.error("Error saving invoice:", error);
-      toast.error("Erreur lors de la sauvegarde");
+      toast.error("❌ Erreur de connexion", {
+        description: "Vérifiez votre connexion internet et réessayez",
+        duration: 6000,
+      });
     } finally {
       setSaving(false);
     }
@@ -694,9 +781,12 @@ export function InvoiceForm({
                 <Label htmlFor="customerId">Client *</Label>
                 <Select
                   value={form.watch("customerId") || ""}
-                  onValueChange={(value) => form.setValue("customerId", value)}
+                  onValueChange={(value) => {
+                    form.setValue("customerId", value);
+                    clearFormErrors();
+                  }}
                 >
-                  <SelectTrigger className="bg-white">
+                  <SelectTrigger className={`bg-white ${formErrors.customer ? 'border-red-500' : ''}`}>
                     <SelectValue placeholder="Sélectionner un client" />
                   </SelectTrigger>
                   <SelectContent>
@@ -707,15 +797,21 @@ export function InvoiceForm({
                     ))}
                   </SelectContent>
                 </Select>
+                {formErrors.customer && (
+                  <p className="text-sm text-red-500">{formErrors.customer}</p>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
                 <Label htmlFor="vendorId">Fournisseur *</Label>
                 <Select
                   value={form.watch("vendorId") || ""}
-                  onValueChange={(value) => form.setValue("vendorId", value)}
+                  onValueChange={(value) => {
+                    form.setValue("vendorId", value);
+                    clearFormErrors();
+                  }}
                 >
-                  <SelectTrigger className="bg-white">
+                  <SelectTrigger className={`bg-white ${formErrors.customer ? 'border-red-500' : ''}`}>
                     <SelectValue placeholder="Sélectionner un fournisseur" />
                   </SelectTrigger>
                   <SelectContent>
@@ -726,16 +822,22 @@ export function InvoiceForm({
                     ))}
                   </SelectContent>
                 </Select>
+                {formErrors.customer && (
+                  <p className="text-sm text-red-500">{formErrors.customer}</p>
+                )}
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="projectId">Projet</Label>
+              <Label htmlFor="projectId">Projet *</Label>
               <Select
                 value={form.watch("projectId") || ""}
-                onValueChange={(value) => form.setValue("projectId", value)}
+                onValueChange={(value) => {
+                  form.setValue("projectId", value);
+                  clearFormErrors();
+                }}
               >
-                <SelectTrigger className="bg-white">
+                <SelectTrigger className={`bg-white ${formErrors.project ? 'border-red-500' : ''}`}>
                   <SelectValue placeholder="Sélectionner un projet" />
                 </SelectTrigger>
                 <SelectContent>
@@ -746,6 +848,9 @@ export function InvoiceForm({
                   ))}
                 </SelectContent>
               </Select>
+              {formErrors.project && (
+                <p className="text-sm text-red-500">{formErrors.project}</p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -849,11 +954,12 @@ export function InvoiceForm({
                   <TableCell>
                     <Select
                       value={form.watch(`lines.${index}.activityId`) || ""}
-                      onValueChange={(value) =>
-                        form.setValue(`lines.${index}.activityId`, value)
-                      }
+                      onValueChange={(value) => {
+                        form.setValue(`lines.${index}.activityId`, value);
+                        clearFormErrors();
+                      }}
                     >
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger className={`bg-white ${formErrors[`line_${index}_activity`] ? 'border-red-500' : ''}`}>
                         <SelectValue placeholder="Activité" />
                       </SelectTrigger>
                       <SelectContent>
@@ -864,18 +970,22 @@ export function InvoiceForm({
                         ))}
                       </SelectContent>
                     </Select>
+                    {formErrors[`line_${index}_activity`] && (
+                      <p className="text-xs text-red-500 mt-1">{formErrors[`line_${index}_activity`]}</p>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Select
                       value={form.watch(`lines.${index}.costCategory`) || ""}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         form.setValue(
                           `lines.${index}.costCategory`,
                           value as "M" | "S" | "D" | "E" | "MOD"
-                        )
-                      }
+                        );
+                        clearFormErrors();
+                      }}
                     >
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger className={`bg-white ${formErrors[`line_${index}_costCategory`] ? 'border-red-500' : ''}`}>
                         <SelectValue placeholder="Groupe" />
                       </SelectTrigger>
                       <SelectContent>
@@ -886,6 +996,9 @@ export function InvoiceForm({
                         <SelectItem value="MOD">MOD - Main-d'œuvre</SelectItem>
                       </SelectContent>
                     </Select>
+                    {formErrors[`line_${index}_costCategory`] && (
+                      <p className="text-xs text-red-500 mt-1">{formErrors[`line_${index}_costCategory`]}</p>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Button
@@ -908,6 +1021,9 @@ export function InvoiceForm({
               <Plus className="h-4 w-4 mr-2" />
               Ajouter une ligne
             </Button>
+            {formErrors.lines && (
+              <p className="text-sm text-red-500 mt-2">{formErrors.lines}</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -989,11 +1105,25 @@ export function InvoiceForm({
             onClick={handlePost}
             disabled={saving}
           >
-            {saving ? "Postage..." : "Poster la facture"}
+            {saving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                Postage...
+              </>
+            ) : (
+              "Poster la facture"
+            )}
           </Button>
         )}
         <Button type="submit" disabled={saving}>
-          {saving ? "Sauvegarde..." : invoiceId ? "Mettre à jour" : "Créer"}
+          {saving ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Sauvegarde...
+            </>
+          ) : (
+            invoiceId ? "Mettre à jour" : "Créer"
+          )}
         </Button>
       </div>
     </form>
