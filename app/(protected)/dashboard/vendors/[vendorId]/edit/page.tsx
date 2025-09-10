@@ -1,31 +1,31 @@
 import { Suspense } from "react";
-import { CustomerForm } from "@/components/CustomerForm";
+import { VendorForm } from "@/components/VendorForm";
 import { getCurrentOrgId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
-import { Users } from "lucide-react";
+import { Truck } from "lucide-react";
 
-interface EditCustomerPageProps {
-  params: Promise<{ customerId: string }>;
+interface EditVendorPageProps {
+  params: Promise<{ vendorId: string }>;
 }
 
-export default async function EditCustomerPage({ params }: EditCustomerPageProps) {
+export default async function EditVendorPage({ params }: EditVendorPageProps) {
   const orgId = await getCurrentOrgId();
   if (!orgId) {
     redirect("/auth/login");
   }
 
-  const { customerId } = await params;
+  const { vendorId } = await params;
 
-  // Fetch customer and chart accounts in parallel
-  const [customer, chartAccounts] = await Promise.all([
-    db.customer.findFirst({
+  // Fetch vendor and chart accounts in parallel
+  const [vendor, chartAccounts] = await Promise.all([
+    db.vendor.findFirst({
       where: {
-        id: customerId,
+        id: vendorId,
         organizationId: orgId,
       },
       include: {
-        receivableAccount: {
+        payableAccount: {
           select: { id: true, number: true, name: true },
         },
       },
@@ -37,7 +37,7 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
     }),
   ]);
 
-  if (!customer) {
+  if (!vendor) {
     notFound();
   }
 
@@ -46,19 +46,19 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 bg-primary-100 rounded-lg flex items-center justify-center">
-          <Users className="h-5 w-5 text-primary-600" />
+          <Truck className="h-5 w-5 text-primary-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Edit Customer</h1>
-          <p className="text-gray-600">Update customer information</p>
+          <h1 className="text-2xl font-bold text-gray-900">Edit Vendor</h1>
+          <p className="text-gray-600">Update vendor information</p>
         </div>
       </div>
 
       {/* Form */}
       <Suspense fallback={<div>Loading form...</div>}>
-        <CustomerForm 
+        <VendorForm 
           chartAccounts={chartAccounts} 
-          customer={customer}
+          vendor={vendor}
           isEditing={true}
         />
       </Suspense>

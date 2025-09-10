@@ -157,7 +157,7 @@ export function CustomerForm({
                 </SelectTrigger>
                 <SelectContent>
                   {chartAccounts
-                    .filter((account) => account.number.startsWith("411"))
+                    .filter((account) => account.number.startsWith("1100"))
                     .map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.number} - {account.name}

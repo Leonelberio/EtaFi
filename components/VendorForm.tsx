@@ -20,41 +20,63 @@ import { toast } from "sonner";
 
 interface VendorFormProps {
   chartAccounts: Array<{ id: string; number: string; name: string }>;
+  vendor?: {
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
+    payableAccountId: string;
+  };
+  isEditing?: boolean;
 }
 
-export function VendorForm({ chartAccounts }: VendorFormProps) {
+export function VendorForm({
+  chartAccounts,
+  vendor,
+  isEditing = false,
+}: VendorFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const form = useForm({
     resolver: zodResolver(vendorSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      city: "",
-      postalCode: "",
-      country: "",
-      payableAccountId: "",
+      name: vendor?.name || "",
+      email: vendor?.email || "",
+      phone: vendor?.phone || "",
+      address: vendor?.address || "",
+      city: vendor?.city || "",
+      postalCode: vendor?.postalCode || "",
+      country: vendor?.country || "Canada",
+      payableAccountId: vendor?.payableAccountId || "",
     },
   });
 
   const onSubmit = async (data: any) => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/vendors", {
-        method: "POST",
+
+      const url = isEditing ? `/api/vendors/${vendor?.id}` : "/api/vendors";
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to create vendor");
+        throw new Error(
+          error.error || `Failed to ${isEditing ? "update" : "create"} vendor`
+        );
       }
 
-      toast.success("Vendor created successfully");
+      toast.success(`Vendor ${isEditing ? "updated" : "created"} successfully`);
 
       router.push("/dashboard/vendors");
       router.refresh();
@@ -70,7 +92,7 @@ export function VendorForm({ chartAccounts }: VendorFormProps) {
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>Create New Vendor</CardTitle>
+        <CardTitle>{isEditing ? "Edit Vendor" : "Create New Vendor"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -129,7 +151,7 @@ export function VendorForm({ chartAccounts }: VendorFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {chartAccounts
-                    .filter((account) => account.number.startsWith("401"))
+                    .filter((account) => account.number.startsWith("2000"))
                     .map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.number} - {account.name}

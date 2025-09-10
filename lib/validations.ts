@@ -56,13 +56,25 @@ export const projectSchema = z.object({
 // Schéma pour la création d'un fournisseur
 export const vendorSchema = z.object({
   name: z.string().min(2).max(100),
-  payableAccountNumber: z.string().min(3).max(10), // "401000"
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  postalCode: z.string().optional().or(z.literal("")),
+  country: z.string().optional().or(z.literal("")),
+  payableAccountId: z.string().optional(),
 });
 
 // Schéma pour la création d'un client
 export const customerSchema = z.object({
   name: z.string().min(2).max(100),
-  receivableAccountNumber: z.string().min(3).max(10), // "411000"
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  postalCode: z.string().optional().or(z.literal("")),
+  country: z.string().optional().or(z.literal("")),
+  receivableAccountId: z.string().optional(),
 });
 
 // Schéma pour une ligne de facture

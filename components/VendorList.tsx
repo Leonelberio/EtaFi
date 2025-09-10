@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +14,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Search, Mail, Phone, MapPin, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,6 +45,7 @@ interface Vendor {
 }
 
 export function VendorList() {
+  const router = useRouter();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -71,6 +84,28 @@ export function VendorList() {
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
+  };
+
+  const handleDelete = async (vendorId: string, vendorName: string) => {
+    try {
+      const response = await fetch(`/api/vendors/${vendorId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete vendor");
+      }
+
+      // Remove vendor from local state
+      setVendors(vendors.filter((vendor) => vendor.id !== vendorId));
+      toast.success(`Vendor "${vendorName}" deleted successfully`);
+    } catch (error) {
+      console.error("Error deleting vendor:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete vendor"
+      );
+    }
   };
 
   if (loading) {
@@ -178,16 +213,46 @@ export function VendorList() {
                         size="sm"
                         variant="outline"
                         className="h-8 w-8 p-0"
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/vendors/${vendor.id}/edit`
+                          )
+                        }
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently delete the vendor "{vendor.name}"
+                              and remove all associated data.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() =>
+                                handleDelete(vendor.id, vendor.name)
+                              }
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </TableCell>
                 </TableRow>
