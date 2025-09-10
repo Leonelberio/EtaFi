@@ -330,9 +330,9 @@ export function InvoiceForm({
       const lineTotal = lineAmount + lineTax;
 
       return {
-        amount: Number(lineAmount.toFixed(2)),
-        taxAmount: Number(lineTax.toFixed(2)),
-        totalAmount: Number(lineTotal.toFixed(2)),
+        amount: Number(Number(lineAmount).toFixed(2)),
+        taxAmount: Number(Number(lineTax).toFixed(2)),
+        totalAmount: Number(Number(lineTotal).toFixed(2)),
       };
     });
 
@@ -350,9 +350,9 @@ export function InvoiceForm({
     setCalculatedValues({
       lines: calculatedLines,
       totals: {
-        subtotal: Number(subtotal.toFixed(2)),
-        totalTax: Number(totalTax.toFixed(2)),
-        total: Number(total.toFixed(2)),
+        subtotal: Number(Number(subtotal).toFixed(2)),
+        totalTax: Number(Number(totalTax).toFixed(2)),
+        total: Number(Number(total).toFixed(2)),
       },
     });
 
@@ -369,13 +369,15 @@ export function InvoiceForm({
       });
     });
 
-    form.setValue("subtotal", Number(subtotal.toFixed(2)), {
+    form.setValue("subtotal", Number(Number(subtotal).toFixed(2)), {
       shouldValidate: false,
     });
-    form.setValue("taxAmount", Number(totalTax.toFixed(2)), {
+    form.setValue("taxAmount", Number(Number(totalTax).toFixed(2)), {
       shouldValidate: false,
     });
-    form.setValue("total", Number(total.toFixed(2)), { shouldValidate: false });
+    form.setValue("total", Number(Number(total).toFixed(2)), {
+      shouldValidate: false,
+    });
   }, [watchedLines, form]);
 
   // Generate invoice number on mount for new invoices

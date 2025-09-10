@@ -151,7 +151,7 @@ export default async function JournalDetailPage({
             <div>
               <p className="text-sm font-medium text-gray-500">Total Amount</p>
               <p className="text-sm font-medium">
-                ${Number(journal.totalAmount).toFixed(2)}
+                ${Number(Number(journal.totalAmount) || 0).toFixed(2)}
               </p>
             </div>
             <div>
@@ -236,12 +236,12 @@ export default async function JournalDetailPage({
                     </td>
                     <td className="p-2 text-right font-medium">
                       {line.debitAmount
-                        ? `$${Number(line.debitAmount).toFixed(2)}`
+                        ? `$${Number(Number(line.debitAmount) || 0).toFixed(2)}`
                         : "—"}
                     </td>
                     <td className="p-2 text-right font-medium">
                       {line.creditAmount
-                        ? `$${Number(line.creditAmount).toFixed(2)}`
+                        ? `$${Number(Number(line.creditAmount) || 0).toFixed(2)}`
                         : "—"}
                     </td>
                   </tr>
@@ -253,10 +253,10 @@ export default async function JournalDetailPage({
                     Totals:
                   </td>
                   <td className="p-2 text-right font-bold">
-                    ${totalDebits.toFixed(2)}
+                    ${Number(totalDebits || 0).toFixed(2)}
                   </td>
                   <td className="p-2 text-right font-bold">
-                    ${totalCredits.toFixed(2)}
+                    ${Number(totalCredits || 0).toFixed(2)}
                   </td>
                 </tr>
               </tfoot>

@@ -417,11 +417,15 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
             <div className="grid grid-cols-2 gap-4 p-4 bg-gray-100 rounded-lg">
               <div className="text-right">
                 <p className="text-sm font-medium">Total Debits:</p>
-                <p className="text-lg font-bold">${totalDebits.toFixed(2)}</p>
+                <p className="text-lg font-bold">
+                  ${Number(totalDebits || 0).toFixed(2)}
+                </p>
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium">Total Credits:</p>
-                <p className="text-lg font-bold">${totalCredits.toFixed(2)}</p>
+                <p className="text-lg font-bold">
+                  ${Number(totalCredits || 0).toFixed(2)}
+                </p>
               </div>
             </div>
 

@@ -342,7 +342,7 @@ export function JournalList({ initialJournals = [] }: JournalListProps) {
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      ${Number(journal.totalAmount).toFixed(2)}
+                      ${Number(Number(journal.totalAmount) || 0).toFixed(2)}
                     </TableCell>
                     <TableCell>{getStatusBadge(journal.status)}</TableCell>
                     <TableCell className="text-right">
