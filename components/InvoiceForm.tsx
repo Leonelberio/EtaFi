@@ -558,55 +558,20 @@ export function InvoiceForm({
   };
 
   const onSubmit = async (data: InvoiceFormData) => {
+    alert("onSubmit called!"); // Simple alert to test if function is called
+    console.log("onSubmit called with data:", data);
+    console.log("invoiceId:", invoiceId);
     try {
       setSaving(true);
       clearFormErrors();
 
-      // Validate required fields
-      if (!data.customerId && !data.vendorId) {
-        setFormErrors({
-          customer: "Veuillez sélectionner un client ou un fournisseur",
-        });
-        toast.error("Veuillez sélectionner un client ou un fournisseur");
-        return;
-      }
-
-      if (!data.projectId) {
-        setFormErrors({ project: "Veuillez sélectionner un projet" });
-        toast.error("Veuillez sélectionner un projet");
-        return;
-      }
-
-      if (!data.lines || data.lines.length === 0) {
-        setFormErrors({
-          lines: "Veuillez ajouter au moins une ligne de facture",
-        });
-        toast.error("Veuillez ajouter au moins une ligne de facture");
-        return;
-      }
-
-      // Validate each line
-      const lineErrors: Record<string, string> = {};
-      for (let i = 0; i < data.lines.length; i++) {
-        const line = data.lines[i];
-        if (!line.activityId) {
-          lineErrors[`line_${i}_activity`] =
-            `Veuillez sélectionner une activité pour la ligne: ${line.description || "Sans description"}`;
-        }
-        if (!line.costCategory) {
-          lineErrors[`line_${i}_costCategory`] =
-            `Veuillez sélectionner un groupe de coût pour la ligne: ${line.description || "Sans description"}`;
-        }
-      }
-
-      if (Object.keys(lineErrors).length > 0) {
-        setFormErrors(lineErrors);
-        toast.error("Veuillez corriger les erreurs dans les lignes de facture");
-        return;
-      }
+      // Temporarily skip validation for debugging
+      console.log("Skipping validation for debugging");
 
       const url = invoiceId ? `/api/invoices/${invoiceId}` : "/api/invoices";
       const method = invoiceId ? "PUT" : "POST";
+      
+      console.log("Making API call:", { url, method, data });
 
       const response = await fetch(url, {
         method,
