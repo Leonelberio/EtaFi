@@ -173,6 +173,7 @@ export function InvoiceForm({
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
+    mode: "onChange", // Add this to see validation errors in real-time
     defaultValues: {
       type: "SALES",
       status: "DRAFT",
@@ -224,6 +225,11 @@ export function InvoiceForm({
       }),
     },
   });
+
+  // Add form state watcher for debugging
+  const watchedValues = form.watch();
+  console.log("Form values:", watchedValues);
+  console.log("Form errors:", form.formState.errors);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -570,7 +576,7 @@ export function InvoiceForm({
 
       const url = invoiceId ? `/api/invoices/${invoiceId}` : "/api/invoices";
       const method = invoiceId ? "PUT" : "POST";
-
+      
       console.log("Making API call:", { url, method, data });
 
       const response = await fetch(url, {
