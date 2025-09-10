@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   ArrowRight,
   Building2,
@@ -12,10 +13,13 @@ import {
   Users,
   BarChart3,
   DollarSign,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
+  const { data: session, status } = useSession();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -46,21 +50,48 @@ export default function LandingPage() {
                 href="/dashboard"
                 className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
               >
-                Live Demo
+                {session ? "Dashboard" : "Live Demo"}
               </Link>
             </div>
 
             <div className="flex items-center space-x-4">
-              <Link href="/auth/login">
-                <Button variant="ghost" className="text-sm">
-                  Login
-                </Button>
-              </Link>
-              <Link href="/auth/register">
-                <Button className="bg-black hover:bg-gray-800 text-white text-sm">
-                  Get Started
-                </Button>
-              </Link>
+              {session ? (
+                <>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-gray-700 font-medium text-sm">
+                        {session.user?.name?.charAt(0) || "U"}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-700 hidden sm:block">
+                      {session.user?.name || session.user?.email}
+                    </span>
+                  </div>
+                  <Link href="/dashboard">
+                    <Button className="bg-black hover:bg-gray-800 text-white text-sm">
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                  <Link href="/api/auth/signout">
+                    <Button variant="ghost" className="text-sm">
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login">
+                    <Button variant="ghost" className="text-sm">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/auth/register">
+                    <Button className="bg-black hover:bg-gray-800 text-white text-sm">
+                      Get Started
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -72,35 +103,75 @@ export default function LandingPage() {
           <div className="inline-flex items-center space-x-2 bg-gray-50 rounded-full px-4 py-2 mb-8">
             <Star className="w-4 h-4 text-gray-600" />
             <span className="text-sm text-gray-600 font-medium">
-              Professional accounting software
+              {session ? "Welcome back!" : "Professional accounting software"}
             </span>
           </div>
 
           <h1 className="text-5xl md:text-6xl font-light text-gray-900 mb-6 leading-tight">
-            Complete accounting
-            <br />
-            <span className="font-normal">for growing businesses</span>
+            {session ? (
+              <>
+                Welcome back, {session.user?.name?.split(" ")[0] || "User"}!
+                <br />
+                <span className="font-normal">
+                  Ready to manage your accounts?
+                </span>
+              </>
+            ) : (
+              <>
+                Complete accounting
+                <br />
+                <span className="font-normal">for growing businesses</span>
+              </>
+            )}
           </h1>
 
           <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Full-featured accounting platform with chart of accounts, invoice
-            management, automated journal posting, tax code handling, and
-            comprehensive financial reporting. Built for accounting
-            professionals managing multiple organizations.
+            {session ? (
+              <>
+                Access your dashboard to manage projects, track expenses, create
+                invoices, and generate financial reports. Everything you need to
+                streamline your accounting workflow.
+              </>
+            ) : (
+              <>
+                Full-featured accounting platform with chart of accounts,
+                invoice management, automated journal posting, tax code
+                handling, and comprehensive financial reporting. Built for
+                accounting professionals managing multiple organizations.
+              </>
+            )}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Link href="/auth/register">
-              <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3">
-                Start Free Trial
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="outline" className="px-8 py-3">
-                View Live Demo
-              </Button>
-            </Link>
+            {session ? (
+              <>
+                <Link href="/dashboard">
+                  <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3">
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/dashboard/projects">
+                  <Button variant="outline" className="px-8 py-3">
+                    Manage Projects
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/register">
+                  <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3">
+                    Start Free Trial
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button variant="outline" className="px-8 py-3">
+                    View Live Demo
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Stats */}
@@ -359,26 +430,56 @@ export default function LandingPage() {
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-light text-gray-900 mb-6">
-            Ready to streamline your accounting?
+            {session
+              ? "Need help getting started?"
+              : "Ready to streamline your accounting?"}
           </h2>
           <p className="text-xl text-gray-600 mb-10 leading-relaxed">
-            Join accounting professionals using EtaFi to manage multiple
-            organizations, automate journal entries, and provide better
-            financial insights to their clients.
+            {session ? (
+              <>
+                Explore our comprehensive documentation, watch tutorials, or
+                contact support to make the most of your EtaFi accounting
+                platform.
+              </>
+            ) : (
+              <>
+                Join accounting professionals using EtaFi to manage multiple
+                organizations, automate journal entries, and provide better
+                financial insights to their clients.
+              </>
+            )}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/auth/register">
-              <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3">
-                Start Free Trial
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="outline" className="px-8 py-3">
-                Explore Live Demo
-              </Button>
-            </Link>
+            {session ? (
+              <>
+                <Link href="/dashboard">
+                  <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3">
+                    Continue to Dashboard
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/dashboard/help">
+                  <Button variant="outline" className="px-8 py-3">
+                    Get Help
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/register">
+                  <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3">
+                    Start Free Trial
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button variant="outline" className="px-8 py-3">
+                    Explore Live Demo
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>
