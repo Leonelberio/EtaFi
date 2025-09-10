@@ -116,6 +116,7 @@ export default async function EditInvoicePage({
       {/* Form */}
       <Suspense fallback={<div>Loading form...</div>}>
         <InvoiceForm
+          invoiceId={invoiceId}
           chartAccounts={chartAccounts}
           customers={customers}
           vendors={vendors}
