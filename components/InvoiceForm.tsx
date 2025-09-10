@@ -244,7 +244,7 @@ export function InvoiceForm({
   // Generate invoice number function
   const generateInvoiceNumber = async () => {
     if (isEditing) return; // Don't regenerate for existing invoices
-
+    
     setIsGeneratingNumber(true);
     try {
       const response = await fetch("/api/invoices/generate-number");
@@ -256,6 +256,30 @@ export function InvoiceForm({
       console.error("Error generating invoice number:", error);
     } finally {
       setIsGeneratingNumber(false);
+    }
+  };
+
+  const handlePost = async () => {
+    if (!invoiceId) return;
+    
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/invoices/${invoiceId}/post`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        toast.success("Facture postée - Écritures de journal créées");
+        router.push("/dashboard/invoices");
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Erreur lors du posting");
+      }
+    } catch (error) {
+      console.error("Error posting invoice:", error);
+      toast.error("Erreur lors du posting");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -956,6 +980,16 @@ export function InvoiceForm({
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Annuler
         </Button>
+        {isEditing && invoice?.status === "DRAFT" && (
+          <Button 
+            type="button" 
+            variant="secondary" 
+            onClick={handlePost}
+            disabled={saving}
+          >
+            {saving ? "Postage..." : "Poster la facture"}
+          </Button>
+        )}
         <Button type="submit" disabled={saving}>
           {saving ? "Sauvegarde..." : invoiceId ? "Mettre à jour" : "Créer"}
         </Button>
