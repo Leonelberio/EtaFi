@@ -216,14 +216,16 @@ export function ApplyTemplateModal({
             <div className="space-y-2">
               <Label htmlFor="clientId">Client</Label>
               <Select
-                value={formData.clientId}
-                onValueChange={(value) => handleInputChange("clientId", value)}
+                value={formData.clientId || "NONE"}
+                onValueChange={(value) =>
+                  handleInputChange("clientId", value === "NONE" ? "" : value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select client" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No client</SelectItem>
+                  <SelectItem value="NONE">No client</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
@@ -236,14 +238,16 @@ export function ApplyTemplateModal({
             <div className="space-y-2">
               <Label htmlFor="managerId">Project Manager</Label>
               <Select
-                value={formData.managerId}
-                onValueChange={(value) => handleInputChange("managerId", value)}
+                value={formData.managerId || "NONE"}
+                onValueChange={(value) =>
+                  handleInputChange("managerId", value === "NONE" ? "" : value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select manager" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No manager</SelectItem>
+                  <SelectItem value="NONE">No manager</SelectItem>
                   {managers.map((manager) => (
                     <SelectItem key={manager.id} value={manager.id}>
                       {manager.name} ({manager.email})

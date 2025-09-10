@@ -23,8 +23,10 @@ import {
   Building2,
   Check,
   Building,
+  FileText,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SmartSearch } from "@/components/SmartSearch";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -42,7 +44,6 @@ interface HeaderProps {
 
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const { data: session } = useSession();
-  const [searchQuery, setSearchQuery] = useState("");
   const [switchingToOrg, setSwitchingToOrg] = useState<Organization | null>(null);
 
   // 🆕 Use organization context for real-time updates
@@ -182,26 +183,13 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             </DropdownMenu>
           </div>
 
-          {/* Search */}
+          {/* Smart Search */}
           <div className="flex flex-1 items-center justify-center px-2 lg:ml-6 lg:justify-start">
             <div className="w-full max-w-lg lg:max-w-xs">
-              <label htmlFor="search" className="sr-only">
-                Rechercher
-              </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <Input
-                  id="search"
-                  name="search"
-                  className="bg-white border-gray-300 focus:border-rose-500 focus:ring-rose-500 pl-10 pr-3 sm:text-sm"
-                  placeholder="Rechercher entreprises, exercices..."
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+              <SmartSearch 
+                className="w-full"
+                placeholder="Rechercher pages, factures, projets..."
+              />
             </div>
           </div>
 
@@ -209,13 +197,13 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           <div className="flex items-center gap-4">
             {/* Quick Actions */}
             <div className="hidden md:flex items-center gap-2">
-              <Link href="/dashboard/companies/new">
+              <Link href="/dashboard/invoices/new">
                 <Button
                   size="sm"
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 text-xs"
+                  className="bg-rose-500 hover:bg-rose-600 text-white border border-rose-500 text-xs"
                 >
-                  <Building2 className="h-4 w-4 mr-1" />
-                  Nouvelle Entreprise
+                  <FileText className="h-4 w-4 mr-1" />
+                  Nouvelle Facture
                 </Button>
               </Link>
             </div>

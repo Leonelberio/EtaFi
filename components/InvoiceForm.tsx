@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -135,21 +135,40 @@ interface TaxCode {
 interface InvoiceFormProps {
   invoiceId?: string;
   initialData?: Partial<InvoiceFormData>;
+  chartAccounts?: ChartAccount[];
+  customers?: Customer[];
+  vendors?: Vendor[];
+  projects?: Project[];
+  taxCodes?: TaxCode[];
+  invoice?: any;
+  isEditing?: boolean;
 }
 
-export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
+export function InvoiceForm({
+  invoiceId,
+  initialData,
+  chartAccounts: initialChartAccounts = [],
+  customers: initialCustomers = [],
+  vendors: initialVendors = [],
+  projects: initialProjects = [],
+  taxCodes: initialTaxCodes = [],
+  invoice,
+  isEditing = false,
+}: InvoiceFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Data states
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [vendors, setVendors] = useState<Vendor[]>(initialVendors);
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [subActivities, setSubActivities] = useState<SubActivity[]>([]);
-  const [chartAccounts, setChartAccounts] = useState<ChartAccount[]>([]);
-  const [taxCodes, setTaxCodes] = useState<TaxCode[]>([]);
+  const [chartAccounts, setChartAccounts] =
+    useState<ChartAccount[]>(initialChartAccounts);
+  const [taxCodes, setTaxCodes] = useState<TaxCode[]>(initialTaxCodes);
+  const [isGeneratingNumber, setIsGeneratingNumber] = useState(false);
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -173,6 +192,34 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
         },
       ],
       ...initialData,
+      ...(invoice && {
+        ...invoice,
+        date: invoice.date
+          ? new Date(invoice.date).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        dueDate: invoice.dueDate
+          ? new Date(invoice.dueDate).toISOString().split("T")[0]
+          : undefined,
+        lines: invoice.lines?.map((line: any, index: number) => ({
+          ...line,
+          quantity: Number(line.quantity) || 0,
+          unitPrice: Number(line.unitPrice) || 0,
+          amount: Number(line.amount) || 0,
+          taxAmount: Number(line.taxAmount) || 0,
+          totalAmount: Number(line.totalAmount) || 0,
+          taxRate: Number(line.taxRate) || 0,
+          sortOrder: index,
+        })) || [
+          {
+            description: "",
+            quantity: 1,
+            unitPrice: 0,
+            amount: 0,
+            totalAmount: 0,
+            sortOrder: 0,
+          },
+        ],
+      }),
     },
   });
 
@@ -180,6 +227,90 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
     control: form.control,
     name: "lines",
   });
+
+  // Watch all form values for real-time calculation
+  const watchedValues = form.watch();
+  const watchedLines = form.watch("lines");
+
+  // Generate invoice number function
+  const generateInvoiceNumber = async () => {
+    if (isEditing) return; // Don't regenerate for existing invoices
+
+    setIsGeneratingNumber(true);
+    try {
+      const response = await fetch("/api/invoices/generate-number");
+      if (response.ok) {
+        const data = await response.json();
+        form.setValue("number", data.number);
+      }
+    } catch (error) {
+      console.error("Error generating invoice number:", error);
+    } finally {
+      setIsGeneratingNumber(false);
+    }
+  };
+
+  // Calculate line totals in real-time using useMemo
+  const calculatedLines = useMemo(() => {
+    if (!watchedLines) return [];
+
+    return watchedLines.map((line) => {
+      const lineAmount = (line.quantity || 0) * (line.unitPrice || 0);
+      const lineTax = lineAmount * (line.taxRate || 0);
+      const lineTotal = lineAmount + lineTax;
+
+      return {
+        amount: lineAmount,
+        taxAmount: lineTax,
+        totalAmount: lineTotal,
+      };
+    });
+  }, [watchedLines]);
+
+  // Calculate invoice totals in real-time using useMemo
+  const calculatedTotals = useMemo(() => {
+    const subtotal = calculatedLines.reduce(
+      (sum, line) => sum + line.amount,
+      0
+    );
+    const totalTax = calculatedLines.reduce(
+      (sum, line) => sum + line.taxAmount,
+      0
+    );
+    const total = subtotal + totalTax;
+
+    return { subtotal, totalTax, total };
+  }, [calculatedLines]);
+
+  // Update form values when calculations change
+  useEffect(() => {
+    calculatedLines.forEach((calc, index) => {
+      form.setValue(`lines.${index}.amount`, calc.amount, {
+        shouldValidate: false,
+      });
+      form.setValue(`lines.${index}.taxAmount`, calc.taxAmount, {
+        shouldValidate: false,
+      });
+      form.setValue(`lines.${index}.totalAmount`, calc.totalAmount, {
+        shouldValidate: false,
+      });
+    });
+
+    form.setValue("subtotal", calculatedTotals.subtotal, {
+      shouldValidate: false,
+    });
+    form.setValue("taxAmount", calculatedTotals.totalTax, {
+      shouldValidate: false,
+    });
+    form.setValue("total", calculatedTotals.total, { shouldValidate: false });
+  }, [calculatedLines, calculatedTotals, form]);
+
+  // Generate invoice number on mount for new invoices
+  useEffect(() => {
+    if (!isEditing) {
+      generateInvoiceNumber();
+    }
+  }, [isEditing]);
 
   const watchType = form.watch("type");
   const watchProjectId = form.watch("projectId");
@@ -190,6 +321,18 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
     const loadData = async () => {
       try {
         setLoading(true);
+
+        // If data was provided as props, no need to fetch
+        if (
+          initialCustomers.length > 0 &&
+          initialVendors.length > 0 &&
+          initialProjects.length > 0 &&
+          initialChartAccounts.length > 0 &&
+          initialTaxCodes.length > 0
+        ) {
+          setLoading(false);
+          return;
+        }
 
         const [
           customersRes,
@@ -205,7 +348,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
           fetch("/api/tax-codes"),
         ]);
 
-        if (customersRes.ok) {
+        if (customersRes.ok && initialCustomers.length === 0) {
           const customersData = await customersRes.json();
           setCustomers(
             Array.isArray(customersData.customers)
@@ -214,21 +357,21 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
           );
         }
 
-        if (vendorsRes.ok) {
+        if (vendorsRes.ok && initialVendors.length === 0) {
           const vendorsData = await vendorsRes.json();
           setVendors(
             Array.isArray(vendorsData.vendors) ? vendorsData.vendors : []
           );
         }
 
-        if (projectsRes.ok) {
+        if (projectsRes.ok && initialProjects.length === 0) {
           const projectsData = await projectsRes.json();
           setProjects(
             Array.isArray(projectsData.projects) ? projectsData.projects : []
           );
         }
 
-        if (chartAccountsRes.ok) {
+        if (chartAccountsRes.ok && initialChartAccounts.length === 0) {
           const chartAccountsData = await chartAccountsRes.json();
           setChartAccounts(
             Array.isArray(chartAccountsData.accounts)
@@ -237,7 +380,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
           );
         }
 
-        if (taxCodesRes.ok) {
+        if (taxCodesRes.ok && initialTaxCodes.length === 0) {
           const taxCodesData = await taxCodesRes.json();
           setTaxCodes(
             Array.isArray(taxCodesData.taxCodes) ? taxCodesData.taxCodes : []
@@ -274,7 +417,11 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
           console.log("Activities loaded:", data);
           setActivities(Array.isArray(data) ? data : []);
         } else {
-          console.error("Failed to load activities:", response.status, response.statusText);
+          console.error(
+            "Failed to load activities:",
+            response.status,
+            response.statusText
+          );
           const errorText = await response.text();
           console.error("Error response:", errorText);
         }
@@ -327,19 +474,6 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
   const removeLine = (index: number) => {
     if (fields.length > 1) {
       remove(index);
-    }
-  };
-
-  const calculateLineTotal = (index: number) => {
-    const line = watchLines[index];
-    if (line) {
-      const amount = (line.quantity || 0) * (line.unitPrice || 0);
-      const taxAmount = amount * (line.taxRate || 0);
-      const totalAmount = amount + taxAmount;
-
-      form.setValue(`lines.${index}.amount`, amount);
-      form.setValue(`lines.${index}.taxAmount`, taxAmount);
-      form.setValue(`lines.${index}.totalAmount`, totalAmount);
     }
   };
 
@@ -406,12 +540,22 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="number">Numéro de facture *</Label>
-              <Input
-                id="number"
-                {...form.register("number")}
-                placeholder="INV-2025-001"
-                className="bg-white"
-              />
+              <div className="relative">
+                <Input
+                  id="number"
+                  {...form.register("number")}
+                  placeholder={
+                    isGeneratingNumber ? "Génération..." : "INV-2025-001"
+                  }
+                  className="bg-gray-50"
+                  readOnly
+                />
+                {isGeneratingNumber && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                  </div>
+                )}
+              </div>
               {form.formState.errors.number && (
                 <p className="text-sm text-red-600">
                   {form.formState.errors.number.message}
@@ -604,7 +748,6 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
                           `lines.${index}.quantity`,
                           parseFloat(e.target.value) || 0
                         );
-                        calculateLineTotal(index);
                       }}
                       className="bg-white"
                     />
@@ -621,7 +764,6 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
                           `lines.${index}.unitPrice`,
                           parseFloat(e.target.value) || 0
                         );
-                        calculateLineTotal(index);
                       }}
                       className="bg-white"
                     />
@@ -630,7 +772,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
                     <Input
                       type="number"
                       step="0.01"
-                      value={form.watch(`lines.${index}.amount`) || 0}
+                      value={calculatedLines[index]?.amount || 0}
                       readOnly
                       className="bg-gray-50"
                     />
@@ -643,7 +785,6 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
                         const taxCode = taxCodes.find((tc) => tc.id === value);
                         if (taxCode) {
                           form.setValue(`lines.${index}.taxRate`, taxCode.rate);
-                          calculateLineTotal(index);
                         }
                       }}
                     >
@@ -664,7 +805,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
                     <Input
                       type="number"
                       step="0.01"
-                      value={form.watch(`lines.${index}.totalAmount`) || 0}
+                      value={calculatedLines[index]?.totalAmount || 0}
                       readOnly
                       className="bg-gray-50"
                     />
@@ -748,7 +889,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
             <div className="space-y-2">
               <Label>Sous-total</Label>
               <Input
-                value={formatCurrency(form.watch("subtotal") || 0)}
+                value={formatCurrency(calculatedTotals.subtotal)}
                 readOnly
                 className="bg-gray-50"
               />
@@ -756,7 +897,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
             <div className="space-y-2">
               <Label>Taxes</Label>
               <Input
-                value={formatCurrency(form.watch("taxAmount") || 0)}
+                value={formatCurrency(calculatedTotals.totalTax)}
                 readOnly
                 className="bg-gray-50"
               />
@@ -764,7 +905,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
             <div className="space-y-2">
               <Label>Total</Label>
               <Input
-                value={formatCurrency(form.watch("total") || 0)}
+                value={formatCurrency(calculatedTotals.total)}
                 readOnly
                 className="bg-gray-50 font-bold"
               />
