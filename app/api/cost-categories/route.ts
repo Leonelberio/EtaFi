@@ -8,10 +8,11 @@ const costCategorySchema = z.object({
   code: z
     .string()
     .min(1)
-    .max(3)
-    .refine((val) => ["M", "S", "D", "E", "MOD"].includes(val), {
-      message: "Code must be one of: M, S, D, E, MOD",
-    }),
+    .max(10)
+    .regex(
+      /^[A-Z0-9_-]+$/,
+      "Code must contain only uppercase letters, numbers, underscores, and hyphens"
+    ),
   name: z.string().min(2).max(100),
   description: z.string().min(2).max(500),
   color: z

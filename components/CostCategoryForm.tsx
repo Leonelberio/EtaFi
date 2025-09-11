@@ -17,13 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 
 // Form validation schema
@@ -31,10 +24,11 @@ const costCategoryFormSchema = z.object({
   code: z
     .string()
     .min(1, "Code is required")
-    .max(3, "Code must be 3 characters or less")
-    .refine((val) => ["M", "S", "D", "E", "MOD"].includes(val), {
-      message: "Code must be one of: M, S, D, E, MOD",
-    }),
+    .max(10, "Code must be 10 characters or less")
+    .regex(
+      /^[A-Z0-9_-]+$/,
+      "Code must contain only uppercase letters, numbers, underscores, and hyphens"
+    ),
   name: z
     .string()
     .min(2, "Name must be at least 2 characters")
@@ -138,25 +132,7 @@ export function CostCategoryForm({
     },
   });
 
-  const selectedCode = form.watch("code");
   const selectedColor = form.watch("color");
-
-  // Auto-fill fields when code is selected
-  const handleCodeChange = (code: string) => {
-    form.setValue("code", code);
-    const option = COST_CATEGORY_OPTIONS.find((opt) => opt.code === code);
-    if (option) {
-      form.setValue("name", option.name);
-      form.setValue("description", option.description);
-      form.setValue("color", option.color);
-      form.setValue("icon", option.icon);
-      // Auto-set sort order based on code
-      const sortOrder = COST_CATEGORY_OPTIONS.findIndex(
-        (opt) => opt.code === code
-      ) + 1;
-      form.setValue("sortOrder", sortOrder);
-    }
-  };
 
   const onSubmit = async (data: CostCategoryFormData) => {
     try {
@@ -219,45 +195,31 @@ export function CostCategoryForm({
           <CardHeader>
             <CardTitle>Category Information</CardTitle>
             <CardDescription>
-              Configure the cost category details following the Canadian
-              5-group system (M, S, D, E, MOD).
+              Configure the cost category details following the Canadian 5-group
+              system (M, S, D, E, MOD).
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Code Selection */}
+            {/* Code Input */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
                 Category Code *
               </label>
-              <Select
-                value={form.watch("code")}
-                onValueChange={handleCodeChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category code" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COST_CATEGORY_OPTIONS.map((option) => (
-                    <SelectItem key={option.code} value={option.code}>
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                          style={{ backgroundColor: option.color }}
-                        >
-                          {option.icon || option.code}
-                        </div>
-                        <div>
-                          <div className="font-medium">{option.code}</div>
-                          <div className="text-sm text-gray-500">
-                            {option.name}
-                          </div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                {...form.register("code")}
+                placeholder="e.g., M, S, D, E, MOD, CUSTOM1, etc."
+                className="font-mono uppercase"
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase();
+                  form.setValue("code", value);
+                }}
+              />
+              <p className="text-xs text-gray-500">
+                Use uppercase letters, numbers, underscores, and hyphens only.
+                Common codes: M (Material), S (Services), D (Divers), E
+                (Equipment), MOD (Labor)
+              </p>
               {form.formState.errors.code && (
                 <p className="text-red-500 text-sm">
                   {form.formState.errors.code.message}
@@ -375,12 +337,14 @@ export function CostCategoryForm({
               </div>
               <Switch
                 checked={form.watch("isActive")}
-                onCheckedChange={(checked) => form.setValue("isActive", checked)}
+                onCheckedChange={(checked) =>
+                  form.setValue("isActive", checked)
+                }
               />
             </div>
 
             {/* Preview */}
-            {selectedCode && (
+            {form.watch("code") && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
                   Preview
@@ -391,7 +355,7 @@ export function CostCategoryForm({
                       className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
                       style={{ backgroundColor: selectedColor }}
                     >
-                      {form.watch("icon") || selectedCode}
+                      {form.watch("icon") || form.watch("code")}
                     </div>
                     <div>
                       <div className="font-medium">
