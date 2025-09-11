@@ -33,6 +33,11 @@ export async function GET(req: NextRequest) {
         orderBy: { name: "asc" },
         skip,
         take: limit,
+        include: {
+          receivableAccount: {
+            select: { number: true, name: true },
+          },
+        },
       }),
       db.customer.count({ where }),
     ]);

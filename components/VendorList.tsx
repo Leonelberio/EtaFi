@@ -40,7 +40,7 @@ interface Vendor {
   payableAccount: {
     number: string;
     name: string;
-  };
+  } | null;
   createdAt: string;
 }
 
@@ -194,13 +194,19 @@ export function VendorList() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className="bg-primary-50 text-primary-700"
-                    >
-                      {vendor.payableAccount.number} -{" "}
-                      {vendor.payableAccount.name}
-                    </Badge>
+                    {vendor.payableAccount ? (
+                      <Badge
+                        variant="secondary"
+                        className="bg-primary-50 text-primary-700"
+                      >
+                        {vendor.payableAccount.number} -{" "}
+                        {vendor.payableAccount.name}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-gray-500">
+                        Aucun compte
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-500">
@@ -214,9 +220,7 @@ export function VendorList() {
                         variant="outline"
                         className="h-8 w-8 p-0"
                         onClick={() =>
-                          router.push(
-                            `/dashboard/vendors/${vendor.id}/edit`
-                          )
+                          router.push(`/dashboard/vendors/${vendor.id}/edit`)
                         }
                       >
                         <Edit className="h-3 w-3" />
@@ -236,8 +240,8 @@ export function VendorList() {
                             <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will
-                              permanently delete the vendor "{vendor.name}"
-                              and remove all associated data.
+                              permanently delete the vendor "{vendor.name}" and
+                              remove all associated data.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

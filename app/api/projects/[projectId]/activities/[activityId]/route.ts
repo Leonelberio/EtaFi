@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentOrgId } from "@/lib/auth";
-import { activitySchema } from "@/lib/validations";
+import {
+  activitySchema,
+  activityWithSubActivitiesSchema,
+} from "@/lib/validations";
 
 interface RouteParams {
   params: Promise<{ projectId: string; activityId: string }>;
@@ -70,7 +73,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     const { projectId, activityId } = await params;
-    const body = activitySchema.parse(await req.json());
+    const body = activityWithSubActivitiesSchema.parse(await req.json());
 
     // Check if activity exists and belongs to organization
     const existingActivity = await db.activity.findFirst({
@@ -113,34 +116,68 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         (body.budgetE || 0) +
         (body.budgetMOD || 0);
 
-    const updatedActivity = await db.activity.update({
-      where: {
-        id: activityId,
-      },
-      data: {
-        code: body.code,
-        name: body.name,
-        description: body.description,
-        budgetAmount: totalBudget,
-        budgetM: body.budgetM || 0,
-        budgetS: body.budgetS || 0,
-        budgetD: body.budgetD || 0,
-        budgetE: body.budgetE || 0,
-        budgetMOD: body.budgetMOD || 0,
-        isActive: body.isActive ?? true,
-        sortOrder: body.sortOrder ?? 0,
-      },
-      include: {
-        subActivities: {
-          orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+    // Use transaction to update activity and sub-activities
+    const updatedActivity = await db.$transaction(async (tx) => {
+      // First, delete existing sub-activities
+      await tx.subActivity.deleteMany({
+        where: {
+          activityId: activityId,
         },
-        _count: {
-          select: {
-            subActivities: true,
-            journalLines: true,
+      });
+
+      // Update the activity
+      const activity = await tx.activity.update({
+        where: {
+          id: activityId,
+        },
+        data: {
+          code: body.code,
+          name: body.name,
+          description: body.description,
+          budgetAmount: totalBudget,
+          budgetM: body.budgetM || 0,
+          budgetS: body.budgetS || 0,
+          budgetD: body.budgetD || 0,
+          budgetE: body.budgetE || 0,
+          budgetMOD: body.budgetMOD || 0,
+          isActive: body.isActive ?? true,
+          sortOrder: body.sortOrder ?? 0,
+        },
+      });
+
+      // Create new sub-activities if any
+      if (body.subActivities && body.subActivities.length > 0) {
+        await tx.subActivity.createMany({
+          data: body.subActivities.map((subActivity, index) => ({
+            organizationId,
+            projectId: projectId,
+            activityId: activityId,
+            code: `${body.code}-${String(index + 1).padStart(2, "0")}`,
+            name: subActivity.name,
+            description: subActivity.description || "",
+            budgetAmount: subActivity.estimatedCost,
+            estimatedHours: subActivity.estimatedHours,
+            isActive: true,
+            sortOrder: index,
+          })),
+        });
+      }
+
+      // Return the updated activity with sub-activities
+      return await tx.activity.findUnique({
+        where: { id: activityId },
+        include: {
+          subActivities: {
+            orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+          },
+          _count: {
+            select: {
+              subActivities: true,
+              journalLines: true,
+            },
           },
         },
-      },
+      });
     });
 
     return NextResponse.json(updatedActivity);

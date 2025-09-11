@@ -182,7 +182,7 @@ export function CostCategoryList({
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">5-Group Cost Categories</h1>
+          <h1 className="text-2xl font-bold">Cost Categories</h1>
           <div className="flex gap-2">
             <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
             <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
@@ -205,9 +205,7 @@ export function CostCategoryList({
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            5-Group Cost Categories
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Cost Categories</h1>
           <p className="text-gray-600 mt-1">
             Canadian project cost categorization system (M, S, D, E, MOD)
           </p>

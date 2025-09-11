@@ -550,9 +550,7 @@ export default function ProjectTemplateForm({
                             checked={showDetailedBudget}
                             onCheckedChange={setShowDetailedBudget}
                           />
-                          <Label className="text-sm">
-                            Detailed Budget (5-Group)
-                          </Label>
+                          <Label className="text-sm">Detailed Budget</Label>
                         </div>
                       </div>
 

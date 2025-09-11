@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentOrgId } from "@/lib/auth";
-import { activitySchema } from "@/lib/validations";
+import {
+  activitySchema,
+  activityWithSubActivitiesSchema,
+} from "@/lib/validations";
 
 interface RouteParams {
   params: Promise<{ projectId: string }>;
@@ -50,7 +53,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
     });
 
-    console.log(`Found ${activities.length} activities for project ${projectId}`);
+    console.log(
+      `Found ${activities.length} activities for project ${projectId}`
+    );
     return NextResponse.json(activities);
   } catch (error) {
     console.error("Error fetching activities:", error);
@@ -70,7 +75,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     const { projectId } = await params;
-    const body = activitySchema.parse(await req.json());
+    const body = activityWithSubActivitiesSchema.parse(await req.json());
 
     // Verify project exists and belongs to organization
     const project = await db.project.findFirst({
@@ -123,9 +128,25 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         budgetMOD: body.budgetMOD || 0,
         isActive: body.isActive ?? true,
         sortOrder: body.sortOrder ?? 0,
+        subActivities: {
+          create:
+            body.subActivities?.map((subActivity, index) => ({
+              organizationId,
+              projectId: projectId,
+              code: `${body.code}-${String(index + 1).padStart(2, "0")}`,
+              name: subActivity.name,
+              description: subActivity.description || "",
+              budgetAmount: subActivity.estimatedCost,
+              estimatedHours: subActivity.estimatedHours,
+              isActive: true,
+              sortOrder: index,
+            })) || [],
+        },
       },
       include: {
-        subActivities: true,
+        subActivities: {
+          orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+        },
         _count: {
           select: {
             subActivities: true,

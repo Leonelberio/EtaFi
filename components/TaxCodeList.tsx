@@ -115,7 +115,7 @@ export function TaxCodeList() {
       }
 
       const data = await response.json();
-      setTaxCodes(data);
+      setTaxCodes(data.taxCodes || []);
     } catch (error) {
       console.error("Error fetching tax codes:", error);
       toast.error("Failed to fetch tax codes");

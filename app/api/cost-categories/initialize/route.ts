@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser, getCurrentOrgId } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-// Default Canadian 5-Group Cost Categories
+// Default Canadian Cost Categories
 const DEFAULT_COST_CATEGORIES = [
   {
     code: "M",
@@ -82,7 +82,8 @@ export async function POST(request: NextRequest) {
     if (existingCategories > 0 && !overwriteExisting) {
       return NextResponse.json(
         {
-          error: "Organization already has cost categories. Set overwriteExisting=true to replace them.",
+          error:
+            "Organization already has cost categories. Set overwriteExisting=true to replace them.",
           existingCount: existingCategories,
         },
         { status: 400 }

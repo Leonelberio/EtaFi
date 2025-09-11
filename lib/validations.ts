@@ -29,6 +29,20 @@ export const activitySchema = z.object({
   sortOrder: z.number().optional().default(0),
 });
 
+// Schéma pour les sous-activités dans le formulaire
+export const subActivityFormSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  estimatedHours: z.number().min(0).default(0),
+  estimatedCost: z.number().min(0).default(0),
+});
+
+// Schéma étendu pour les activités avec sous-activités
+export const activityWithSubActivitiesSchema = activitySchema.extend({
+  subActivities: z.array(subActivityFormSchema).optional().default([]),
+});
+
 // Schéma pour la création d'une sous-activité
 export const subActivitySchema = z.object({
   code: z.string().min(3).max(20), // Sub-activity code (e.g., "01010-01")

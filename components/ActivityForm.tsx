@@ -30,6 +30,8 @@ import {
   DollarSign,
   Target,
   BarChart3,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -78,6 +80,14 @@ const COST_GROUPS = [
   },
 ] as const;
 
+interface SubActivity {
+  id: string;
+  name: string;
+  description: string;
+  estimatedHours: number;
+  estimatedCost: number;
+}
+
 interface ActivityFormProps {
   projectId: string;
   activity?: {
@@ -107,6 +117,14 @@ export function ActivityForm({
   const [useDetailedBudget, setUseDetailedBudget] = useState(false);
   const [useMultiGroups, setUseMultiGroups] = useState(false);
   const [chartAccounts, setChartAccounts] = useState<any[]>([]);
+  const [subActivities, setSubActivities] = useState<SubActivity[]>([]);
+  const [newSubActivity, setNewSubActivity] = useState<SubActivity>({
+    id: "",
+    name: "",
+    description: "",
+    estimatedHours: 0,
+    estimatedCost: 0,
+  });
   const [costGroups, setCostGroups] = useState<any[]>([]);
 
   const form = useForm<ActivityInput>({
@@ -189,6 +207,25 @@ export function ActivityForm({
             setCostGroups(groupsData.costGroups || []);
             setUseMultiGroups(groupsData.costGroups?.length > 0);
           }
+
+          // Load existing sub-activities
+          const activityResponse = await fetch(
+            `/api/projects/${projectId}/activities/${activity.id}`
+          );
+          if (activityResponse.ok) {
+            const activityData = await activityResponse.json();
+            if (activityData.subActivities) {
+              setSubActivities(
+                activityData.subActivities.map((sub: any) => ({
+                  id: sub.id,
+                  name: sub.name,
+                  description: sub.description || "",
+                  estimatedHours: sub.estimatedHours || 0,
+                  estimatedCost: sub.budgetAmount || 0,
+                }))
+              );
+            }
+          }
         }
       } catch (error) {
         console.error("Error loading data:", error);
@@ -197,6 +234,27 @@ export function ActivityForm({
 
     loadData();
   }, [activity?.id]);
+
+  const addSubActivity = () => {
+    if (newSubActivity.name.trim()) {
+      const subActivity = {
+        ...newSubActivity,
+        id: `sub-${Date.now()}`,
+      };
+      setSubActivities((prev) => [...prev, subActivity]);
+      setNewSubActivity({
+        id: "",
+        name: "",
+        description: "",
+        estimatedHours: 0,
+        estimatedCost: 0,
+      });
+    }
+  };
+
+  const removeSubActivity = (id: string) => {
+    setSubActivities((prev) => prev.filter((sub) => sub.id !== id));
+  };
 
   const onSubmit = async (data: ActivityInput) => {
     try {
@@ -207,10 +265,21 @@ export function ActivityForm({
         : `/api/projects/${projectId}/activities`;
       const method = isEditing ? "PUT" : "POST";
 
+      // Include sub-activities in the request
+      const requestData = {
+        ...data,
+        subActivities: subActivities.map((sub) => ({
+          name: sub.name,
+          description: sub.description,
+          estimatedHours: sub.estimatedHours,
+          estimatedCost: sub.estimatedCost,
+        })),
+      };
+
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
       });
 
       if (!response.ok) {
@@ -497,6 +566,133 @@ export function ActivityForm({
                     form.setValue("isActive", checked)
                   }
                 />
+              </div>
+
+              {/* Sub-Activities Section */}
+              <Separator />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base font-medium">
+                      Sous-activités
+                    </Label>
+                    <p className="text-sm text-gray-600">
+                      Ajoutez des sous-activités détaillées (optionnel)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subActivityName">
+                      Nom de la sous-activité
+                    </Label>
+                    <Input
+                      id="subActivityName"
+                      placeholder="ex: Installation des prises"
+                      value={newSubActivity.name}
+                      onChange={(e) =>
+                        setNewSubActivity((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subActivityHours">Heures estimées</Label>
+                    <Input
+                      id="subActivityHours"
+                      type="number"
+                      placeholder="0"
+                      value={newSubActivity.estimatedHours}
+                      onChange={(e) =>
+                        setNewSubActivity((prev) => ({
+                          ...prev,
+                          estimatedHours: parseFloat(e.target.value) || 0,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subActivityDescription">Description</Label>
+                    <Input
+                      id="subActivityDescription"
+                      placeholder="Description de la sous-activité"
+                      value={newSubActivity.description}
+                      onChange={(e) =>
+                        setNewSubActivity((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subActivityCost">Coût estimé</Label>
+                    <Input
+                      id="subActivityCost"
+                      type="number"
+                      placeholder="0.00"
+                      value={newSubActivity.estimatedCost}
+                      onChange={(e) =>
+                        setNewSubActivity((prev) => ({
+                          ...prev,
+                          estimatedCost: parseFloat(e.target.value) || 0,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addSubActivity}
+                  disabled={!newSubActivity.name.trim()}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter la sous-activité
+                </Button>
+
+                {subActivities.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Sous-activités ajoutées</Label>
+                    <div className="space-y-2">
+                      {subActivities.map((subActivity) => (
+                        <div
+                          key={subActivity.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium">{subActivity.name}</p>
+                            <p className="text-sm text-gray-600">
+                              {subActivity.description}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {subActivity.estimatedHours}h -{" "}
+                              {new Intl.NumberFormat("fr-CA", {
+                                style: "currency",
+                                currency: "CAD",
+                              }).format(subActivity.estimatedCost)}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeSubActivity(subActivity.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Submit Buttons */}

@@ -40,7 +40,7 @@ interface Customer {
   receivableAccount: {
     number: string;
     name: string;
-  };
+  } | null;
   createdAt: string;
 }
 
@@ -196,13 +196,19 @@ export function CustomerList() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className="bg-primary-50 text-primary-700"
-                    >
-                      {customer.receivableAccount.number} -{" "}
-                      {customer.receivableAccount.name}
-                    </Badge>
+                    {customer.receivableAccount ? (
+                      <Badge
+                        variant="secondary"
+                        className="bg-primary-50 text-primary-700"
+                      >
+                        {customer.receivableAccount.number} -{" "}
+                        {customer.receivableAccount.name}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-gray-500">
+                        Aucun compte
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-500">
