@@ -46,7 +46,9 @@ const projectSchema = z.object({
       "Project code must contain only uppercase letters, numbers, underscore, and dash"
     ),
   name: z.string().min(2, "Project name is required").max(100),
-  description: z.string().optional(),
+  description: z.string().min(1, "Description is required"),
+  executionAddress: z.string().optional(),
+  projectDomain: z.string().min(1, "Project domain is required"),
   clientId: z.string().optional(),
   managerId: z.string().optional(),
   tempManagerId: z.string().optional(),
@@ -67,6 +69,8 @@ interface ProjectFormProps {
     code: string;
     name: string;
     description?: string;
+    executionAddress?: string;
+    projectDomain?: string;
     clientId?: string;
     managerId?: string;
     tempManagerId?: string;
@@ -98,6 +102,8 @@ export function ProjectForm({
       code: project?.code || "",
       name: project?.name || "",
       description: project?.description || "",
+      executionAddress: project?.executionAddress || "",
+      projectDomain: project?.projectDomain || "",
       clientId: project?.clientId || "",
       managerId: project?.managerId || "",
       tempManagerId: project?.tempManagerId || "",
@@ -288,7 +294,7 @@ export function ProjectForm({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Description *</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Project description and objectives"
@@ -297,6 +303,68 @@ export function ProjectForm({
                         {...field}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="executionAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Adresse d'exécution du projet</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="123 Rue Example, Montréal, QC H1A 1A1"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Adresse physique où le projet sera exécuté
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="projectDomain"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Domaine de projet *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un domaine" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CONSTRUCTION">Construction</SelectItem>
+                        <SelectItem value="ENGINEERING">Ingénierie</SelectItem>
+                        <SelectItem value="COMMERCE">Commerce</SelectItem>
+                        <SelectItem value="TECHNOLOGY">Technologie</SelectItem>
+                        <SelectItem value="HEALTHCARE">Santé</SelectItem>
+                        <SelectItem value="EDUCATION">Éducation</SelectItem>
+                        <SelectItem value="FINANCE">Finance</SelectItem>
+                        <SelectItem value="MANUFACTURING">Manufacture</SelectItem>
+                        <SelectItem value="TRANSPORTATION">Transport</SelectItem>
+                        <SelectItem value="ENERGY">Énergie</SelectItem>
+                        <SelectItem value="AGRICULTURE">Agriculture</SelectItem>
+                        <SelectItem value="TOURISM">Tourisme</SelectItem>
+                        <SelectItem value="MEDIA">Médias</SelectItem>
+                        <SelectItem value="CONSULTING">Conseil</SelectItem>
+                        <SelectItem value="GOVERNMENT">Gouvernement</SelectItem>
+                        <SelectItem value="OTHER">Autres</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Domaine d'activité principal du projet
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

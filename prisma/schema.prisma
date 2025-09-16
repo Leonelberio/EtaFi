@@ -113,9 +113,10 @@ model Organization {
 
   // Canadian tax information
   taxNumber     String? // Business Number (BN)
+  nasNumber     String? // NAS (Numéro d'assurance sociale)
   gstNumber     String? // GST/HST Registration Number
   qstNumber     String? // QST Registration Number (Quebec)
-  fiscalYearEnd String? // Fiscal year end (e.g., "December 31")
+  fiscalYearEnd String? // Fiscal year end (date format: YYYY-MM-DD)
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -177,23 +178,25 @@ model OrganizationMembership {
 }
 
 model Project {
-  id             String    @id @default(cuid())
-  organizationId String
-  code           String
-  name           String
-  description    String?
-  clientId       String?
-  managerId      String?
-  tempManagerId  String?
-  tempManagerEnd DateTime?
-  kind           String    @default("BILLABLE")
-  status         String    @default("ACTIVE")
-  totalBudget    Decimal?
-  currency       String    @default("CAD")
-  startDate      DateTime?
-  endDate        DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  organizationId   String
+  code             String
+  name             String
+  description      String?
+  executionAddress String?
+  projectDomain    String?
+  clientId         String?
+  managerId        String?
+  tempManagerId    String?
+  tempManagerEnd   DateTime?
+  kind             String    @default("BILLABLE")
+  status           String    @default("ACTIVE")
+  totalBudget      Decimal?
+  currency         String    @default("CAD")
+  startDate        DateTime?
+  endDate          DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   client       Customer?    @relation(fields: [clientId], references: [id])

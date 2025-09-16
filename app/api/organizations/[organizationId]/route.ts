@@ -71,6 +71,7 @@ export async function PUT(
   const {
     name,
     description,
+    businessDomain,
     address,
     city,
     postalCode,
@@ -79,6 +80,7 @@ export async function PUT(
     email,
     website,
     taxNumber,
+    nasNumber,
     gstNumber,
     qstNumber,
     fiscalYearEnd,
@@ -135,6 +137,7 @@ export async function PUT(
       data: {
         name,
         description,
+        businessDomain,
         address,
         city,
         postalCode,
@@ -143,6 +146,7 @@ export async function PUT(
         email,
         website,
         taxNumber,
+        nasNumber,
         gstNumber,
         qstNumber,
         fiscalYearEnd,

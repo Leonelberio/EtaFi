@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -19,8 +19,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Building2, ArrowLeft } from "lucide-react";
+import {
+  Building2,
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Lock,
+  CalendarIcon,
+} from "lucide-react";
 import Link from "next/link";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useOrganizationSettings } from "@/contexts/OrganizationSettingsContext";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 const organizationSchema = z.object({
   name: z.string().min(1, "Organization name is required"),
@@ -41,6 +57,7 @@ const organizationSchema = z.object({
 
   // Canadian tax information
   taxNumber: z.string().optional(),
+  nasNumber: z.string().optional(),
   gstNumber: z.string().optional(),
   qstNumber: z.string().optional(),
   fiscalYearEnd: z.string().optional(),
@@ -60,6 +77,7 @@ interface OrganizationFormProps {
     email?: string;
     website?: string;
     taxNumber?: string;
+    nasNumber?: string;
     gstNumber?: string;
     qstNumber?: string;
     fiscalYearEnd?: string;
@@ -72,7 +90,14 @@ export function OrganizationForm({
   isEditing = false,
 }: OrganizationFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isTaxSectionVisible, setIsTaxSectionVisible] = useState(false);
+  const [taxPassword, setTaxPassword] = useState("");
+  const [taxPasswordError, setTaxPasswordError] = useState("");
+  const [fiscalYearEndDate, setFiscalYearEndDate] = useState<
+    Date | undefined
+  >();
   const router = useRouter();
+  const { taxPassword: savedTaxPassword } = useOrganizationSettings();
 
   // 🆕 Get refresh function from context
   const { refreshOrganizations } = useOrganizationContext();
@@ -91,11 +116,44 @@ export function OrganizationForm({
       email: organization?.email || "",
       website: organization?.website || "",
       taxNumber: organization?.taxNumber || "",
+      nasNumber: organization?.nasNumber || "",
       gstNumber: organization?.gstNumber || "",
       qstNumber: organization?.qstNumber || "",
-      fiscalYearEnd: organization?.fiscalYearEnd || "December 31",
+      fiscalYearEnd: organization?.fiscalYearEnd || "",
     },
   });
+
+  const handleTaxSectionAuth = () => {
+    if (taxPassword === savedTaxPassword && savedTaxPassword) {
+      setIsTaxSectionVisible(true);
+      setTaxPasswordError("");
+      setTaxPassword("");
+    } else {
+      setTaxPasswordError("Mot de passe incorrect");
+    }
+  };
+
+  // Initialize fiscal year end date
+  useEffect(() => {
+    if (organization?.fiscalYearEnd) {
+      // Handle both old format ("December 31") and new format ("2024-12-31")
+      let date: Date;
+      if (organization.fiscalYearEnd.includes("-")) {
+        // New format: YYYY-MM-DD
+        date = new Date(organization.fiscalYearEnd);
+      } else {
+        // Old format: "December 31" - convert to current year
+        const currentYear = new Date().getFullYear();
+        date = new Date(`${organization.fiscalYearEnd}, ${currentYear}`);
+      }
+
+      if (!isNaN(date.getTime())) {
+        setFiscalYearEndDate(date);
+        // Update form value to new format
+        form.setValue("fiscalYearEnd", format(date, "yyyy-MM-dd"));
+      }
+    }
+  }, [organization?.fiscalYearEnd, form]);
 
   const onSubmit = async (data: z.infer<typeof organizationSchema>) => {
     try {
@@ -374,47 +432,173 @@ export function OrganizationForm({
         {/* Canadian Tax Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Canadian Tax Information</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Canadian Tax Information
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="taxNumber">Business Number (BN)</Label>
-                  <Input
-                    id="taxNumber"
-                    {...form.register("taxNumber")}
-                    placeholder="123456789"
-                    disabled={isLoading}
-                  />
-                  <p className="text-xs text-gray-500">
-                    9-digit Canada Revenue Agency business number
-                  </p>
+            {!isTaxSectionVisible ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <Lock className="h-6 w-6 text-gray-500" />
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      Informations fiscales protégées
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Cette section contient des informations sensibles.
+                      Veuillez entrer le mot de passe pour y accéder.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="fiscalYearEnd">Fiscal Year End</Label>
-                  <Input
-                    id="fiscalYearEnd"
-                    {...form.register("fiscalYearEnd")}
-                    placeholder="December 31"
-                    disabled={isLoading}
-                  />
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="taxPassword">Mot de passe</Label>
+                    <div className="relative">
+                      <Input
+                        id="taxPassword"
+                        type="password"
+                        value={taxPassword}
+                        onChange={(e) => setTaxPassword(e.target.value)}
+                        placeholder="Entrez le mot de passe"
+                        disabled={isLoading}
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleTaxSectionAuth}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                        disabled={isLoading || !taxPassword}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {taxPasswordError && (
+                      <p className="text-sm text-red-600">{taxPasswordError}</p>
+                    )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handleTaxSectionAuth}
+                    disabled={isLoading || !taxPassword}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Accéder aux informations fiscales
+                  </Button>
                 </div>
               </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-5 w-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">
+                      Informations fiscales déverrouillées
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsTaxSectionVisible(false)}
+                    className="text-green-700 hover:text-green-800"
+                  >
+                    <EyeOff className="h-4 w-4" />
+                  </Button>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gstNumber">GST/HST Registration</Label>
-                  <Input
-                    id="gstNumber"
-                    {...form.register("gstNumber")}
-                    placeholder="123456789RT0001"
-                    disabled={isLoading}
-                  />
-                  <p className="text-xs text-gray-500">
-                    GST/HST registration number (if applicable)
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="taxNumber">Business Number (BN)</Label>
+                    <Input
+                      id="taxNumber"
+                      {...form.register("taxNumber")}
+                      placeholder="123456789"
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-gray-500">
+                      9-digit Canada Revenue Agency business number
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="nasNumber">
+                      NAS (Numéro d'assurance sociale)
+                    </Label>
+                    <Input
+                      id="nasNumber"
+                      {...form.register("nasNumber")}
+                      placeholder="123 456 789"
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Numéro d'assurance sociale du propriétaire
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fiscalYearEnd">Fin d'exercice fiscal</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={`w-full justify-start text-left font-normal ${
+                            !fiscalYearEndDate && "text-muted-foreground"
+                          }`}
+                          disabled={isLoading}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {fiscalYearEndDate ? (
+                            format(fiscalYearEndDate, "PPP", { locale: fr })
+                          ) : (
+                            <span>Sélectionner une date</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={fiscalYearEndDate}
+                          onSelect={(date) => {
+                            setFiscalYearEndDate(date);
+                            if (date) {
+                              form.setValue(
+                                "fiscalYearEnd",
+                                format(date, "yyyy-MM-dd")
+                              );
+                            }
+                          }}
+                          disabled={(date) => date < new Date("1900-01-01")}
+                          initialFocus
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-gray-500">
+                      Date de fin d'exercice fiscal (format: AAAA-MM-JJ)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="gstNumber">GST/HST Registration</Label>
+                    <Input
+                      id="gstNumber"
+                      {...form.register("gstNumber")}
+                      placeholder="123456789RT0001"
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-gray-500">
+                      GST/HST registration number (if applicable)
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -430,7 +614,7 @@ export function OrganizationForm({
                   </p>
                 </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 

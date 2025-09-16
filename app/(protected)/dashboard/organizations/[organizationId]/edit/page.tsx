@@ -1,4 +1,5 @@
 import { OrganizationForm } from "@/components/OrganizationForm";
+import { OrganizationSettingsProvider } from "@/contexts/OrganizationSettingsContext";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
@@ -24,6 +25,19 @@ async function getOrganization(organizationId: string, userId: string) {
       id: true,
       name: true,
       description: true,
+      businessDomain: true,
+      address: true,
+      city: true,
+      postalCode: true,
+      country: true,
+      phone: true,
+      email: true,
+      website: true,
+      taxNumber: true,
+      nasNumber: true,
+      gstNumber: true,
+      qstNumber: true,
+      fiscalYearEnd: true,
     },
   });
 
@@ -46,12 +60,14 @@ export default async function EditOrganizationPage({
   }
 
   return (
-    <OrganizationForm
-      organization={{
-        ...organization,
-        description: organization.description || undefined,
-      }}
-      isEditing={true}
-    />
+    <OrganizationSettingsProvider>
+      <OrganizationForm
+        organization={{
+          ...organization,
+          description: organization.description || undefined,
+        }}
+        isEditing={true}
+      />
+    </OrganizationSettingsProvider>
   );
 }

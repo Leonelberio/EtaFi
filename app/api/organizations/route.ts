@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
   const {
     name,
     description,
+    businessDomain,
     address,
     city,
     postalCode,
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
     email,
     website,
     taxNumber,
+    nasNumber,
     gstNumber,
     qstNumber,
     fiscalYearEnd,
@@ -55,6 +57,7 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         description,
+        businessDomain,
         address,
         city,
         postalCode,
@@ -63,6 +66,7 @@ export async function POST(req: NextRequest) {
         email,
         website,
         taxNumber,
+        nasNumber,
         gstNumber,
         qstNumber,
         fiscalYearEnd,
@@ -137,9 +141,9 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       organizations,
-      currentOrganizationId: user?.currentOrganizationId || null
+      currentOrganizationId: user?.currentOrganizationId || null,
     });
   } catch (error) {
     console.error("Error fetching organizations:", error);
