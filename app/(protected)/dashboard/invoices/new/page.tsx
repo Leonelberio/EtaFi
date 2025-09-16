@@ -18,8 +18,10 @@ export default async function NewInvoicePage() {
           <FileText className="h-5 w-5 text-primary-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Nouvelle facture</h1>
-          <p className="text-gray-600">Créer une nouvelle facture de vente ou d'achat</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Nouvelle facture de vente
+          </h1>
+          <p className="text-gray-600">Créer une nouvelle facture de vente</p>
         </div>
       </div>
 

@@ -21,7 +21,7 @@ const invoiceLineSchema = z.object({
   sortOrder: z.number().default(0),
 });
 
-const salesInvoiceSchema = z.object({
+const purchaseInvoiceSchema = z.object({
   number: z.string().min(1, "Invoice number is required"),
   status: z
     .enum(["DRAFT", "SENT", "PAID", "CANCELLED", "OVERDUE"])
@@ -30,7 +30,7 @@ const salesInvoiceSchema = z.object({
   dueDate: z.string().optional(),
   ref: z.string().optional(),
   poNumber: z.string().optional(),
-  customerId: z.string().min(1, "Customer is required for sales invoices"),
+  vendorId: z.string().min(1, "Vendor is required for purchase invoices"),
   projectId: z.string().optional(),
   subtotal: z.number().min(0, "Subtotal must be positive"),
   taxAmount: z.number().min(0, "Tax amount must be positive"),
@@ -47,114 +47,128 @@ const salesInvoiceSchema = z.object({
     .min(1, "At least one line item is required"),
 });
 
-// GET /api/invoices - List invoices
+// GET /api/purchase-invoices - List purchase invoices
 export async function GET(request: NextRequest) {
   try {
-    const organizationId = await getCurrentOrgId();
-    if (!organizationId) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const orgId = await getCurrentOrgId();
+    if (!orgId) {
+      return NextResponse.json(
+        { error: "Organization not found" },
+        { status: 404 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
-    const search = searchParams.get("search");
-    const type = searchParams.get("type");
-    const status = searchParams.get("status");
-    const projectId = searchParams.get("projectId");
+    const search = searchParams.get("search") || "";
+    const status = searchParams.get("status") || "";
+    const vendorId = searchParams.get("vendorId") || "";
 
-    // Build where clause - only SALES invoices
-    const whereClause: any = {
-      organizationId,
-      type: "SALES", // Only sales invoices
+    const skip = (page - 1) * limit;
+
+    // Build where clause
+    const where: any = {
+      organizationId: orgId,
+      type: "PURCHASE", // Only purchase invoices
     };
 
     if (search) {
-      whereClause.OR = [
+      where.OR = [
         { number: { contains: search, mode: "insensitive" } },
         { ref: { contains: search, mode: "insensitive" } },
         { poNumber: { contains: search, mode: "insensitive" } },
-        { notes: { contains: search, mode: "insensitive" } },
       ];
     }
 
-    // Type is always SALES for this endpoint
-
     if (status) {
-      whereClause.status = status;
+      where.status = status;
     }
 
-    if (projectId) {
-      whereClause.projectId = projectId;
+    if (vendorId) {
+      where.vendorId = vendorId;
     }
 
-    const [invoices, totalCount] = await Promise.all([
+    const [invoices, total] = await Promise.all([
       db.invoice.findMany({
-        where: whereClause,
+        where,
         include: {
-          customer: { select: { id: true, name: true } },
-          vendor: { select: { id: true, name: true } },
-          project: { select: { id: true, code: true, name: true } },
-          lines: {
-            include: {
-              project: { select: { code: true, name: true } },
-              activity: { select: { code: true, name: true } },
-              subActivity: { select: { code: true, name: true } },
-              taxCode: { select: { code: true, name: true, rate: true } },
-              revenueAccount: { select: { number: true, name: true } },
+          vendor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
             },
-            orderBy: { sortOrder: "asc" },
           },
-          creator: { select: { name: true } },
-          approver: { select: { name: true } },
+          project: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          lines: true,
+          _count: {
+            select: {
+              lines: true,
+              payments: true,
+            },
+          },
         },
-        orderBy: { date: "desc" },
-        skip: (page - 1) * limit,
+        orderBy: { createdAt: "desc" },
+        skip,
         take: limit,
       }),
-      db.invoice.count({ where: whereClause }),
+      db.invoice.count({ where }),
     ]);
 
     return NextResponse.json({
       invoices,
-      totalCount,
-      totalPages: Math.ceil(totalCount / limit),
-      currentPage: page,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
-    console.error("Error fetching invoices:", error);
+    console.error("Error fetching purchase invoices:", error);
     return NextResponse.json(
-      { error: "Failed to fetch invoices" },
+      { error: "Failed to fetch purchase invoices" },
       { status: 500 }
     );
   }
 }
 
-// POST /api/invoices - Create invoice
+// POST /api/purchase-invoices - Create purchase invoice
 export async function POST(request: NextRequest) {
   try {
-    const organizationId = await getCurrentOrgId();
-    if (!organizationId) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = await auth();
-    if (!session?.user?.id) {
+    const orgId = await getCurrentOrgId();
+    if (!orgId) {
       return NextResponse.json(
-        { error: "User not authenticated" },
-        { status: 401 }
+        { error: "Organization not found" },
+        { status: 404 }
       );
     }
 
     const body = await request.json();
-    const validatedData = salesInvoiceSchema.parse(body);
+    const validatedData = purchaseInvoiceSchema.parse(body);
 
     // Check if invoice number already exists
     const existingInvoice = await db.invoice.findFirst({
       where: {
-        organizationId,
+        organizationId: orgId,
         number: validatedData.number,
-        type: "SALES",
+        type: "PURCHASE",
       },
     });
 
@@ -172,7 +186,7 @@ export async function POST(request: NextRequest) {
         data: {
           organizationId,
           number: validatedData.number,
-          type: "SALES", // Always SALES for this endpoint
+          type: "PURCHASE", // Always PURCHASE for this endpoint
           status: validatedData.status,
           date: new Date(validatedData.date),
           dueDate: validatedData.dueDate
@@ -180,7 +194,7 @@ export async function POST(request: NextRequest) {
             : null,
           ref: validatedData.ref,
           poNumber: validatedData.poNumber,
-          customerId: validatedData.customerId,
+          vendorId: validatedData.vendorId,
           projectId: validatedData.projectId,
           subtotal: validatedData.subtotal,
           taxAmount: validatedData.taxAmount,
@@ -211,7 +225,6 @@ export async function POST(request: NextRequest) {
               taxRate: line.taxRate,
               taxAmount: line.taxAmount || 0,
               totalAmount: line.totalAmount,
-              projectId: validatedData.projectId, // Use invoice projectId
               activityId: line.activityId,
               subActivityId: line.subActivityId,
               costCategory: line.costCategory,
@@ -225,23 +238,17 @@ export async function POST(request: NextRequest) {
       return { invoice, lines };
     });
 
-    return NextResponse.json({
-      message: "Invoice created successfully",
-      invoice: result.invoice,
-      lines: result.lines,
-    });
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    console.error("Error creating invoice:", error);
-
+    console.error("Error creating purchase invoice:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation error", details: error.errors },
         { status: 400 }
       );
     }
-
     return NextResponse.json(
-      { error: "Failed to create invoice" },
+      { error: "Failed to create purchase invoice" },
       { status: 500 }
     );
   }

@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { InvoiceList } from "@/components/InvoiceList";
+import { PurchaseInvoiceList } from "@/components/PurchaseInvoiceList";
 import { getCurrentOrgId } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { FileText } from "lucide-react";
 
-export default async function InvoicesPage() {
+export default async function PurchaseInvoicesPage() {
   const orgId = await getCurrentOrgId();
   if (!orgId) {
     redirect("/dashboard/organizations");
@@ -18,18 +18,16 @@ export default async function InvoicesPage() {
           <FileText className="h-5 w-5 text-primary-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Factures de vente
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Factures d'achat</h1>
           <p className="text-gray-600">
-            Gestion des factures de vente et clients
+            Gestion des factures d'achat et fournisseurs
           </p>
         </div>
       </div>
 
-      {/* Invoice List Component */}
-      <Suspense fallback={<div>Chargement des factures...</div>}>
-        <InvoiceList />
+      {/* Purchase Invoice List Component */}
+      <Suspense fallback={<div>Chargement des factures d'achat...</div>}>
+        <PurchaseInvoiceList />
       </Suspense>
     </div>
   );

@@ -37,14 +37,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-interface SalesInvoice {
+interface PurchaseInvoice {
   id: string;
   number: string;
   status: string;
   date: string;
   dueDate?: string;
   ref?: string;
-  customer?: { name: string };
+  vendor?: { name: string };
   project?: { code: string; name: string };
   subtotal: number;
   taxAmount: number;
@@ -66,14 +66,16 @@ interface SalesInvoice {
   }>;
 }
 
-interface InvoiceListProps {
+interface PurchaseInvoiceListProps {
   projectId?: string;
 }
 
-export function InvoiceList({ projectId }: InvoiceListProps) {
+export function PurchaseInvoiceList({ projectId }: PurchaseInvoiceListProps) {
   const router = useRouter();
-  const [allInvoices, setAllInvoices] = useState<SalesInvoice[]>([]);
-  const [filteredInvoices, setFilteredInvoices] = useState<SalesInvoice[]>([]);
+  const [allInvoices, setAllInvoices] = useState<PurchaseInvoice[]>([]);
+  const [filteredInvoices, setFilteredInvoices] = useState<PurchaseInvoice[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [filtering, setFiltering] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,18 +94,18 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
 
       if (projectId) params.append("projectId", projectId);
 
-      const response = await fetch(`/api/invoices?${params}`);
+      const response = await fetch(`/api/purchase-invoices?${params}`);
       if (response.ok) {
         const data = await response.json();
         setAllInvoices(data.invoices || []);
         setFilteredInvoices(data.invoices || []);
         setTotalCount(data.invoices?.length || 0);
       } else {
-        toast.error("Erreur lors du chargement des factures de vente");
+        toast.error("Erreur lors du chargement des factures d'achat");
       }
     } catch (error) {
-      console.error("Error fetching sales invoices:", error);
-      toast.error("Erreur lors du chargement des factures de vente");
+      console.error("Error fetching purchase invoices:", error);
+      toast.error("Erreur lors du chargement des factures d'achat");
     } finally {
       setLoading(false);
     }
@@ -122,7 +124,7 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
         (invoice) =>
           invoice.number.toLowerCase().includes(searchLower) ||
           invoice.ref?.toLowerCase().includes(searchLower) ||
-          invoice.customer?.name.toLowerCase().includes(searchLower) ||
+          invoice.vendor?.name.toLowerCase().includes(searchLower) ||
           invoice.project?.name.toLowerCase().includes(searchLower) ||
           invoice.project?.code.toLowerCase().includes(searchLower)
       );
@@ -165,18 +167,18 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
 
   const handleDelete = async (invoiceId: string) => {
     if (
-      !confirm("Êtes-vous sûr de vouloir supprimer cette facture de vente ?")
+      !confirm("Êtes-vous sûr de vouloir supprimer cette facture d'achat ?")
     ) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/invoices/${invoiceId}`, {
+      const response = await fetch(`/api/purchase-invoices/${invoiceId}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
-        toast.success("Facture de vente supprimée");
+        toast.success("Facture d'achat supprimée");
         // Remove from both arrays
         setAllInvoices((prev) => prev.filter((inv) => inv.id !== invoiceId));
         setFilteredInvoices((prev) =>
@@ -188,19 +190,19 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
         toast.error(error.error || "Erreur lors de la suppression");
       }
     } catch (error) {
-      console.error("Error deleting invoice:", error);
+      console.error("Error deleting purchase invoice:", error);
       toast.error("Erreur lors de la suppression");
     }
   };
 
   const handlePost = async (invoiceId: string) => {
     try {
-      const response = await fetch(`/api/invoices/${invoiceId}/post`, {
+      const response = await fetch(`/api/purchase-invoices/${invoiceId}/post`, {
         method: "POST",
       });
 
       if (response.ok) {
-        toast.success("Facture de vente postée - Écritures de journal créées");
+        toast.success("Facture d'achat postée - Écritures de journal créées");
         // Update the invoice status in both arrays
         setAllInvoices((prev) =>
           prev.map((inv) =>
@@ -217,7 +219,7 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
         toast.error(error.error || "Erreur lors du posting");
       }
     } catch (error) {
-      console.error("Error posting invoice:", error);
+      console.error("Error posting purchase invoice:", error);
       toast.error("Erreur lors du posting");
     }
   };
@@ -289,7 +291,7 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Chargement des factures de vente...</p>
+          <p>Chargement des factures d'achat...</p>
         </div>
       </div>
     );
@@ -320,9 +322,6 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
         <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
       </TableCell>
       <TableCell>
-        <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-      </TableCell>
-      <TableCell>
         <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
       </TableCell>
     </TableRow>
@@ -333,16 +332,14 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Factures de vente
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Factures d'achat</h1>
           <p className="text-gray-600">
-            {totalCount} facture{totalCount > 1 ? "s" : ""} de vente au total
+            {totalCount} facture{totalCount > 1 ? "s" : ""} d'achat au total
           </p>
         </div>
-        <Button onClick={() => router.push("/dashboard/invoices/new")}>
+        <Button onClick={() => router.push("/dashboard/purchase-invoices/new")}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle facture de vente
+          Nouvelle facture d'achat
         </Button>
       </div>
 
@@ -362,7 +359,7 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="search"
-                  placeholder="Numéro, référence, client..."
+                  placeholder="Numéro, référence, fournisseur..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-white"
@@ -409,7 +406,7 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
                 <TableHead>Numéro</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Client</TableHead>
+                <TableHead>Fournisseur</TableHead>
                 <TableHead>Projet</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="text-right">Payé</TableHead>
@@ -448,7 +445,7 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>{invoice.customer?.name || "—"}</TableCell>
+                      <TableCell>{invoice.vendor?.name || "—"}</TableCell>
                       <TableCell>
                         {invoice.project ? (
                           <div>
@@ -475,7 +472,9 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
                             variant="ghost"
                             size="sm"
                             onClick={() =>
-                              router.push(`/dashboard/invoices/${invoice.id}`)
+                              router.push(
+                                `/dashboard/purchase-invoices/${invoice.id}`
+                              )
                             }
                           >
                             <Eye className="h-4 w-4" />
@@ -485,7 +484,7 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
                             size="sm"
                             onClick={() =>
                               router.push(
-                                `/dashboard/invoices/${invoice.id}/edit`
+                                `/dashboard/purchase-invoices/${invoice.id}/edit`
                               )
                             }
                           >
@@ -521,7 +520,7 @@ export function InvoiceList({ projectId }: InvoiceListProps) {
           {!filtering && getPaginatedInvoices().length === 0 && (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500">Aucune facture de vente trouvée</p>
+              <p className="text-gray-500">Aucune facture d'achat trouvée</p>
             </div>
           )}
         </CardContent>

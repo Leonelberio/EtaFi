@@ -22,6 +22,13 @@ import {
   DollarSign,
   PieChart,
   AlertTriangle,
+  UserCog,
+  Calendar,
+  TrendingDown,
+  FileBarChart,
+  Bot,
+  Zap,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +40,7 @@ interface SidebarProps {
 // Module-based navigation structure
 const navigationModules = [
   {
-    name: "Tableau de Bord",
+    name: "Accueil",
     items: [
       {
         name: "Accueil",
@@ -43,7 +50,7 @@ const navigationModules = [
     ],
   },
   {
-    name: "Organisation",
+    name: "Organisations",
     items: [
       {
         name: "Organisations",
@@ -53,42 +60,12 @@ const navigationModules = [
     ],
   },
   {
-    name: "Gestion des Projets",
+    name: "Équipe",
     items: [
       {
-        name: "Projets",
-        href: "/dashboard/projects",
-        icon: Shield,
-      },
-      {
-        name: "Activités",
-        href: "/dashboard/activities",
-        icon: TrendingUp,
-      },
-      {
-        name: "Modèles de Projets",
-        href: "/dashboard/project-templates",
-        icon: FileText,
-      },
-    ],
-  },
-  {
-    name: "Budgétisation",
-    items: [
-      {
-        name: "Budgets",
-        href: "/dashboard/budgets",
-        icon: DollarSign,
-      },
-      {
-        name: "Rapports Budget",
-        href: "/dashboard/budget-reports",
-        icon: PieChart,
-      },
-      {
-        name: "Alertes Budget",
-        href: "/dashboard/budget-alerts",
-        icon: AlertTriangle,
+        name: "Utilisateurs",
+        href: "/dashboard/users",
+        icon: UserCog,
       },
     ],
   },
@@ -123,7 +100,59 @@ const navigationModules = [
     ],
   },
   {
-    name: "Clients & Fournisseurs",
+    name: "Projets",
+    items: [
+      {
+        name: "Projets",
+        href: "/dashboard/projects",
+        icon: Shield,
+      },
+      {
+        name: "Activités",
+        href: "/dashboard/activities",
+        icon: TrendingUp,
+      },
+      {
+        name: "Modèles de Projets",
+        href: "/dashboard/project-templates",
+        icon: FileText,
+      },
+    ],
+  },
+  {
+    name: "Planification financière",
+    items: [
+      {
+        name: "Budgétisation",
+        href: "/dashboard/budgets",
+        icon: DollarSign,
+        subItems: [
+          {
+            name: "Budgets",
+            href: "/dashboard/budgets",
+            icon: DollarSign,
+          },
+          {
+            name: "Rapports Budget",
+            href: "/dashboard/budget-reports",
+            icon: PieChart,
+          },
+          {
+            name: "Alertes Budget",
+            href: "/dashboard/budget-alerts",
+            icon: AlertTriangle,
+          },
+        ],
+      },
+      {
+        name: "Prévisions de liquidités",
+        href: "/dashboard/cash-flow",
+        icon: TrendingDown,
+      },
+    ],
+  },
+  {
+    name: "Facturation et clients",
     items: [
       {
         name: "Clients",
@@ -131,19 +160,75 @@ const navigationModules = [
         icon: Users,
       },
       {
-        name: "Fournisseurs",
-        href: "/dashboard/vendors",
-        icon: Truck,
+        name: "Factures de vente",
+        href: "/dashboard/invoices",
+        icon: FileText,
       },
     ],
   },
   {
-    name: "Facturation",
+    name: "Achats et fournisseurs",
     items: [
       {
-        name: "Factures",
-        href: "/dashboard/invoices",
+        name: "Fournisseurs",
+        href: "/dashboard/vendors",
+        icon: Truck,
+      },
+      {
+        name: "Factures d'achat",
+        href: "/dashboard/purchase-invoices",
         icon: FileText,
+      },
+    ],
+  },
+  {
+    name: "Paie",
+    items: [
+      {
+        name: "Paie",
+        href: "/dashboard/payroll",
+        icon: CreditCard,
+        disabled: true,
+      },
+    ],
+  },
+  {
+    name: "Taxes",
+    items: [
+      {
+        name: "Codes de Taxe",
+        href: "/dashboard/tax-codes",
+        icon: Receipt,
+      },
+    ],
+  },
+  {
+    name: "Rapports",
+    items: [
+      {
+        name: "Rapports",
+        href: "/dashboard/reports",
+        icon: FileBarChart,
+      },
+    ],
+  },
+  {
+    name: "Analyse financière et IA",
+    items: [
+      {
+        name: "Analytics",
+        href: "/dashboard/analytics",
+        icon: BarChart3,
+      },
+    ],
+  },
+  {
+    name: "Automatisations et IA",
+    items: [
+      {
+        name: "Automatisations",
+        href: "/dashboard/automations",
+        icon: Zap,
       },
     ],
   },
@@ -207,31 +292,78 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
             <nav className="space-y-1">
               {module.items.map((item) => {
                 const isActive = isNavigationActive(item.href);
+                const isDisabled = item.disabled;
+
                 return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={onClose}
-                    className={cn(
-                      "group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
-                      isActive
-                        ? "bg-primary-50 text-primary-700 border border-primary-100"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    )}
-                  >
-                    <item.icon
+                  <div key={item.name}>
+                    <Link
+                      href={isDisabled ? "#" : item.href}
+                      onClick={isDisabled ? (e) => e.preventDefault() : onClose}
                       className={cn(
-                        "mr-3 h-5 w-5 transition-colors duration-200",
-                        isActive
-                          ? "text-primary-600"
-                          : "text-gray-400 group-hover:text-gray-600"
+                        "group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
+                        isDisabled
+                          ? "text-gray-400 cursor-not-allowed opacity-60"
+                          : isActive
+                            ? "bg-primary-50 text-primary-700 border border-primary-100"
+                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                       )}
-                    />
-                    {item.name}
-                    {isActive && (
-                      <div className="ml-auto h-2 w-2 bg-primary-500 rounded-full animate-pulse-soft" />
+                    >
+                      <item.icon
+                        className={cn(
+                          "mr-3 h-5 w-5 transition-colors duration-200",
+                          isDisabled
+                            ? "text-gray-300"
+                            : isActive
+                              ? "text-primary-600"
+                              : "text-gray-400 group-hover:text-gray-600"
+                        )}
+                      />
+                      {item.name}
+                      {isDisabled && (
+                        <span className="ml-auto text-xs text-gray-400">
+                          (Bientôt)
+                        </span>
+                      )}
+                      {isActive && !isDisabled && (
+                        <div className="ml-auto h-2 w-2 bg-primary-500 rounded-full animate-pulse-soft" />
+                      )}
+                    </Link>
+
+                    {/* Render sub-items if they exist */}
+                    {item.subItems && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {item.subItems.map((subItem) => {
+                          const isSubActive = isNavigationActive(subItem.href);
+                          return (
+                            <Link
+                              key={subItem.name}
+                              href={subItem.href}
+                              onClick={onClose}
+                              className={cn(
+                                "group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                                isSubActive
+                                  ? "bg-primary-50 text-primary-700 border border-primary-100"
+                                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                              )}
+                            >
+                              <subItem.icon
+                                className={cn(
+                                  "mr-3 h-4 w-4 transition-colors duration-200",
+                                  isSubActive
+                                    ? "text-primary-600"
+                                    : "text-gray-400 group-hover:text-gray-500"
+                                )}
+                              />
+                              {subItem.name}
+                              {isSubActive && (
+                                <div className="ml-auto h-1.5 w-1.5 bg-primary-500 rounded-full animate-pulse-soft" />
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
                     )}
-                  </Link>
+                  </div>
                 );
               })}
             </nav>

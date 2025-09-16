@@ -55,9 +55,8 @@ const invoiceLineSchema = z.object({
   sortOrder: z.number().default(0),
 });
 
-const invoiceSchema = z.object({
+const salesInvoiceSchema = z.object({
   number: z.string().min(1, "Invoice number is required"),
-  type: z.enum(["SALES", "PURCHASE"]),
   status: z
     .enum(["DRAFT", "SENT", "PAID", "CANCELLED", "OVERDUE"])
     .default("DRAFT"),
@@ -65,8 +64,7 @@ const invoiceSchema = z.object({
   dueDate: z.string().optional(),
   ref: z.string().optional(),
   poNumber: z.string().optional(),
-  customerId: z.string().optional(),
-  vendorId: z.string().optional(),
+  customerId: z.string().min(1, "Customer is required for sales invoices"),
   projectId: z.string().optional(),
   subtotal: z.number().min(0, "Subtotal must be positive"),
   taxAmount: z.number().min(0, "Tax amount must be positive"),
@@ -83,15 +81,9 @@ const invoiceSchema = z.object({
     .min(1, "At least one line item is required"),
 });
 
-type InvoiceFormData = z.infer<typeof invoiceSchema>;
+type SalesInvoiceFormData = z.infer<typeof salesInvoiceSchema>;
 
 interface Customer {
-  id: string;
-  name: string;
-  email?: string;
-}
-
-interface Vendor {
   id: string;
   name: string;
   email?: string;
@@ -134,10 +126,9 @@ interface TaxCode {
 
 interface InvoiceFormProps {
   invoiceId?: string;
-  initialData?: Partial<InvoiceFormData>;
+  initialData?: Partial<SalesInvoiceFormData>;
   chartAccounts?: ChartAccount[];
   customers?: Customer[];
-  vendors?: Vendor[];
   projects?: Project[];
   taxCodes?: TaxCode[];
   invoice?: any;
@@ -149,7 +140,6 @@ export function InvoiceForm({
   initialData,
   chartAccounts: initialChartAccounts = [],
   customers: initialCustomers = [],
-  vendors: initialVendors = [],
   projects: initialProjects = [],
   taxCodes: initialTaxCodes = [],
   invoice,
@@ -162,7 +152,6 @@ export function InvoiceForm({
 
   // Data states
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
-  const [vendors, setVendors] = useState<Vendor[]>(initialVendors);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [subActivities, setSubActivities] = useState<SubActivity[]>([]);
@@ -171,11 +160,10 @@ export function InvoiceForm({
   const [taxCodes, setTaxCodes] = useState<TaxCode[]>(initialTaxCodes);
   const [isGeneratingNumber, setIsGeneratingNumber] = useState(false);
 
-  const form = useForm<InvoiceFormData>({
-    resolver: zodResolver(invoiceSchema),
+  const form = useForm<SalesInvoiceFormData>({
+    resolver: zodResolver(salesInvoiceSchema),
     mode: "onChange", // Add this to see validation errors in real-time
     defaultValues: {
-      type: "SALES",
       status: "DRAFT",
       date: new Date().toISOString().split("T")[0],
       currency: "CAD",
@@ -393,7 +381,6 @@ export function InvoiceForm({
     }
   }, [isEditing]);
 
-  const watchType = form.watch("type");
   const watchProjectId = form.watch("projectId");
   const watchLines = form.watch("lines");
 
@@ -406,7 +393,6 @@ export function InvoiceForm({
         // If data was provided as props, no need to fetch
         if (
           initialCustomers.length > 0 &&
-          initialVendors.length > 0 &&
           initialProjects.length > 0 &&
           initialChartAccounts.length > 0 &&
           initialTaxCodes.length > 0
@@ -415,19 +401,13 @@ export function InvoiceForm({
           return;
         }
 
-        const [
-          customersRes,
-          vendorsRes,
-          projectsRes,
-          chartAccountsRes,
-          taxCodesRes,
-        ] = await Promise.all([
-          fetch("/api/customers"),
-          fetch("/api/vendors"),
-          fetch("/api/projects"),
-          fetch("/api/chart-accounts"),
-          fetch("/api/tax-codes"),
-        ]);
+        const [customersRes, projectsRes, chartAccountsRes, taxCodesRes] =
+          await Promise.all([
+            fetch("/api/customers"),
+            fetch("/api/projects"),
+            fetch("/api/chart-accounts"),
+            fetch("/api/tax-codes"),
+          ]);
 
         if (customersRes.ok && initialCustomers.length === 0) {
           const customersData = await customersRes.json();
@@ -435,13 +415,6 @@ export function InvoiceForm({
             Array.isArray(customersData.customers)
               ? customersData.customers
               : []
-          );
-        }
-
-        if (vendorsRes.ok && initialVendors.length === 0) {
-          const vendorsData = await vendorsRes.json();
-          setVendors(
-            Array.isArray(vendorsData.vendors) ? vendorsData.vendors : []
           );
         }
 
@@ -563,7 +536,7 @@ export function InvoiceForm({
     setFormErrors({});
   };
 
-  const onSubmit = async (data: InvoiceFormData) => {
+  const onSubmit = async (data: SalesInvoiceFormData) => {
     alert("onSubmit called!"); // Simple alert to test if function is called
     console.log("onSubmit called with data:", data);
     console.log("invoiceId:", invoiceId);
@@ -584,13 +557,16 @@ export function InvoiceForm({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          type: "SALES", // Always SALES for this form
+        }),
       });
 
       if (response.ok) {
         const result = await response.json();
         const action = invoiceId ? "mise à jour" : "créée";
-        toast.success(`✅ Facture ${action} avec succès!`, {
+        toast.success(`✅ Facture de vente ${action} avec succès!`, {
           description: `Numéro: ${result.number || data.number}`,
           duration: 4000,
         });
@@ -683,24 +659,6 @@ export function InvoiceForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type">Type *</Label>
-              <Select
-                value={form.watch("type")}
-                onValueChange={(value) =>
-                  form.setValue("type", value as "SALES" | "PURCHASE")
-                }
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="SALES">Vente</SelectItem>
-                  <SelectItem value="PURCHASE">Achat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="date">Date *</Label>
               <Input
                 id="date"
@@ -760,61 +718,32 @@ export function InvoiceForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {watchType === "SALES" ? (
-              <div className="space-y-2">
-                <Label htmlFor="customerId">Client *</Label>
-                <Select
-                  value={form.watch("customerId") || ""}
-                  onValueChange={(value) => {
-                    form.setValue("customerId", value);
-                    clearFormErrors();
-                  }}
+            <div className="space-y-2">
+              <Label htmlFor="customerId">Client *</Label>
+              <Select
+                value={form.watch("customerId") || ""}
+                onValueChange={(value) => {
+                  form.setValue("customerId", value);
+                  clearFormErrors();
+                }}
+              >
+                <SelectTrigger
+                  className={`bg-white ${formErrors.customer ? "border-red-500" : ""}`}
                 >
-                  <SelectTrigger
-                    className={`bg-white ${formErrors.customer ? "border-red-500" : ""}`}
-                  >
-                    <SelectValue placeholder="Sélectionner un client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formErrors.customer && (
-                  <p className="text-sm text-red-500">{formErrors.customer}</p>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="vendorId">Fournisseur *</Label>
-                <Select
-                  value={form.watch("vendorId") || ""}
-                  onValueChange={(value) => {
-                    form.setValue("vendorId", value);
-                    clearFormErrors();
-                  }}
-                >
-                  <SelectTrigger
-                    className={`bg-white ${formErrors.customer ? "border-red-500" : ""}`}
-                  >
-                    <SelectValue placeholder="Sélectionner un fournisseur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vendors.map((vendor) => (
-                      <SelectItem key={vendor.id} value={vendor.id}>
-                        {vendor.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formErrors.customer && (
-                  <p className="text-sm text-red-500">{formErrors.customer}</p>
-                )}
-              </div>
-            )}
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {formErrors.customer && (
+                <p className="text-sm text-red-500">{formErrors.customer}</p>
+              )}
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="projectId">Projet *</Label>
