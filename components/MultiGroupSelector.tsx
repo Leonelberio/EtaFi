@@ -54,6 +54,7 @@ interface MultiGroupSelectorProps {
   chartAccounts: ChartAccount[];
   onGroupsChange?: (groups: CostGroup[]) => void;
   disabled?: boolean;
+  totalBudget?: number;
 }
 
 // Cost group definitions with enhanced UI
@@ -112,6 +113,7 @@ export function MultiGroupSelector({
   chartAccounts,
   onGroupsChange,
   disabled = false,
+  totalBudget = 0,
 }: MultiGroupSelectorProps) {
   const [groups, setGroups] = useState<CostGroup[]>(initialGroups);
   const [isLoading, setIsLoading] = useState(false);
@@ -247,6 +249,21 @@ export function MultiGroupSelector({
               <p className="text-sm text-muted-foreground">
                 Assignez des pourcentages aux 5 groupes analytiques
               </p>
+              {totalBudget > 0 && (
+                <div className="mt-2">
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-50 text-blue-700 border-blue-200"
+                  >
+                    Budget Total: $
+                    {totalBudget.toLocaleString("en-CA", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    CAD
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
 
@@ -345,6 +362,18 @@ export function MultiGroupSelector({
                         />
                         <span className="text-sm text-muted-foreground">%</span>
                       </div>
+                      {/* Calculated Dollar Amount */}
+                      <div className="text-xs text-green-600 font-medium mt-1">
+                        $
+                        {(
+                          (group.percentage / 100) *
+                          totalBudget
+                        ).toLocaleString("en-CA", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        CAD
+                      </div>
                     </div>
 
                     {/* GL Account Selection */}
@@ -417,7 +446,7 @@ export function MultiGroupSelector({
               <Label className="text-sm font-medium mb-3 block">
                 Ajouter un groupe de coûts
               </Label>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {getAvailableGroups().map((groupDef) => {
                   const Icon = groupDef.icon;
                   return (
@@ -427,15 +456,17 @@ export function MultiGroupSelector({
                       variant="outline"
                       onClick={() => addGroup(groupDef.key)}
                       disabled={disabled}
-                      className={`h-auto p-3 flex flex-col items-center gap-2 ${groupDef.color} hover:shadow-md transition-all`}
+                      className={`h-auto p-4 flex flex-col items-center gap-3 ${groupDef.color} hover:shadow-md transition-all min-h-[80px]`}
                     >
-                      <Icon className="h-5 w-5" />
-                      <div className="text-center">
-                        <div className="font-medium text-xs">
+                      <Icon className="h-6 w-6" />
+                      <div className="text-center space-y-1">
+                        <div className="font-semibold text-sm">
                           {groupDef.code}
                         </div>
-                        <div className="text-xs opacity-75">
-                          {groupDef.name}
+                        <div className="text-xs leading-tight opacity-80 max-w-[120px]">
+                          {groupDef.name.split(" & ").map((part, index) => (
+                            <div key={index}>{part}</div>
+                          ))}
                         </div>
                       </div>
                     </Button>

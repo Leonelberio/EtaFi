@@ -102,7 +102,6 @@ interface ActivityFormProps {
     budgetE?: number;
     budgetMOD?: number;
     isActive: boolean;
-    sortOrder: number;
   };
   isEditing?: boolean;
 }
@@ -140,7 +139,6 @@ export function ActivityForm({
       budgetE: activity?.budgetE || 0,
       budgetMOD: activity?.budgetMOD || 0,
       isActive: activity?.isActive ?? true,
-      sortOrder: activity?.sortOrder || 0,
     },
   });
 
@@ -351,38 +349,22 @@ export function ActivityForm({
           <CardContent>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="code">Activity Code *</Label>
-                  <Input
-                    id="code"
-                    {...form.register("code")}
-                    placeholder="01010, 01135, 01220"
-                    disabled={isLoading}
-                  />
-                  {form.formState.errors.code && (
-                    <p className="text-sm text-red-600">
-                      {form.formState.errors.code.message}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-500">
-                    Unique code within project (e.g., 01010 for Foundation)
+              <div className="space-y-2">
+                <Label htmlFor="code">Activity Code *</Label>
+                <Input
+                  id="code"
+                  {...form.register("code")}
+                  placeholder="01010, 01135, 01220"
+                  disabled={isLoading}
+                />
+                {form.formState.errors.code && (
+                  <p className="text-sm text-red-600">
+                    {form.formState.errors.code.message}
                   </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sortOrder">Sort Order</Label>
-                  <Input
-                    id="sortOrder"
-                    type="number"
-                    {...form.register("sortOrder", { valueAsNumber: true })}
-                    placeholder="0"
-                    disabled={isLoading}
-                  />
-                  <p className="text-xs text-gray-500">
-                    Display order in project (0 = first)
-                  </p>
-                </div>
+                )}
+                <p className="text-xs text-gray-500">
+                  Unique code within project (e.g., 01010 for Foundation)
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -431,7 +413,12 @@ export function ActivityForm({
                     <Switch
                       id="detailed-budget"
                       checked={useDetailedBudget}
-                      onCheckedChange={setUseDetailedBudget}
+                      onCheckedChange={(checked) => {
+                        setUseDetailedBudget(checked);
+                        if (checked) {
+                          setUseMultiGroups(false); // Deactivate Multi-Groups when Detailed Breakdown is activated
+                        }
+                      }}
                     />
                   </div>
                 </div>
@@ -532,7 +519,12 @@ export function ActivityForm({
                     <Switch
                       id="multi-groups"
                       checked={useMultiGroups}
-                      onCheckedChange={setUseMultiGroups}
+                      onCheckedChange={(checked) => {
+                        setUseMultiGroups(checked);
+                        if (checked) {
+                          setUseDetailedBudget(false); // Deactivate Detailed Breakdown when Multi-Groups is activated
+                        }
+                      }}
                       disabled={isLoading}
                     />
                   </div>
@@ -546,6 +538,7 @@ export function ActivityForm({
                     chartAccounts={chartAccounts}
                     onGroupsChange={setCostGroups}
                     disabled={isLoading}
+                    totalBudget={budgetAmount || 0}
                   />
                 )}
               </div>
