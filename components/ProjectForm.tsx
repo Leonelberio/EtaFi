@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,6 +33,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 
 // Form validation schema
@@ -135,6 +146,64 @@ export function ProjectForm({
     },
   });
 
+  // 🆕 Data loss prevention
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null
+  );
+  const initialFormData = useRef<string>("");
+
+  // Track form changes
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      const currentData = JSON.stringify(value);
+      if (initialFormData.current === "") {
+        initialFormData.current = currentData;
+      }
+      setHasUnsavedChanges(currentData !== initialFormData.current);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Warn before leaving page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue =
+          "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter cette page ?";
+        return "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter cette page ?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Handle navigation with confirmation
+  const handleNavigation = (path: string) => {
+    if (hasUnsavedChanges) {
+      setPendingNavigation(path);
+      setShowExitDialog(true);
+    } else {
+      router.push(path);
+    }
+  };
+
+  const confirmExit = () => {
+    setShowExitDialog(false);
+    if (pendingNavigation) {
+      router.push(pendingNavigation);
+      setPendingNavigation(null);
+    }
+  };
+
+  const cancelExit = () => {
+    setShowExitDialog(false);
+    setPendingNavigation(null);
+  };
+
   const onSubmit = async (data: ProjectFormData) => {
     try {
       setIsLoading(true);
@@ -186,6 +255,10 @@ export function ProjectForm({
         `Project ${isEditing ? "updated" : "created"} successfully`
       );
 
+      // Reset unsaved changes state
+      setHasUnsavedChanges(false);
+      initialFormData.current = JSON.stringify(data);
+
       // Redirect to project details or list
       if (result.project?.id) {
         router.push(`/dashboard/projects/${result.project.id}`);
@@ -230,14 +303,28 @@ export function ProjectForm({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={() => router.back()}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleNavigation("/dashboard/projects")}
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {isEditing ? "Edit Project" : "Create New Project"}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {isEditing ? "Edit Project" : "Create New Project"}
+            </h1>
+            {hasUnsavedChanges && (
+              <Badge
+                variant="outline"
+                className="bg-yellow-50 text-yellow-700 border-yellow-200"
+              >
+                Modifications non sauvegardées
+              </Badge>
+            )}
+          </div>
           <p className="text-gray-600">
             {isEditing
               ? "Update project information and settings"
@@ -780,7 +867,7 @@ export function ProjectForm({
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.back()}
+              onClick={() => handleNavigation("/dashboard/projects")}
             >
               Cancel
             </Button>
@@ -792,6 +879,29 @@ export function ProjectForm({
           </div>
         </form>
       </Form>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Modifications non sauvegardées</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous avez des modifications non sauvegardées. Si vous quittez
+              maintenant, toutes vos modifications seront perdues. Voulez-vous
+              vraiment quitter cette page ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelExit}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmExit}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Quitter sans sauvegarder
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

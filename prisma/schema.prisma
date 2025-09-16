@@ -254,6 +254,16 @@ model Activity {
   budgetE   Decimal? @default(0) @db.Decimal(15, 2) // Équipement
   budgetMOD Decimal? @default(0) @db.Decimal(15, 2) // Main-d'œuvre
 
+  // 🆕 MOD Hours tracking
+  budgetMODHours Decimal? @default(0) @db.Decimal(10, 2) // Heures MOD budgétées
+  actualMODHours Decimal? @default(0) @db.Decimal(10, 2) // Heures MOD réelles
+
+  // 🆕 Cost type classification
+  costType String? @default("FIXED") // FIXED or VARIABLE
+
+  // 🆕 Cost category classification  
+  costCategory String? @default("CONTRACTUAL") // CONTRACTUAL, CLIENT_EXTRA, SUBCONTRACTOR_EXTRA
+
   // Actual costs by group (calculated from journal entries)
   actualM   Decimal? @default(0) @db.Decimal(15, 2)
   actualS   Decimal? @default(0) @db.Decimal(15, 2)
@@ -303,6 +313,16 @@ model SubActivity {
   budgetD   Decimal? @default(0) @db.Decimal(15, 2)
   budgetE   Decimal? @default(0) @db.Decimal(15, 2)
   budgetMOD Decimal? @default(0) @db.Decimal(15, 2)
+
+  // 🆕 MOD Hours tracking
+  budgetMODHours Decimal? @default(0) @db.Decimal(10, 2) // Heures MOD budgétées
+  actualMODHours Decimal? @default(0) @db.Decimal(10, 2) // Heures MOD réelles
+
+  // 🆕 Cost type classification
+  costType String? @default("FIXED") // FIXED or VARIABLE
+
+  // 🆕 Cost category classification  
+  costCategory String? @default("CONTRACTUAL") // CONTRACTUAL, CLIENT_EXTRA, SUBCONTRACTOR_EXTRA
 
   // Actual costs by group
   actualM   Decimal? @default(0) @db.Decimal(15, 2)

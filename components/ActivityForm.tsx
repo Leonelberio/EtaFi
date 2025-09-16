@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,23 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { activitySchema, type ActivityInput } from "@/lib/validations";
 import { MultiGroupSelector } from "@/components/MultiGroupSelector";
@@ -33,8 +51,6 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 // Cost group definitions with icons and colors
 const COST_GROUPS = [
@@ -101,6 +117,10 @@ interface ActivityFormProps {
     budgetD?: number;
     budgetE?: number;
     budgetMOD?: number;
+    budgetMODHours?: number;
+    actualMODHours?: number;
+    costType?: "FIXED" | "VARIABLE";
+    costCategory?: "CONTRACTUAL" | "CLIENT_EXTRA" | "SUBCONTRACTOR_EXTRA";
     isActive: boolean;
   };
   isEditing?: boolean;
@@ -138,9 +158,71 @@ export function ActivityForm({
       budgetD: activity?.budgetD || 0,
       budgetE: activity?.budgetE || 0,
       budgetMOD: activity?.budgetMOD || 0,
+      budgetMODHours: activity?.budgetMODHours || 0,
+      actualMODHours: activity?.actualMODHours || 0,
+      costType: activity?.costType || "FIXED",
+      costCategory: activity?.costCategory || "CONTRACTUAL",
       isActive: activity?.isActive ?? true,
     },
   });
+
+  // 🆕 Data loss prevention
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null
+  );
+  const initialFormData = useRef<string>("");
+
+  // Track form changes
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      const currentData = JSON.stringify(value);
+      if (initialFormData.current === "") {
+        initialFormData.current = currentData;
+      }
+      setHasUnsavedChanges(currentData !== initialFormData.current);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Warn before leaving page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue =
+          "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter cette page ?";
+        return "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter cette page ?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Handle navigation with confirmation
+  const handleNavigation = (path: string) => {
+    if (hasUnsavedChanges) {
+      setPendingNavigation(path);
+      setShowExitDialog(true);
+    } else {
+      router.push(path);
+    }
+  };
+
+  const confirmExit = () => {
+    setShowExitDialog(false);
+    if (pendingNavigation) {
+      router.push(pendingNavigation);
+      setPendingNavigation(null);
+    }
+  };
+
+  const cancelExit = () => {
+    setShowExitDialog(false);
+    setPendingNavigation(null);
+  };
 
   // Watch budget values for calculations
   const budgetAmount = form.watch("budgetAmount");
@@ -293,6 +375,10 @@ export function ActivityForm({
           : "Activity created successfully!"
       );
 
+      // Reset unsaved changes state
+      setHasUnsavedChanges(false);
+      initialFormData.current = JSON.stringify(data);
+
       // Navigate back to activities list
       router.push(`/dashboard/projects/${projectId}/activities`);
     } catch (error) {
@@ -314,20 +400,32 @@ export function ActivityForm({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href={`/dashboard/projects/${projectId}`}>
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Project
-          </Button>
-        </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleNavigation(`/dashboard/projects/${projectId}`)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Project
+        </Button>
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
             <BarChart3 className="h-5 w-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {isEditing ? "Edit Activity" : "New Activity"}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {isEditing ? "Edit Activity" : "New Activity"}
+              </h1>
+              {hasUnsavedChanges && (
+                <Badge
+                  variant="outline"
+                  className="bg-yellow-50 text-yellow-700 border-yellow-200"
+                >
+                  Modifications non sauvegardées
+                </Badge>
+              )}
+            </div>
             <p className="text-gray-600">
               {isEditing
                 ? "Update activity details"
@@ -541,6 +639,145 @@ export function ActivityForm({
                     totalBudget={budgetAmount || 0}
                   />
                 )}
+              </div>
+
+              {/* 🆕 MOD Hours & Cost Classification */}
+              <Separator />
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-4">
+                    Heures MOD & Classification des Coûts
+                  </h3>
+
+                  {/* MOD Hours Section */}
+                  <div className="space-y-4 mb-6">
+                    <h4 className="text-md font-medium text-gray-900">
+                      Heures MOD
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="budgetMODHours">
+                          Heures MOD Budgétées
+                        </Label>
+                        <Input
+                          id="budgetMODHours"
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          {...form.register("budgetMODHours", {
+                            valueAsNumber: true,
+                          })}
+                          placeholder="0.0"
+                          disabled={isLoading}
+                        />
+                        <p className="text-xs text-gray-500">
+                          Nombre d'heures de main-d'œuvre directe budgétées
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="actualMODHours">
+                          Heures MOD Réelles
+                        </Label>
+                        <Input
+                          id="actualMODHours"
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          {...form.register("actualMODHours", {
+                            valueAsNumber: true,
+                          })}
+                          placeholder="0.0"
+                          disabled={isLoading}
+                        />
+                        <p className="text-xs text-gray-500">
+                          Nombre d'heures de main-d'œuvre directe réellement
+                          utilisées
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cost Type Section */}
+                  <div className="space-y-4 mb-6">
+                    <h4 className="text-md font-medium text-gray-900">
+                      Type de Coût
+                    </h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="costType">Classification du Coût</Label>
+                      <Select
+                        value={form.watch("costType")}
+                        onValueChange={(value) =>
+                          form.setValue(
+                            "costType",
+                            value as "FIXED" | "VARIABLE"
+                          )
+                        }
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner le type de coût" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FIXED">Coût Fixe</SelectItem>
+                          <SelectItem value="VARIABLE">
+                            Coût Variable
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500">
+                        Fixe: coût constant indépendant du volume | Variable:
+                        coût qui varie avec le volume
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Cost Category Section */}
+                  <div className="space-y-4">
+                    <h4 className="text-md font-medium text-gray-900">
+                      Catégorie de Coût
+                    </h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="costCategory">
+                        Classification de la Catégorie
+                      </Label>
+                      <Select
+                        value={form.watch("costCategory")}
+                        onValueChange={(value) =>
+                          form.setValue(
+                            "costCategory",
+                            value as
+                              | "CONTRACTUAL"
+                              | "CLIENT_EXTRA"
+                              | "SUBCONTRACTOR_EXTRA"
+                          )
+                        }
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner la catégorie de coût" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CONTRACTUAL">
+                            Coût Contractuel
+                          </SelectItem>
+                          <SelectItem value="CLIENT_EXTRA">
+                            Coût Supplémentaire Rechargeable au Client
+                          </SelectItem>
+                          <SelectItem value="SUBCONTRACTOR_EXTRA">
+                            Coût Supplémentaire Rechargeable à un Sous-traitant
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500">
+                        Contractuel: inclus dans le contrat | Supplémentaire
+                        Client: facturable au client | Supplémentaire
+                        Sous-traitant: facturable au sous-traitant
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Activity Options */}
@@ -768,6 +1005,29 @@ export function ActivityForm({
           </CardContent>
         </Card>
       </div>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Modifications non sauvegardées</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous avez des modifications non sauvegardées. Si vous quittez
+              maintenant, toutes vos modifications seront perdues. Voulez-vous
+              vraiment quitter cette page ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelExit}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmExit}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Quitter sans sauvegarder
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

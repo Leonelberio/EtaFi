@@ -25,6 +25,19 @@ export const activitySchema = z.object({
   budgetE: z.number().min(0).optional(), // Équipement
   budgetMOD: z.number().min(0).optional(), // Main-d'œuvre
 
+  // 🆕 MOD Hours tracking
+  budgetMODHours: z.number().min(0).optional(), // Heures MOD budgétées
+  actualMODHours: z.number().min(0).optional(), // Heures MOD réelles
+
+  // 🆕 Cost type classification
+  costType: z.enum(["FIXED", "VARIABLE"]).optional().default("FIXED"),
+
+  // 🆕 Cost category classification
+  costCategory: z
+    .enum(["CONTRACTUAL", "CLIENT_EXTRA", "SUBCONTRACTOR_EXTRA"])
+    .optional()
+    .default("CONTRACTUAL"),
+
   isActive: z.boolean().optional().default(true),
   sortOrder: z.number().optional().default(0),
 });
@@ -56,6 +69,19 @@ export const subActivitySchema = z.object({
   budgetD: z.number().min(0).optional(),
   budgetE: z.number().min(0).optional(),
   budgetMOD: z.number().min(0).optional(),
+
+  // 🆕 MOD Hours tracking
+  budgetMODHours: z.number().min(0).optional(), // Heures MOD budgétées
+  actualMODHours: z.number().min(0).optional(), // Heures MOD réelles
+
+  // 🆕 Cost type classification
+  costType: z.enum(["FIXED", "VARIABLE"]).optional().default("FIXED"),
+
+  // 🆕 Cost category classification
+  costCategory: z
+    .enum(["CONTRACTUAL", "CLIENT_EXTRA", "SUBCONTRACTOR_EXTRA"])
+    .optional()
+    .default("CONTRACTUAL"),
 
   isActive: z.boolean().optional().default(true),
   sortOrder: z.number().optional().default(0),
