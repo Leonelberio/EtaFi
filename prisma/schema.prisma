@@ -97,9 +97,10 @@ model Reminder {
 }
 
 model Organization {
-  id          String  @id @default(cuid())
-  name        String
-  description String?
+  id             String  @id @default(cuid())
+  name           String
+  description    String?
+  businessDomain String  @default("OTHER")
 
   // Business information (migrated from Company)
   address    String?
@@ -524,7 +525,7 @@ model ChartAccount {
   activityCostGroups    ActivityCostGroup[]
   subActivityCostGroups SubActivityCostGroup[]
   projectCostGroupCodes ProjectCostGroupCode[]
-  
+
   // Invoice relations
   invoiceRevenueAccounts InvoiceLine[] @relation("InvoiceRevenueAccount")
 
@@ -865,16 +866,16 @@ model Invoice {
   // Metadata
   notes         String?
   internalNotes String?
-  isActive      Boolean  @default(true)
-  
+  isActive      Boolean @default(true)
+
   // Audit trail
-  createdBy      String?
-  approvedBy     String?
-  postedAt       DateTime?
-  paidAt         DateTime?
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdBy  String?
+  approvedBy String?
+  postedAt   DateTime?
+  paidAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -884,10 +885,10 @@ model Invoice {
   lines        InvoiceLine[]
   payments     InvoicePayment[]
   journalLines JournalLine[]
-  
+
   // User relations
-  creator      User?            @relation("InvoiceCreator", fields: [createdBy], references: [id])
-  approver     User?            @relation("InvoiceApprover", fields: [approvedBy], references: [id])
+  creator  User? @relation("InvoiceCreator", fields: [createdBy], references: [id])
+  approver User? @relation("InvoiceApprover", fields: [approvedBy], references: [id])
 
   @@unique([organizationId, number])
   @@index([organizationId])
@@ -935,12 +936,12 @@ model InvoiceLine {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  invoice      Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  taxCode      TaxCode?     @relation(fields: [taxCodeId], references: [id])
-  project      Project?     @relation(fields: [projectId], references: [id])
-  activity     Activity?    @relation(fields: [activityId], references: [id])
-  subActivity  SubActivity? @relation(fields: [subActivityId], references: [id])
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice        Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  taxCode        TaxCode?      @relation(fields: [taxCodeId], references: [id])
+  project        Project?      @relation(fields: [projectId], references: [id])
+  activity       Activity?     @relation(fields: [activityId], references: [id])
+  subActivity    SubActivity?  @relation(fields: [subActivityId], references: [id])
   revenueAccount ChartAccount? @relation("InvoiceRevenueAccount", fields: [revenueAccountId], references: [id])
 
   @@index([organizationId])
@@ -1103,4 +1104,3 @@ model ProjectCostGroupCode {
   @@index([isActive])
   @@index([isDefault])
 }
-

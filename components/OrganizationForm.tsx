@@ -11,6 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Building2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -18,6 +25,7 @@ import Link from "next/link";
 const organizationSchema = z.object({
   name: z.string().min(1, "Organization name is required"),
   description: z.string().optional(),
+  businessDomain: z.string().min(1, "Business domain is required"),
 
   // Business information
   address: z.string().optional(),
@@ -25,7 +33,10 @@ const organizationSchema = z.object({
   postalCode: z.string().optional(),
   country: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .min(1, "Email is required"),
   website: z.string().url().optional().or(z.literal("")),
 
   // Canadian tax information
@@ -40,6 +51,7 @@ interface OrganizationFormProps {
     id: string;
     name: string;
     description?: string;
+    businessDomain?: string;
     address?: string;
     city?: string;
     postalCode?: string;
@@ -61,7 +73,7 @@ export function OrganizationForm({
 }: OrganizationFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  
+
   // 🆕 Get refresh function from context
   const { refreshOrganizations } = useOrganizationContext();
 
@@ -70,6 +82,7 @@ export function OrganizationForm({
     defaultValues: {
       name: organization?.name || "",
       description: organization?.description || "",
+      businessDomain: organization?.businessDomain || "",
       address: organization?.address || "",
       city: organization?.city || "",
       postalCode: organization?.postalCode || "",
@@ -187,7 +200,7 @@ export function OrganizationForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -201,6 +214,68 @@ export function OrganizationForm({
                     </p>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="businessDomain">Domaine d'activité *</Label>
+                <Select
+                  value={form.watch("businessDomain")}
+                  onValueChange={(value) =>
+                    form.setValue("businessDomain", value)
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Sélectionner un domaine d'activité" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TECHNOLOGY">
+                      Technologie et Informatique
+                    </SelectItem>
+                    <SelectItem value="HEALTHCARE">Santé et Médical</SelectItem>
+                    <SelectItem value="FINANCE">Finance et Banque</SelectItem>
+                    <SelectItem value="EDUCATION">
+                      Éducation et Formation
+                    </SelectItem>
+                    <SelectItem value="RETAIL">Commerce de détail</SelectItem>
+                    <SelectItem value="MANUFACTURING">
+                      Manufacture et Production
+                    </SelectItem>
+                    <SelectItem value="CONSTRUCTION">
+                      Construction et Immobilier
+                    </SelectItem>
+                    <SelectItem value="TRANSPORTATION">
+                      Transport et Logistique
+                    </SelectItem>
+                    <SelectItem value="ENERGY">
+                      Énergie et Utilitaires
+                    </SelectItem>
+                    <SelectItem value="AGRICULTURE">
+                      Agriculture et Agroalimentaire
+                    </SelectItem>
+                    <SelectItem value="TOURISM">
+                      Tourisme et Hôtellerie
+                    </SelectItem>
+                    <SelectItem value="MEDIA">
+                      Médias et Communication
+                    </SelectItem>
+                    <SelectItem value="CONSULTING">
+                      Conseil et Services professionnels
+                    </SelectItem>
+                    <SelectItem value="NONPROFIT">
+                      Organisme à but non lucratif
+                    </SelectItem>
+                    <SelectItem value="GOVERNMENT">
+                      Gouvernement et Secteur public
+                    </SelectItem>
+                    <SelectItem value="OTHER">Autres</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.businessDomain && (
+                  <p className="text-sm text-red-600">
+                    {form.formState.errors.businessDomain.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">

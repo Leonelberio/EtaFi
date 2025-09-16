@@ -1,0 +1,30 @@
+Database Backup Information
+===========================
+
+Backup Date: $(date)
+Database: compta_projet
+Backup Location: /Users/MAC/Documents/GitHub/apps/compta_projet/backups/
+
+Backup Files Created:
+- compta_projet_backup_20250916_211602.dump (Custom format - recommended for restore)
+- compta_projet_backup_20250916_211606.sql (Plain SQL format - human readable)
+- compta_projet_schema_20250916_211608.sql (Schema only - structure without data)
+
+Backup Commands Used:
+- pg_dump "$DATABASE_URL" --verbose --no-password --format=custom --file="compta_projet_backup_TIMESTAMP.dump"
+- pg_dump "$DATABASE_URL" --verbose --no-password --format=plain --file="compta_projet_backup_TIMESTAMP.sql"
+- pg_dump "$DATABASE_URL" --verbose --no-password --schema-only --format=plain --file="compta_projet_schema_TIMESTAMP.sql"
+
+Restore Commands:
+- Custom format: pg_restore --verbose --no-password --dbname="NEW_DATABASE_URL" compta_projet_backup_TIMESTAMP.dump
+- SQL format: psql "$NEW_DATABASE_URL" < compta_projet_backup_TIMESTAMP.sql
+
+Important Notes:
+- The custom format (.dump) is recommended for full restore as it preserves all database objects
+- The SQL format (.sql) is human-readable and can be edited if needed
+- Always test restore procedures on a development database first
+- Keep multiple backup copies in different locations for safety
+
+Database Schema Changes Made:
+- Added businessDomain field to Organization table with default value "OTHER"
+- Made email field required in Organization table
