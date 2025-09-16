@@ -23,7 +23,27 @@ export default async function EditProjectPage({
       id: projectId,
       organizationId: orgId,
     },
-    include: {
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      description: true,
+      executionAddress: true,
+      projectDomain: true,
+      clientId: true,
+      managerId: true,
+      tempManagerId: true,
+      tempManagerEnd: true,
+      kind: true,
+      status: true,
+      totalBudget: true,
+      totalBudgetCosting: true,
+      totalBudgetSelling: true,
+      initialProfitDollars: true,
+      initialProfitPercent: true,
+      currency: true,
+      startDate: true,
+      endDate: true,
       client: {
         select: {
           id: true,

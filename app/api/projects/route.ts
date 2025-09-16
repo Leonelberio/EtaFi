@@ -15,7 +15,9 @@ const projectSchema = z.object({
       "Project code must contain only uppercase letters, numbers, underscore, and dash"
     ),
   name: z.string().min(2, "Project name is required").max(100),
-  description: z.string().optional(),
+  description: z.string().min(1, "Description is required"),
+  executionAddress: z.string().optional(),
+  projectDomain: z.string().min(1, "Project domain is required"),
   clientId: z.string().optional(),
   managerId: z.string().optional(),
   tempManagerId: z.string().optional(),
@@ -25,6 +27,10 @@ const projectSchema = z.object({
     .enum(["ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"])
     .default("ACTIVE"),
   totalBudget: z.number().positive().optional(),
+  totalBudgetCosting: z.number().positive().optional(),
+  totalBudgetSelling: z.number().positive().optional(),
+  initialProfitDollars: z.number().optional(),
+  initialProfitPercent: z.number().min(0).max(100).optional(),
   currency: z.string().default("CAD"),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),

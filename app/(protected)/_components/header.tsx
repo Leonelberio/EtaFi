@@ -44,7 +44,9 @@ interface HeaderProps {
 
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const { data: session } = useSession();
-  const [switchingToOrg, setSwitchingToOrg] = useState<Organization | null>(null);
+  const [switchingToOrg, setSwitchingToOrg] = useState<Organization | null>(
+    null
+  );
 
   // 🆕 Use organization context for real-time updates
   const {
@@ -186,7 +188,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           {/* Smart Search */}
           <div className="flex flex-1 items-center justify-center px-2 lg:ml-6 lg:justify-start">
             <div className="w-full max-w-lg lg:max-w-xs">
-              <SmartSearch 
+              <SmartSearch
                 className="w-full"
                 placeholder="Rechercher pages, factures, projets..."
               />

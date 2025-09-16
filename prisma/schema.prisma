@@ -178,25 +178,29 @@ model OrganizationMembership {
 }
 
 model Project {
-  id               String    @id @default(cuid())
-  organizationId   String
-  code             String
-  name             String
-  description      String?
-  executionAddress String?
-  projectDomain    String?
-  clientId         String?
-  managerId        String?
-  tempManagerId    String?
-  tempManagerEnd   DateTime?
-  kind             String    @default("BILLABLE")
-  status           String    @default("ACTIVE")
-  totalBudget      Decimal?
-  currency         String    @default("CAD")
-  startDate        DateTime?
-  endDate          DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id                   String    @id @default(cuid())
+  organizationId       String
+  code                 String
+  name                 String
+  description          String?
+  executionAddress     String?
+  projectDomain        String?
+  clientId             String?
+  managerId            String?
+  tempManagerId        String?
+  tempManagerEnd       DateTime?
+  kind                 String    @default("BILLABLE")
+  status               String    @default("ACTIVE")
+  totalBudget          Decimal?
+  totalBudgetCosting   Decimal? // Total Budget coûtant (coûts bruts connus à l'interne)
+  totalBudgetSelling   Decimal? // Total Budget vendant (budget remis au client)
+  initialProfitDollars Decimal? // Profit initial (dollars) = budget vendant - budget coûtant
+  initialProfitPercent Decimal? // Profit initial (%)
+  currency             String    @default("CAD")
+  startDate            DateTime?
+  endDate              DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   client       Customer?    @relation(fields: [clientId], references: [id])

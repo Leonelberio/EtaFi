@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,6 +56,10 @@ const projectSchema = z.object({
   kind: z.enum(["ADMIN", "BILLABLE"]),
   status: z.enum(["ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"]),
   totalBudget: z.number().positive().optional(),
+  totalBudgetCosting: z.number().positive().optional(),
+  totalBudgetSelling: z.number().positive().optional(),
+  initialProfitDollars: z.number().optional(),
+  initialProfitPercent: z.number().min(0).max(100).optional(),
   currency: z.string().default("CAD"),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -78,6 +82,10 @@ interface ProjectFormProps {
     kind: "ADMIN" | "BILLABLE";
     status: "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
     totalBudget?: number;
+    totalBudgetCosting?: number;
+    totalBudgetSelling?: number;
+    initialProfitDollars?: number;
+    initialProfitPercent?: number;
     currency: string;
     startDate?: string;
     endDate?: string;
@@ -113,6 +121,10 @@ export function ProjectForm({
       kind: project?.kind || "BILLABLE",
       status: project?.status || "ACTIVE",
       totalBudget: project?.totalBudget || undefined,
+      totalBudgetCosting: project?.totalBudgetCosting || undefined,
+      totalBudgetSelling: project?.totalBudgetSelling || undefined,
+      initialProfitDollars: project?.initialProfitDollars || undefined,
+      initialProfitPercent: project?.initialProfitPercent || undefined,
       currency: project?.currency || "CAD",
       startDate: project?.startDate
         ? new Date(project.startDate).toISOString().split("T")[0]
@@ -140,9 +152,16 @@ export function ProjectForm({
           ? new Date(data.tempManagerEnd).toISOString()
           : undefined,
         // Remove empty string and "none" values
-        clientId: data.clientId && data.clientId !== "none" ? data.clientId : undefined,
-        managerId: data.managerId && data.managerId !== "none" ? data.managerId : undefined,
-        tempManagerId: data.tempManagerId && data.tempManagerId !== "none" ? data.tempManagerId : undefined,
+        clientId:
+          data.clientId && data.clientId !== "none" ? data.clientId : undefined,
+        managerId:
+          data.managerId && data.managerId !== "none"
+            ? data.managerId
+            : undefined,
+        tempManagerId:
+          data.tempManagerId && data.tempManagerId !== "none"
+            ? data.tempManagerId
+            : undefined,
       };
 
       const url = isEditing ? `/api/projects/${project?.id}` : "/api/projects";
@@ -187,6 +206,25 @@ export function ProjectForm({
 
   // Watch for temp manager to require end date
   const tempManagerId = form.watch("tempManagerId");
+
+  // Watch budget fields for automatic profit calculation
+  const totalBudgetCosting = form.watch("totalBudgetCosting");
+  const totalBudgetSelling = form.watch("totalBudgetSelling");
+
+  // Calculate profit automatically when budget fields change
+  React.useEffect(() => {
+    if (totalBudgetCosting && totalBudgetSelling && totalBudgetCosting > 0) {
+      const profitDollars = totalBudgetSelling - totalBudgetCosting;
+      const profitPercent = (profitDollars / totalBudgetCosting) * 100;
+
+      form.setValue("initialProfitDollars", Number(profitDollars.toFixed(2)));
+      form.setValue("initialProfitPercent", Number(profitPercent.toFixed(2)));
+    } else {
+      // Clear profit fields if either budget field is missing or costing is 0
+      form.setValue("initialProfitDollars", undefined);
+      form.setValue("initialProfitPercent", undefined);
+    }
+  }, [totalBudgetCosting, totalBudgetSelling, form]);
 
   return (
     <div className="space-y-6">
@@ -344,15 +382,21 @@ export function ProjectForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="CONSTRUCTION">Construction</SelectItem>
+                        <SelectItem value="CONSTRUCTION">
+                          Construction
+                        </SelectItem>
                         <SelectItem value="ENGINEERING">Ingénierie</SelectItem>
                         <SelectItem value="COMMERCE">Commerce</SelectItem>
                         <SelectItem value="TECHNOLOGY">Technologie</SelectItem>
                         <SelectItem value="HEALTHCARE">Santé</SelectItem>
                         <SelectItem value="EDUCATION">Éducation</SelectItem>
                         <SelectItem value="FINANCE">Finance</SelectItem>
-                        <SelectItem value="MANUFACTURING">Manufacture</SelectItem>
-                        <SelectItem value="TRANSPORTATION">Transport</SelectItem>
+                        <SelectItem value="MANUFACTURING">
+                          Manufacture
+                        </SelectItem>
+                        <SelectItem value="TRANSPORTATION">
+                          Transport
+                        </SelectItem>
                         <SelectItem value="ENERGY">Énergie</SelectItem>
                         <SelectItem value="AGRICULTURE">Agriculture</SelectItem>
                         <SelectItem value="TOURISM">Tourisme</SelectItem>
@@ -459,7 +503,9 @@ export function ProjectForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">No temporary manager</SelectItem>
+                          <SelectItem value="none">
+                            No temporary manager
+                          </SelectItem>
                           {managers.map((manager) => (
                             <SelectItem key={manager.id} value={manager.id}>
                               {manager.name}
@@ -502,124 +548,229 @@ export function ProjectForm({
             <CardHeader>
               <CardTitle>Financial & Timeline</CardTitle>
               <CardDescription>
-                Budget and project timeline information
+                Budget breakdown, profit analysis, and project timeline
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="totalBudget"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Total Budget</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value
-                                ? parseFloat(e.target.value)
-                                : undefined
-                            )
-                          }
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Overall project budget in CAD
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+            <CardContent className="space-y-6">
+              {/* Budget Breakdown */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-medium text-gray-900">
+                  Budget Breakdown
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="totalBudgetCosting"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Budget coûtant *</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : undefined
+                              )
+                            }
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ACTIVE">Active</SelectItem>
-                          <SelectItem value="ON_HOLD">On Hold</SelectItem>
-                          <SelectItem value="COMPLETED">Completed</SelectItem>
-                          <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormDescription>
+                          Coûts bruts connus à l'interne
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="currency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Currency</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                  <FormField
+                    control={form.control}
+                    name="totalBudgetSelling"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Budget vendant *</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : undefined
+                              )
+                            }
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="CAD">
-                            CAD - Canadian Dollar
-                          </SelectItem>
-                          <SelectItem value="USD">USD - US Dollar</SelectItem>
-                          <SelectItem value="EUR">EUR - Euro</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormDescription>
+                          Budget remis au client (profit déjà ajouté)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="initialProfitDollars"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Profit initial (dollars)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            {...field}
+                            readOnly
+                            className="bg-gray-50 cursor-not-allowed"
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Calculé automatiquement: Budget vendant - Budget
+                          coûtant
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="initialProfitPercent"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Profit initial (%)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            placeholder="0.00"
+                            {...field}
+                            readOnly
+                            className="bg-gray-50 cursor-not-allowed"
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Calculé automatiquement: Pourcentage de profit sur le
+                          budget coûtant
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Project Status & Currency */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-medium text-gray-900">
+                  Project Status & Currency
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Statuts *</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner un statut" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="ACTIVE">Actif</SelectItem>
+                            <SelectItem value="ON_HOLD">En attente</SelectItem>
+                            <SelectItem value="COMPLETED">Terminé</SelectItem>
+                            <SelectItem value="CANCELLED">Annulé</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Currency</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner une devise" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="CAD">
+                              CAD - Dollar canadien
+                            </SelectItem>
+                            <SelectItem value="USD">
+                              USD - Dollar américain
+                            </SelectItem>
+                            <SelectItem value="EUR">EUR - Euro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-medium text-gray-900">Timeline</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
