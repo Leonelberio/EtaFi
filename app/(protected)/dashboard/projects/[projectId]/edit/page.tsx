@@ -77,6 +77,8 @@ export default async function EditProjectPage({
       project={{
         ...project,
         description: project.description || undefined,
+        executionAddress: project.executionAddress || undefined,
+        projectDomain: project.projectDomain || undefined,
         clientId: project.clientId || undefined,
         managerId: project.managerId || undefined,
         tempManagerId: project.tempManagerId || undefined,
@@ -92,6 +94,18 @@ export default async function EditProjectPage({
           | "CANCELLED",
         totalBudget: project.totalBudget
           ? parseFloat(project.totalBudget.toString())
+          : undefined,
+        totalBudgetCosting: project.totalBudgetCosting
+          ? parseFloat(project.totalBudgetCosting.toString())
+          : undefined,
+        totalBudgetSelling: project.totalBudgetSelling
+          ? parseFloat(project.totalBudgetSelling.toString())
+          : undefined,
+        initialProfitDollars: project.initialProfitDollars
+          ? parseFloat(project.initialProfitDollars.toString())
+          : undefined,
+        initialProfitPercent: project.initialProfitPercent
+          ? parseFloat(project.initialProfitPercent.toString())
           : undefined,
       }}
       clients={[]}

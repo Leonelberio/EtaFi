@@ -65,6 +65,19 @@ export default async function EditOrganizationPage({
         organization={{
           ...organization,
           description: organization.description || undefined,
+          email: organization.email || undefined,
+          phone: organization.phone || undefined,
+          address: organization.address || undefined,
+          city: organization.city || undefined,
+          postalCode: organization.postalCode || undefined,
+          country: organization.country || undefined,
+          businessDomain: organization.businessDomain || undefined,
+          nasNumber: organization.nasNumber || undefined,
+          website: organization.website || undefined,
+          taxNumber: organization.taxNumber || undefined,
+          gstNumber: organization.gstNumber || undefined,
+          qstNumber: organization.qstNumber || undefined,
+          fiscalYearEnd: organization.fiscalYearEnd || undefined,
         }}
         isEditing={true}
       />

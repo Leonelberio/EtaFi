@@ -376,7 +376,8 @@ export function PurchaseInvoiceForm({ invoiceId }: PurchaseInvoiceFormProps) {
     }
 
     if (field === "amount" || field === "taxAmount") {
-      lines[index].totalAmount = lines[index].amount + lines[index].taxAmount;
+      lines[index].totalAmount =
+        lines[index].amount + (lines[index].taxAmount || 0);
     }
 
     setValue("lines", lines);

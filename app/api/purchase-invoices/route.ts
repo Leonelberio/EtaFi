@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
       // Create invoice
       const invoice = await tx.invoice.create({
         data: {
-          organizationId,
+          organizationId: orgId,
           number: validatedData.number,
           type: "PURCHASE", // Always PURCHASE for this endpoint
           status: validatedData.status,
@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
         validatedData.lines.map((line, index) =>
           tx.invoiceLine.create({
             data: {
-              organizationId,
+              organizationId: orgId,
               invoiceId: invoice.id,
               description: line.description,
               quantity: line.quantity,

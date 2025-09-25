@@ -292,7 +292,7 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
             <nav className="space-y-1">
               {module.items.map((item) => {
                 const isActive = isNavigationActive(item.href);
-                const isDisabled = item.disabled;
+                const isDisabled = (item as any).disabled;
 
                 return (
                   <div key={item.name}>
@@ -330,9 +330,9 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                     </Link>
 
                     {/* Render sub-items if they exist */}
-                    {item.subItems && (
+                    {(item as any).subItems && (
                       <div className="ml-6 mt-1 space-y-1">
-                        {item.subItems.map((subItem) => {
+                        {(item as any).subItems.map((subItem: any) => {
                           const isSubActive = isNavigationActive(subItem.href);
                           return (
                             <Link

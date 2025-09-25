@@ -119,7 +119,6 @@ export default async function EditInvoicePage({
           invoiceId={invoiceId}
           chartAccounts={chartAccounts}
           customers={customers}
-          vendors={vendors}
           projects={projects}
           taxCodes={taxCodes}
           invoice={invoiceForClient}

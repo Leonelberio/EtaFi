@@ -88,7 +88,6 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            code: true,
           },
         },
         lines: {
@@ -96,7 +95,6 @@ export async function GET(
             taxCode: {
               select: {
                 id: true,
-                code: true,
                 name: true,
                 rate: true,
               },
@@ -105,20 +103,17 @@ export async function GET(
               select: {
                 id: true,
                 name: true,
-                code: true,
               },
             },
             subActivity: {
               select: {
                 id: true,
                 name: true,
-                code: true,
               },
             },
             revenueAccount: {
               select: {
                 id: true,
-                code: true,
                 name: true,
               },
             },
@@ -258,7 +253,7 @@ export async function PUT(
         validatedData.lines.map((line, index) =>
           tx.invoiceLine.create({
             data: {
-              organizationId,
+              organizationId: orgId,
               invoiceId: invoice.id,
               description: line.description,
               quantity: line.quantity,

@@ -49,6 +49,18 @@ export default async function EditActivityPage({
     actualD: activity.actualD ? Number(activity.actualD) : 0,
     actualE: activity.actualE ? Number(activity.actualE) : 0,
     actualMOD: activity.actualMOD ? Number(activity.actualMOD) : 0,
+    budgetMODHours: activity.budgetMODHours
+      ? Number(activity.budgetMODHours)
+      : undefined,
+    actualMODHours: activity.actualMODHours
+      ? Number(activity.actualMODHours)
+      : undefined,
+    costType: (activity.costType as "FIXED" | "VARIABLE") || undefined,
+    costCategory:
+      (activity.costCategory as
+        | "CONTRACTUAL"
+        | "CLIENT_EXTRA"
+        | "SUBCONTRACTOR_EXTRA") || undefined,
   };
 
   return (
