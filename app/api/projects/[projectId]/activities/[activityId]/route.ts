@@ -35,6 +35,13 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
             name: true,
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         subActivities: {
           orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
         },

@@ -86,6 +86,11 @@ interface Activity {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+  createdBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
   project: {
     id: string;
     name: string;
@@ -395,15 +400,30 @@ export function AllActivitiesList() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Project</TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Project
+                    </TableHead>
                     <TableHead>Code</TableHead>
                     <TableHead>Activity Name</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Created By
+                    </TableHead>
                     <TableHead>Budget</TableHead>
-                    <TableHead>Actual</TableHead>
-                    <TableHead>Progress</TableHead>
-                    <TableHead>Variance</TableHead>
-                    <TableHead>Sub-Activities</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Actual
+                    </TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Progress
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Variance
+                    </TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Sub-Activities
+                    </TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Status
+                    </TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -420,7 +440,7 @@ export function AllActivitiesList() {
 
                     return (
                       <TableRow key={activity.id}>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div>
                             <div className="font-medium">
                               {activity.project.name}
@@ -440,13 +460,36 @@ export function AllActivitiesList() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{activity.name}</div>
+                            <button
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/projects/${activity.project.id}/activities/${activity.id}`
+                                )
+                              }
+                              className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            >
+                              {activity.name}
+                            </button>
                             {activity.description && (
                               <div className="text-sm text-gray-500 truncate max-w-xs">
                                 {activity.description}
                               </div>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {activity.createdBy ? (
+                            <div>
+                              <div className="font-medium">
+                                {activity.createdBy.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {activity.createdBy.email}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
@@ -479,12 +522,12 @@ export function AllActivitiesList() {
                             ) : null}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div className="font-medium">
                             {formatCurrency(activity.costToDate)}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <Progress value={progress} className="w-16 h-2" />
@@ -494,7 +537,7 @@ export function AllActivitiesList() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div
                             className={`text-sm font-medium ${
                               variance.isOverBudget
@@ -516,7 +559,7 @@ export function AllActivitiesList() {
                             {variance.percentage.toFixed(1)}%
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex items-center gap-2">
                             <span className="text-sm">
                               {activity._count?.subActivities || 0}
@@ -528,7 +571,7 @@ export function AllActivitiesList() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Badge
                             variant={
                               activity.isActive ? "default" : "secondary"

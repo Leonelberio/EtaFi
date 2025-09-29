@@ -78,6 +78,11 @@ interface Activity {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+  createdBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
   subActivities?: Array<{
     id: string;
     code: string;
@@ -148,11 +153,14 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      const response = await fetch(`/api/projects/${projectId}/activities/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
+      const response = await fetch(
+        `/api/projects/${projectId}/activities/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: !currentStatus }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update activity");
@@ -171,9 +179,12 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
   const handleDelete = async (id: string) => {
     try {
       setIsDeleting(true);
-      const response = await fetch(`/api/projects/${projectId}/activities/${id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/projects/${projectId}/activities/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -185,7 +196,9 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
       fetchActivities();
     } catch (error) {
       console.error("Error deleting activity:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to delete activity");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete activity"
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -193,24 +206,27 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
 
   const formatCurrency = (amount?: number): string => {
     if (!amount) return "$0.00";
-    return amount.toLocaleString('en-CA', {
-      style: 'currency',
-      currency: 'CAD',
+    return amount.toLocaleString("en-CA", {
+      style: "currency",
+      currency: "CAD",
       minimumFractionDigits: 2,
     });
   };
 
   const calculateProgress = (actual?: number, budget?: number): number => {
     if (!budget || budget === 0) return 0;
-    return Math.min((actual || 0) / budget * 100, 100);
+    return Math.min(((actual || 0) / budget) * 100, 100);
   };
 
-  const getBudgetVariance = (actual?: number, budget?: number): { amount: number; percentage: number; isOverBudget: boolean } => {
+  const getBudgetVariance = (
+    actual?: number,
+    budget?: number
+  ): { amount: number; percentage: number; isOverBudget: boolean } => {
     const actualAmount = actual || 0;
     const budgetAmount = budget || 0;
     const variance = actualAmount - budgetAmount;
     const percentage = budgetAmount > 0 ? (variance / budgetAmount) * 100 : 0;
-    
+
     return {
       amount: variance,
       percentage,
@@ -243,15 +259,18 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
                 Project Activities
-                {projectName && (
-                  <Badge variant="outline">{projectName}</Badge>
-                )}
+                {projectName && <Badge variant="outline">{projectName}</Badge>}
               </CardTitle>
               <CardDescription>
-                Manage activities and track budget vs actual costs by 5-group system
+                Manage activities and track budget vs actual costs by 5-group
+                system
               </CardDescription>
             </div>
-            <Button onClick={() => router.push(`/dashboard/projects/${projectId}/activities/new`)}>
+            <Button
+              onClick={() =>
+                router.push(`/dashboard/projects/${projectId}/activities/new`)
+              }
+            >
               <Plus className="h-4 w-4 mr-2" />
               New Activity
             </Button>
@@ -276,7 +295,9 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
             <div className="text-center py-12">
               <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm ? "No activities found" : "No activities configured"}
+                {searchTerm
+                  ? "No activities found"
+                  : "No activities configured"}
               </h3>
               <p className="text-gray-600 mb-6">
                 {searchTerm
@@ -284,7 +305,13 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                   : "Get started by creating your first project activity with budget breakdown"}
               </p>
               {!searchTerm && (
-                <Button onClick={() => router.push(`/dashboard/projects/${projectId}/activities/new`)}>
+                <Button
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/projects/${projectId}/activities/new`
+                    )
+                  }
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Activity
                 </Button>
@@ -297,28 +324,58 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                   <TableRow>
                     <TableHead>Code</TableHead>
                     <TableHead>Activity Name</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Created By
+                    </TableHead>
                     <TableHead>Budget</TableHead>
-                    <TableHead>Actual</TableHead>
-                    <TableHead>Progress</TableHead>
-                    <TableHead>Variance</TableHead>
-                    <TableHead>Sub-Activities</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Actual
+                    </TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Progress
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Variance
+                    </TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Sub-Activities
+                    </TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Status
+                    </TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredActivities.map((activity) => {
-                    const progress = calculateProgress(activity.costToDate, activity.budgetAmount);
-                    const variance = getBudgetVariance(activity.costToDate, activity.budgetAmount);
-                    
+                    const progress = calculateProgress(
+                      activity.costToDate,
+                      activity.budgetAmount
+                    );
+                    const variance = getBudgetVariance(
+                      activity.costToDate,
+                      activity.budgetAmount
+                    );
+
                     return (
                       <TableRow key={activity.id}>
                         <TableCell>
-                          <div className="font-mono font-medium">{activity.code}</div>
+                          <div className="font-mono font-medium">
+                            {activity.code}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{activity.name}</div>
+                            <button
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/projects/${projectId}/activities/${activity.id}`
+                                )
+                              }
+                              className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            >
+                              {activity.name}
+                            </button>
                             {activity.description && (
                               <div className="text-sm text-gray-500 truncate max-w-xs">
                                 {activity.description}
@@ -326,17 +383,37 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                             )}
                           </div>
                         </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {activity.createdBy ? (
+                            <div>
+                              <div className="font-medium">
+                                {activity.createdBy.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {activity.createdBy.email}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <div className="space-y-1">
                             <div className="font-medium">
                               {formatCurrency(activity.budgetAmount)}
                             </div>
-                            {activity.budgetM || activity.budgetS || activity.budgetD || activity.budgetE || activity.budgetMOD ? (
+                            {activity.budgetM ||
+                            activity.budgetS ||
+                            activity.budgetD ||
+                            activity.budgetE ||
+                            activity.budgetMOD ? (
                               <div className="flex gap-1">
                                 {COST_GROUPS.map((group) => {
-                                  const value = activity[`budget${group.key}` as keyof Activity] as number;
+                                  const value = activity[
+                                    `budget${group.key}` as keyof Activity
+                                  ] as number;
                                   if (!value) return null;
-                                  
+
                                   return (
                                     <Badge
                                       key={group.key}
@@ -351,12 +428,12 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                             ) : null}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div className="font-medium">
                             {formatCurrency(activity.costToDate)}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <Progress value={progress} className="w-16 h-2" />
@@ -366,19 +443,29 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className={`text-sm font-medium ${
-                            variance.isOverBudget ? 'text-red-600' : 'text-green-600'
-                          }`}>
-                            {variance.isOverBudget ? '+' : ''}{formatCurrency(variance.amount)}
+                        <TableCell className="hidden lg:table-cell">
+                          <div
+                            className={`text-sm font-medium ${
+                              variance.isOverBudget
+                                ? "text-red-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {variance.isOverBudget ? "+" : ""}
+                            {formatCurrency(variance.amount)}
                           </div>
-                          <div className={`text-xs ${
-                            variance.isOverBudget ? 'text-red-500' : 'text-green-500'
-                          }`}>
-                            {variance.percentage > 0 ? '+' : ''}{variance.percentage.toFixed(1)}%
+                          <div
+                            className={`text-xs ${
+                              variance.isOverBudget
+                                ? "text-red-500"
+                                : "text-green-500"
+                            }`}
+                          >
+                            {variance.percentage > 0 ? "+" : ""}
+                            {variance.percentage.toFixed(1)}%
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex items-center gap-2">
                             <span className="text-sm">
                               {activity._count?.subActivities || 0}
@@ -390,9 +477,11 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Badge
-                            variant={activity.isActive ? "default" : "secondary"}
+                            variant={
+                              activity.isActive ? "default" : "secondary"
+                            }
                             className={
                               activity.isActive
                                 ? "bg-green-100 text-green-800 hover:bg-green-200"
@@ -412,7 +501,9 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() =>
-                                  router.push(`/dashboard/projects/${projectId}/activities/${activity.id}`)
+                                  router.push(
+                                    `/dashboard/projects/${projectId}/activities/${activity.id}`
+                                  )
                                 }
                               >
                                 <BarChart3 className="h-4 w-4 mr-2" />
@@ -420,7 +511,9 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
-                                  router.push(`/dashboard/projects/${projectId}/activities/${activity.id}/edit`)
+                                  router.push(
+                                    `/dashboard/projects/${projectId}/activities/${activity.id}/edit`
+                                  )
                                 }
                               >
                                 <Edit className="h-4 w-4 mr-2" />
@@ -428,7 +521,10 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
-                                  handleToggleActive(activity.id, activity.isActive)
+                                  handleToggleActive(
+                                    activity.id,
+                                    activity.isActive
+                                  )
                                 }
                               >
                                 {activity.isActive ? (
@@ -466,7 +562,8 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
           {filteredActivities.length > 0 && (
             <div className="flex items-center justify-between text-sm text-gray-600 pt-4 border-t">
               <div>
-                Showing {filteredActivities.length} of {activities.length} activities
+                Showing {filteredActivities.length} of {activities.length}{" "}
+                activities
               </div>
               <div className="flex gap-4">
                 <span>
@@ -476,8 +573,12 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                   Inactive: {activities.filter((a) => !a.isActive).length}
                 </span>
                 <span>
-                  Total Budget: {formatCurrency(
-                    activities.reduce((sum, a) => sum + (a.budgetAmount || 0), 0)
+                  Total Budget:{" "}
+                  {formatCurrency(
+                    activities.reduce(
+                      (sum, a) => sum + (a.budgetAmount || 0),
+                      0
+                    )
                   )}
                 </span>
               </div>
@@ -492,8 +593,9 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Activity</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this activity? This action cannot be
-              undone and may affect existing journal entries and sub-activities.
+              Are you sure you want to delete this activity? This action cannot
+              be undone and may affect existing journal entries and
+              sub-activities.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

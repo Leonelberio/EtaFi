@@ -107,6 +107,13 @@ export async function GET(request: NextRequest) {
             email: true,
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         activities: {
           select: {
             id: true,

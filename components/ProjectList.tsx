@@ -89,6 +89,11 @@ interface Project {
     name: string;
     email: string;
   };
+  createdBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
   activities: Array<{
     id: string;
     code: string;
@@ -401,13 +406,20 @@ export function ProjectList({ initialProjects = [] }: ProjectListProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Project</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Manager</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead className="hidden md:table-cell">Client</TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Manager
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Created By
+                  </TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
+                  <TableHead className="hidden lg:table-cell">Type</TableHead>
                   <TableHead>Budget</TableHead>
-                  <TableHead>Activities</TableHead>
-                  <TableHead>Dates</TableHead>
+                  <TableHead className="hidden sm:table-cell">
+                    Activities
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">Dates</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -416,7 +428,14 @@ export function ProjectList({ initialProjects = [] }: ProjectListProps) {
                   <TableRow key={project.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{project.code}</div>
+                        <button
+                          onClick={() =>
+                            router.push(`/dashboard/projects/${project.id}`)
+                          }
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                        >
+                          {project.code}
+                        </button>
                         <div className="text-sm text-gray-500">
                           {project.name}
                         </div>
@@ -453,6 +472,20 @@ export function ProjectList({ initialProjects = [] }: ProjectListProps) {
                       )}
                     </TableCell>
                     <TableCell>
+                      {project.createdBy ? (
+                        <div>
+                          <div className="font-medium">
+                            {project.createdBy.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {project.createdBy.email}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Badge variant={getStatusVariant(project.status)}>
                         {project.status.replace("_", " ")}
                       </Badge>
@@ -468,7 +501,7 @@ export function ProjectList({ initialProjects = [] }: ProjectListProps) {
                         project.currency
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <div className="flex items-center gap-1">
                         <span className="font-medium">
                           {project._count.activities}
@@ -478,7 +511,7 @@ export function ProjectList({ initialProjects = [] }: ProjectListProps) {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <div className="text-sm">
                         <div>Start: {formatDate(project.startDate)}</div>
                         <div>End: {formatDate(project.endDate)}</div>

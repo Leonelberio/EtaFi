@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentOrgId } from "@/lib/auth";
+import { auth } from "@/auth";
 import {
   activitySchema,
   activityWithSubActivitiesSchema,
@@ -39,6 +40,13 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         organizationId,
       },
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         subActivities: {
           where: { isActive: true },
           orderBy: { sortOrder: "asc" },
@@ -69,6 +77,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 // POST - Create a new activity
 export async function POST(req: NextRequest, { params }: RouteParams) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const organizationId = await getCurrentOrgId();
     if (!organizationId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -117,6 +130,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       data: {
         organizationId,
         projectId,
+        createdById: session.user.id,
         code: body.code,
         name: body.name,
         description: body.description,
@@ -133,6 +147,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
             body.subActivities?.map((subActivity, index) => ({
               organizationId,
               projectId: projectId,
+              createdById: session.user.id,
               code: `${body.code}-${String(index + 1).padStart(2, "0")}`,
               name: subActivity.name,
               description: subActivity.description || "",

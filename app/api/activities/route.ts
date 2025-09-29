@@ -50,6 +50,13 @@ export async function GET(request: NextRequest) {
             status: true,
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         subActivities: {
           select: {
             id: true,

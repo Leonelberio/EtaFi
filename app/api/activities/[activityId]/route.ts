@@ -36,6 +36,13 @@ export async function GET(
             status: true,
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         subActivities: {
           select: {
             id: true,
