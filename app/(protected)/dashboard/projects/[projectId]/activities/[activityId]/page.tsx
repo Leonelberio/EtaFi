@@ -94,8 +94,16 @@ export default async function ActivityDetailPage({
         | "CONTRACTUAL"
         | "CLIENT_EXTRA"
         | "SUBCONTRACTOR_EXTRA") || undefined,
+    createdAt: activity.createdAt.toISOString(),
+    updatedAt: activity.updatedAt.toISOString(),
+    createdBy: activity.createdBy ? {
+      id: activity.createdBy.id,
+      name: activity.createdBy.name || "",
+      email: activity.createdBy.email || "",
+    } : undefined,
     subActivities: activity.subActivities.map((sub) => ({
       ...sub,
+      description: sub.description || undefined,
       budgetAmount: sub.budgetAmount ? Number(sub.budgetAmount) : undefined,
       costToDate: sub.costToDate ? Number(sub.costToDate) : 0,
       budgetM: sub.budgetM ? Number(sub.budgetM) : undefined,
@@ -120,6 +128,8 @@ export default async function ActivityDetailPage({
           | "CONTRACTUAL"
           | "CLIENT_EXTRA"
           | "SUBCONTRACTOR_EXTRA") || undefined,
+      createdAt: sub.createdAt.toISOString(),
+      updatedAt: sub.updatedAt.toISOString(),
     })),
   };
 

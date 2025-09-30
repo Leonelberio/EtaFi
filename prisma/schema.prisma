@@ -610,6 +610,10 @@ model Journal {
   reversedAt     DateTime?
   reversedBy     String?
 
+  // 🆕 Reversal fields for NCECF compliance
+  reversalReason String? // Reason for reversal
+  reversalDate   DateTime? // Date when reversal should be accounted
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -647,6 +651,10 @@ model JournalLine {
   transferSourceId  String? // ID source pour transferts
   transferTargetId  String? // ID cible pour transferts
   transferReference String? // Reference du transfert
+
+  // 🆕 Cost classification fields for NCECF compliance
+  costType     String? // "FIXED", "VARIABLE"
+  costCategory String? // "ADMINISTRATIVE", "CONTRACTUAL", "CLIENT_EXTRA", "SUBCONTRACTOR_EXTRA"
 
   entryDate DateTime
   createdAt DateTime @default(now())

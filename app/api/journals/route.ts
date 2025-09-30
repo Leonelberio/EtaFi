@@ -146,6 +146,9 @@ export async function POST(request: NextRequest) {
               costGroup: line.costGroup || null,
               taxCodeId: line.taxCodeId || null,
               reference: line.reference || null,
+              // 🆕 Cost classification fields for NCECF compliance
+              costType: line.costType || null,
+              costCategory: line.costCategory || null,
               entryDate: new Date(validatedData.entryDate),
             },
           })

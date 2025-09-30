@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { journalSchema } from "@/lib/validations";
+import {
+  isCostAccount,
+  COST_TYPE_OPTIONS,
+  COST_CATEGORY_OPTIONS,
+} from "@/lib/journal-utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,12 +73,22 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
           description: "",
           debitAmount: undefined,
           creditAmount: undefined,
+          projectId: undefined,
+          activityId: undefined,
+          subActivityId: undefined,
+          costType: undefined,
+          costCategory: undefined,
         },
         {
           accountId: "",
           description: "",
           debitAmount: undefined,
           creditAmount: undefined,
+          projectId: undefined,
+          activityId: undefined,
+          subActivityId: undefined,
+          costType: undefined,
+          costCategory: undefined,
         },
       ],
     },
@@ -176,6 +191,11 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
       description: "",
       debitAmount: undefined,
       creditAmount: undefined,
+      projectId: undefined,
+      activityId: undefined,
+      subActivityId: undefined,
+      costType: undefined,
+      costCategory: undefined,
     });
   };
 
@@ -308,109 +328,242 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
             </div>
 
             <div className="space-y-3">
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid grid-cols-12 gap-2 p-4 border rounded-lg bg-gray-50"
-                >
-                  <div className="col-span-3">
-                    <Label className="text-xs">Account *</Label>
-                    <Select
-                      onValueChange={(value) =>
-                        form.setValue(`lines.${index}.accountId`, value)
-                      }
-                      value={form.watch(`lines.${index}.accountId`)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Select account" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.isArray(chartAccounts) &&
-                          chartAccounts.map((account) => (
-                            <SelectItem key={account.id} value={account.id}>
-                              {account.number} - {account.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              {fields.map((field, index) => {
+                const selectedAccountId = form.watch(
+                  `lines.${index}.accountId`
+                );
+                const selectedAccount = chartAccounts.find(
+                  (acc) => acc.id === selectedAccountId
+                );
+                const showCostFields = selectedAccount
+                  ? isCostAccount(selectedAccount.type)
+                  : false;
 
-                  <div className="col-span-3">
-                    <Label className="text-xs">Description *</Label>
-                    <Input
-                      {...form.register(`lines.${index}.description`)}
-                      placeholder="Line description"
-                      className="h-8 text-xs bg-white"
-                    />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label className="text-xs">Debit</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={form.watch(`lines.${index}.debitAmount`) || ""}
-                      onChange={(e) => handleDebitChange(index, e.target.value)}
-                      className="h-8 text-xs bg-white text-right"
-                    />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label className="text-xs">Credit</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={form.watch(`lines.${index}.creditAmount`) || ""}
-                      onChange={(e) =>
-                        handleCreditChange(index, e.target.value)
-                      }
-                      className="h-8 text-xs bg-white text-right"
-                    />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label className="text-xs">Project</Label>
-                    <Select
-                      onValueChange={(value) =>
-                        form.setValue(
-                          `lines.${index}.projectId`,
-                          value === "NONE" ? undefined : value
-                        )
-                      }
-                      value={form.watch(`lines.${index}.projectId`) || "NONE"}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Optional" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="NONE">No Project</SelectItem>
-                        {Array.isArray(projects) &&
-                          projects.map((project) => (
-                            <SelectItem key={project.id} value={project.id}>
-                              {project.code} - {project.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {fields.length > 2 && (
-                    <div className="col-span-1 flex items-end">
-                      <Button
-                        type="button"
-                        onClick={() => removeLine(index)}
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                return (
+                  <div
+                    key={field.id}
+                    className="grid grid-cols-12 gap-2 p-4 border rounded-lg bg-gray-50"
+                  >
+                    <div className="col-span-3">
+                      <Label className="text-xs">Account *</Label>
+                      <Select
+                        onValueChange={(value) =>
+                          form.setValue(`lines.${index}.accountId`, value)
+                        }
+                        value={form.watch(`lines.${index}.accountId`)}
                       >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Select account" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.isArray(chartAccounts) &&
+                            chartAccounts.map((account) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.number} - {account.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
-                </div>
-              ))}
+
+                    <div className="col-span-3">
+                      <Label className="text-xs">Description *</Label>
+                      <Input
+                        {...form.register(`lines.${index}.description`)}
+                        placeholder="Line description"
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <Label className="text-xs">Debit</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={form.watch(`lines.${index}.debitAmount`) || ""}
+                        onChange={(e) =>
+                          handleDebitChange(index, e.target.value)
+                        }
+                        className="h-8 text-xs bg-white text-right"
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <Label className="text-xs">Credit</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={form.watch(`lines.${index}.creditAmount`) || ""}
+                        onChange={(e) =>
+                          handleCreditChange(index, e.target.value)
+                        }
+                        className="h-8 text-xs bg-white text-right"
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <Label className="text-xs">Project</Label>
+                      <Select
+                        onValueChange={(value) =>
+                          form.setValue(
+                            `lines.${index}.projectId`,
+                            value === "NONE" ? undefined : value
+                          )
+                        }
+                        value={form.watch(`lines.${index}.projectId`) || "NONE"}
+                        disabled={!showCostFields}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Optional" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="NONE">No Project</SelectItem>
+                          {Array.isArray(projects) &&
+                            projects.map((project) => (
+                              <SelectItem key={project.id} value={project.id}>
+                                {project.code} - {project.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {fields.length > 2 && (
+                      <div className="col-span-1 flex items-end">
+                        <Button
+                          type="button"
+                          onClick={() => removeLine(index)}
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Cost-specific fields - only show for expense accounts */}
+                    {showCostFields && (
+                      <>
+                        <div className="col-span-3">
+                          <Label className="text-xs">Activity</Label>
+                          <Select
+                            onValueChange={(value) =>
+                              form.setValue(
+                                `lines.${index}.activityId`,
+                                value === "NONE" ? undefined : value
+                              )
+                            }
+                            value={
+                              form.watch(`lines.${index}.activityId`) || "NONE"
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Optional" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="NONE">No Activity</SelectItem>
+                              {Array.isArray(activities) &&
+                                activities.map((activity) => (
+                                  <SelectItem
+                                    key={activity.id}
+                                    value={activity.id}
+                                  >
+                                    {activity.code} - {activity.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="col-span-3">
+                          <Label className="text-xs">Sub-Activity</Label>
+                          <Select
+                            onValueChange={(value) =>
+                              form.setValue(
+                                `lines.${index}.subActivityId`,
+                                value === "NONE" ? undefined : value
+                              )
+                            }
+                            value={
+                              form.watch(`lines.${index}.subActivityId`) ||
+                              "NONE"
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Optional" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="NONE">
+                                No Sub-Activity
+                              </SelectItem>
+                              {/* Sub-activities will be loaded based on selected activity */}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="col-span-3">
+                          <Label className="text-xs">Cost Type</Label>
+                          <Select
+                            onValueChange={(value) =>
+                              form.setValue(
+                                `lines.${index}.costType`,
+                                value as any
+                              )
+                            }
+                            value={form.watch(`lines.${index}.costType`) || ""}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {COST_TYPE_OPTIONS.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="col-span-3">
+                          <Label className="text-xs">Cost Category</Label>
+                          <Select
+                            onValueChange={(value) =>
+                              form.setValue(
+                                `lines.${index}.costCategory`,
+                                value as any
+                              )
+                            }
+                            value={
+                              form.watch(`lines.${index}.costCategory`) || ""
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {COST_CATEGORY_OPTIONS.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Totals */}

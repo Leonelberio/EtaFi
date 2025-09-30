@@ -130,6 +130,16 @@ export const journalLineSchema = z
     costGroup: z.string().optional(),
     taxCodeId: z.string().optional(),
     reference: z.string().optional(),
+    // 🆕 Cost classification fields for NCECF compliance
+    costType: z.enum(["FIXED", "VARIABLE"]).optional(),
+    costCategory: z
+      .enum([
+        "ADMINISTRATIVE",
+        "CONTRACTUAL",
+        "CLIENT_EXTRA",
+        "SUBCONTRACTOR_EXTRA",
+      ])
+      .optional(),
   })
   .refine(
     (data) => {
@@ -145,6 +155,12 @@ export const journalLineSchema = z
       path: ["debitAmount"],
     }
   );
+
+// 🆕 Journal reversal schema for NCECF compliance
+export const journalReversalSchema = z.object({
+  reversalReason: z.string().min(1, "Reversal reason is required").max(500),
+  reversalDate: z.string().min(1, "Reversal date is required"),
+});
 
 export const journalSchema = z
   .object({

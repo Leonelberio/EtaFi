@@ -44,6 +44,7 @@ import {
   Filter,
 } from "lucide-react";
 import { toast } from "sonner";
+import { JournalReversalDialog } from "@/components/JournalReversalDialog";
 
 interface Journal {
   id: string;
@@ -81,6 +82,9 @@ export function JournalList({ initialJournals = [] }: JournalListProps) {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [reversalDialogOpen, setReversalDialogOpen] = useState(false);
+  const [selectedJournalForReversal, setSelectedJournalForReversal] =
+    useState<Journal | null>(null);
   const router = useRouter();
 
   const fetchJournals = async () => {
@@ -139,6 +143,46 @@ export function JournalList({ initialJournals = [] }: JournalListProps) {
         error instanceof Error ? error.message : "Failed to delete journal"
       );
     }
+  };
+
+  const handleReversal = async (data: {
+    reversalReason: string;
+    reversalDate: string;
+  }) => {
+    if (!selectedJournalForReversal) return;
+
+    try {
+      const response = await fetch(
+        `/api/journals/${selectedJournalForReversal.id}/reverse`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to reverse journal");
+      }
+
+      // Refresh the journals list
+      await fetchJournals();
+      toast.success(
+        `Journal "${selectedJournalForReversal.reference}" reversed successfully`
+      );
+    } catch (error) {
+      console.error("Error reversing journal:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to reverse journal"
+      );
+      throw error; // Re-throw to let the dialog handle it
+    }
+  };
+
+  const openReversalDialog = (journal: Journal) => {
+    setSelectedJournalForReversal(journal);
+    setReversalDialogOpen(true);
   };
 
   const handlePost = async (journalId: string) => {
@@ -425,38 +469,14 @@ export function JournalList({ initialJournals = [] }: JournalListProps) {
                         )}
 
                         {journal.status === "POSTED" && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                              >
-                                <XCircle className="h-3 w-3" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Reverse Journal Entry
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will create a reversing journal entry to
-                                  undo the effects of this posted journal. This
-                                  action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleReverse(journal.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Reverse Entry
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                            onClick={() => openReversalDialog(journal)}
+                          >
+                            <XCircle className="h-3 w-3" />
+                          </Button>
                         )}
                       </div>
                     </TableCell>
@@ -492,6 +512,17 @@ export function JournalList({ initialJournals = [] }: JournalListProps) {
           </>
         )}
       </CardContent>
+
+      {/* Journal Reversal Dialog */}
+      <JournalReversalDialog
+        isOpen={reversalDialogOpen}
+        onClose={() => {
+          setReversalDialogOpen(false);
+          setSelectedJournalForReversal(null);
+        }}
+        onConfirm={handleReversal}
+        journalReference={selectedJournalForReversal?.reference}
+      />
     </Card>
   );
 }
