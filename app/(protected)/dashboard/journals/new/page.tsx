@@ -19,14 +19,14 @@ export default async function NewJournalPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            New Journal Entry
+            Nouvelle écriture de journal
           </h1>
-          <p className="text-gray-600">Create a new accounting journal entry</p>
+          <p className="text-gray-600">Créer une nouvelle écriture comptable</p>
         </div>
       </div>
 
       {/* Form */}
-      <Suspense fallback={<div>Loading form...</div>}>
+      <Suspense fallback={<div>Chargement du formulaire...</div>}>
         <JournalForm />
       </Suspense>
     </div>

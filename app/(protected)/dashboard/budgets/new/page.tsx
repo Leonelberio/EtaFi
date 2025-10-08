@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -36,7 +36,6 @@ interface BudgetFormData {
 }
 
 export default function NewBudgetPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<BudgetFormData>({
     name: "",
@@ -81,7 +80,7 @@ export default function NewBudgetPage() {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       console.log("Budget créé:", formData);
-      router.push("/dashboard/budgets");
+      window.location.href = "/dashboard/budgets";
     } catch (error) {
       console.error("Erreur lors de la création du budget:", error);
     } finally {

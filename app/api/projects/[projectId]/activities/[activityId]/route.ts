@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentOrgId } from "@/lib/auth";
+import { auth } from "@/auth";
 import {
   activitySchema,
   activityWithSubActivitiesSchema,
@@ -43,6 +44,15 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           },
         },
         subActivities: {
+          include: {
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
           orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
         },
         _count: {
@@ -74,6 +84,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 // PUT - Update activity
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const organizationId = await getCurrentOrgId();
     if (!organizationId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -147,6 +162,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
           budgetD: body.budgetD || 0,
           budgetE: body.budgetE || 0,
           budgetMOD: body.budgetMOD || 0,
+          costType: body.costType || "FIXED",
+          costCategory: body.costCategory || "CONTRACTUAL",
           isActive: body.isActive ?? true,
           sortOrder: body.sortOrder ?? 0,
         },
@@ -159,11 +176,20 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
             organizationId,
             projectId: projectId,
             activityId: activityId,
+            createdById: session.user.id,
             code: `${body.code}-${String(index + 1).padStart(2, "0")}`,
             name: subActivity.name,
             description: subActivity.description || "",
             budgetAmount: subActivity.estimatedCost,
+            budgetM: subActivity.budgetM || 0,
+            budgetS: subActivity.budgetS || 0,
+            budgetD: subActivity.budgetD || 0,
+            budgetE: subActivity.budgetE || 0,
+            budgetMOD: subActivity.budgetMOD || 0,
+            budgetMODHours: subActivity.budgetMODHours || 0,
             estimatedHours: subActivity.estimatedHours,
+            costType: subActivity.costType || "FIXED",
+            costCategory: subActivity.costCategory || "CONTRACTUAL",
             isActive: true,
             sortOrder: index,
           })),
@@ -174,7 +200,23 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       return await tx.activity.findUnique({
         where: { id: activityId },
         include: {
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
           subActivities: {
+            include: {
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
             orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
           },
           _count: {

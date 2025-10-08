@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentOrgId } from "@/lib/auth";
+import { auth } from "@/auth";
+import { z } from "zod";
+
+// Validation schema for chart account
+const chartAccountSchema = z.object({
+  number: z.string().min(1, "Account number is required"),
+  name: z.string().min(1, "Account name is required"),
+  type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE", "TAX"]),
+  description: z.string().optional(),
+  isActive: z.boolean().optional().default(true),
+  allowManualEntries: z.boolean().optional().default(true),
+  requireProjectAllocation: z.boolean().optional().default(false),
+  defaultTaxCodeId: z.string().optional(),
+});
 
 // GET /api/chart-accounts - Get chart of accounts for organization
 export async function GET(req: NextRequest) {
@@ -101,6 +115,81 @@ export async function GET(req: NextRequest) {
     console.error("Error fetching chart accounts:", error);
     return NextResponse.json(
       { error: "Failed to fetch chart accounts" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/chart-accounts - Create a new chart account
+export async function POST(req: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const organizationId = await getCurrentOrgId();
+    if (!organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const validatedData = chartAccountSchema.parse(body);
+
+    // Check if account number already exists for this organization
+    const existingAccount = await db.chartAccount.findFirst({
+      where: {
+        organizationId,
+        number: validatedData.number,
+      },
+    });
+
+    if (existingAccount) {
+      return NextResponse.json(
+        { error: "Account number already exists" },
+        { status: 400 }
+      );
+    }
+
+    // Create the chart account
+    const account = await db.chartAccount.create({
+      data: {
+        organizationId,
+        number: validatedData.number,
+        name: validatedData.name,
+        type: validatedData.type,
+        description: validatedData.description,
+        isActive: validatedData.isActive ?? true,
+        isSystem: false, // User-created accounts are not system accounts
+        allowManualEntries: validatedData.allowManualEntries ?? true,
+        requireProjectAllocation:
+          validatedData.requireProjectAllocation ?? false,
+        defaultTaxCodeId: validatedData.defaultTaxCodeId,
+      },
+      include: {
+        defaultTaxCode: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            rate: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(account, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Validation error", details: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error("Error creating chart account:", error);
+    return NextResponse.json(
+      { error: "Failed to create chart account" },
       { status: 500 }
     );
   }

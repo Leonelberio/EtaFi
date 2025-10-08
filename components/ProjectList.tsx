@@ -473,13 +473,8 @@ export function ProjectList({ initialProjects = [] }: ProjectListProps) {
                     </TableCell>
                     <TableCell>
                       {project.createdBy ? (
-                        <div>
-                          <div className="font-medium">
-                            {project.createdBy.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {project.createdBy.email}
-                          </div>
+                        <div className="font-medium">
+                          {project.createdBy.name}
                         </div>
                       ) : (
                         <span className="text-gray-400">—</span>

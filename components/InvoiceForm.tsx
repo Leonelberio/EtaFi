@@ -237,19 +237,36 @@ export function InvoiceForm({
     totals: { subtotal: 0, totalTax: 0, total: 0 },
   });
 
-  // Generate invoice number function
+  // Generate invoice number function with project prefix
   const generateInvoiceNumber = async () => {
     if (isEditing) return; // Don't regenerate for existing invoices
 
+    const projectId = form.getValues("projectId");
+    
+    if (!projectId) {
+      toast.error("Veuillez d'abord sélectionner un projet");
+      return;
+    }
+
     setIsGeneratingNumber(true);
     try {
-      const response = await fetch("/api/invoices/generate-number");
+      const response = await fetch("/api/invoices/generate-number", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId }),
+      });
+      
       if (response.ok) {
         const data = await response.json();
-        form.setValue("number", data.number);
+        form.setValue("number", data.invoiceNumber);
+        toast.success(`Numéro généré : ${data.invoiceNumber}`);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Erreur lors de la génération du numéro");
       }
     } catch (error) {
       console.error("Error generating invoice number:", error);
+      toast.error("Erreur lors de la génération du numéro");
     } finally {
       setIsGeneratingNumber(false);
     }
@@ -749,9 +766,34 @@ export function InvoiceForm({
               <Label htmlFor="projectId">Projet *</Label>
               <Select
                 value={form.watch("projectId") || ""}
-                onValueChange={(value) => {
+                onValueChange={async (value) => {
                   form.setValue("projectId", value);
                   clearFormErrors();
+                  
+                  // Auto-générer le numéro de facture quand un projet est sélectionné
+                  if (!isEditing && value) {
+                    await generateInvoiceNumber();
+                  }
+                  
+                  // Charger l'activité de facturation par défaut
+                  if (value) {
+                    try {
+                      const response = await fetch(`/api/projects/${value}/billing-activity`);
+                      if (response.ok) {
+                        const { activity } = await response.json();
+                        // Pré-remplir les lignes avec l'activité par défaut si disponible
+                        const currentLines = form.getValues("lines");
+                        if (currentLines.length > 0 && activity) {
+                          currentLines.forEach((_, index) => {
+                            form.setValue(`lines.${index}.activityId`, activity.id);
+                          });
+                          toast.success(`Activité par défaut appliquée : ${activity.name}`);
+                        }
+                      }
+                    } catch (error) {
+                      console.error("Error loading billing activity:", error);
+                    }
+                  }
                 }}
               >
                 <SelectTrigger

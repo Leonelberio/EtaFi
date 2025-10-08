@@ -74,6 +74,24 @@ export async function PUT(
       return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
     }
 
+    // Vérifier si le code existe déjà pour un autre fournisseur
+    if (validatedData.code !== existingVendor.code) {
+      const duplicateVendor = await db.vendor.findFirst({
+        where: {
+          organizationId: orgId,
+          code: validatedData.code,
+          id: { not: vendorId },
+        },
+      });
+
+      if (duplicateVendor) {
+        return NextResponse.json(
+          { error: "Un fournisseur avec ce code existe déjà" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update vendor
     const vendor = await db.vendor.update({
       where: { id: vendorId },

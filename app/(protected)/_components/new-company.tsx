@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
   Building2,
   ArrowLeft,
@@ -41,7 +40,6 @@ interface Organization {
 
 export default function NewCompany() {
   const { data: session } = useSession();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [formData, setFormData] = useState({
@@ -134,7 +132,7 @@ export default function NewCompany() {
       });
 
       if (response.ok) {
-        router.push("/dashboard/companies");
+        window.location.href = "/dashboard/companies";
       } else {
         throw new Error("Failed to create company");
       }

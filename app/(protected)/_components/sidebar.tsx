@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Home,
   Building2,
@@ -31,6 +31,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useOrganizationContext } from "@/contexts/OrganizationContext";
 
 interface SidebarProps {
   className?: string;
@@ -245,7 +246,35 @@ const navigationModules = [
 ];
 
 export default function Sidebar({ className, onClose }: SidebarProps) {
-  const pathname = usePathname();
+  const [pathname, setPathname] = useState<string>("/");
+  const { organizations } = useOrganizationContext();
+  const organizationCount = organizations?.length || 0;
+
+  useEffect(() => {
+    // Set initial pathname
+    setPathname(window.location.pathname);
+
+    // Listen for popstate (back/forward buttons)
+    const onPop = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", onPop);
+
+    // Listen for all click events on links to update pathname
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest("a[href]") as HTMLAnchorElement;
+      if (link && link.href.startsWith(window.location.origin)) {
+        const newPath = new URL(link.href).pathname;
+        setPathname(newPath);
+      }
+    };
+
+    document.addEventListener("click", handleClick, true);
+
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      document.removeEventListener("click", handleClick, true);
+    };
+  }, []);
 
   // Helper function to determine if a navigation item is active
   const isNavigationActive = (href: string) => {
@@ -298,7 +327,12 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                   <div key={item.name}>
                     <Link
                       href={isDisabled ? "#" : item.href}
-                      onClick={isDisabled ? (e) => e.preventDefault() : onClose}
+                      onClick={
+                        isDisabled
+                          ? (e: React.MouseEvent<HTMLAnchorElement>) =>
+                              e.preventDefault()
+                          : onClose
+                      }
                       className={cn(
                         "group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
                         isDisabled
@@ -378,7 +412,9 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-600 font-medium">Organisations</p>
-              <p className="text-lg font-bold text-gray-900">8</p>
+              <p className="text-lg font-bold text-gray-900">
+                {organizationCount}
+              </p>
             </div>
             <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
               <Building2 className="h-4 w-4 text-gray-600" />

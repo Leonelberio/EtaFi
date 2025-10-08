@@ -82,12 +82,22 @@ export const customerSchema = z.object({
 });
 
 export const vendorSchema = z.object({
+  code: z.string().min(1, "Code is required").max(20, "Code must be 20 characters or less"),
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email is required").optional(),
+  email: z.string().email("Valid email is required").optional().or(z.literal("")),
   phone: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
   postalCode: z.string().optional(),
   country: z.string().optional(),
   payableAccountId: z.string().min(1, "Payable account is required"),
+  
+  // Nouveaux champs fiscaux et de coûts
+  withholdingRate: z.number().min(0).max(100).optional(),
+  taxable: z.boolean().default(true),
+  taxExempt: z.boolean().default(false),
+  taxNumber: z.string().optional(),
+  gstNumber: z.string().optional(),
+  qstNumber: z.string().optional(),
+  defaultCostGroup: z.enum(["M", "S", "D", "E", "MOD"]).optional(),
 });

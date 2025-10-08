@@ -194,6 +194,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   // TODO: Add role-based access control
   try {
+    // Get current user session
+    const { auth } = await import("@/auth");
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Get current organization ID from auth context
     const { getCurrentOrgId } = await import("@/lib/auth");
     const organizationId = await getCurrentOrgId();
@@ -288,6 +296,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...validatedData,
         organizationId,
+        createdById: session.user.id,
         startDate: validatedData.startDate
           ? new Date(validatedData.startDate)
           : null,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -50,7 +50,6 @@ interface SubActivity {
 }
 
 export default function NewActivityPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<ActivityFormData>({
     name: "",
@@ -147,7 +146,7 @@ export default function NewActivityPage() {
         subActivities,
       };
       console.log("Activité créée:", activityData);
-      router.push("/dashboard/activities");
+      window.location.href = "/dashboard/activities";
     } catch (error) {
       console.error("Erreur lors de la création de l'activité:", error);
     } finally {

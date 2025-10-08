@@ -1,11 +1,7 @@
-import { Poppins } from "next/font/google";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-const font = Poppins({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-});
+// Removed next/font import for compatibility with current Next version
 
 interface HeaderProps {
   label: string;
@@ -24,8 +20,7 @@ export const Header = ({ label }: HeaderProps) => {
         />
         <h1
           className={cn(
-            "text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent",
-            font.className
+            "text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"
           )}
         >
           EtaFi

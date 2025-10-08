@@ -5,14 +5,14 @@ export function isCostAccount(accountType: string): boolean {
 
 // Utility function to get cost type options
 export const COST_TYPE_OPTIONS = [
-  { value: "FIXED", label: "Fixed Cost" },
-  { value: "VARIABLE", label: "Variable Cost" },
+  { value: "FIXED", label: "Coût fixe" },
+  { value: "VARIABLE", label: "Coût variable" },
 ] as const;
 
 // Utility function to get cost category options
 export const COST_CATEGORY_OPTIONS = [
-  { value: "ADMINISTRATIVE", label: "Administrative" },
-  { value: "CONTRACTUAL", label: "Contractual" },
-  { value: "CLIENT_EXTRA", label: "Client Extra (Rechargeable)" },
-  { value: "SUBCONTRACTOR_EXTRA", label: "Subcontractor Extra (Rechargeable)" },
+  { value: "ADMINISTRATIVE", label: "Administratif" },
+  { value: "CONTRACTUAL", label: "Contractuel" },
+  { value: "CLIENT_EXTRA", label: "Suppl. rechargeable client" },
+  { value: "SUBCONTRACTOR_EXTRA", label: "Suppl. rechargeable sous-traitant" },
 ] as const;

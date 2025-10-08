@@ -238,8 +238,8 @@ async function main() {
 
   // Créer des fournisseurs de base
   const baseVendors = [
-    { name: "Fournisseur Général", accountNumber: "401000" },
-    { name: "Fournisseur Services", accountNumber: "401000" },
+    { name: "Fournisseur Général", code: "FG01", accountNumber: "401000" },
+    { name: "Fournisseur Services", code: "FS01", accountNumber: "401000" },
   ];
 
   for (const vendor of baseVendors) {
@@ -262,6 +262,7 @@ async function main() {
         await prisma.vendor.create({
           data: {
             name: vendor.name,
+            code: vendor.code,
             organizationId: organization.id,
             payableAccountId: account.id,
           },

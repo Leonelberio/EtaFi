@@ -49,6 +49,18 @@ export const subActivityFormSchema = z.object({
   description: z.string().optional(),
   estimatedHours: z.number().min(0).default(0),
   estimatedCost: z.number().min(0).default(0),
+  costType: z.enum(["FIXED", "VARIABLE"]).optional().default("FIXED"),
+  costCategory: z
+    .enum(["CONTRACTUAL", "CLIENT_EXTRA", "SUBCONTRACTOR_EXTRA"])
+    .optional()
+    .default("CONTRACTUAL"),
+  // Cost group budgets
+  budgetM: z.number().min(0).optional().default(0),
+  budgetS: z.number().min(0).optional().default(0),
+  budgetD: z.number().min(0).optional().default(0),
+  budgetE: z.number().min(0).optional().default(0),
+  budgetMOD: z.number().min(0).optional().default(0),
+  budgetMODHours: z.number().min(0).optional().default(0),
 });
 
 // Schéma étendu pour les activités avec sous-activités
@@ -368,6 +380,97 @@ export const projectCostGroupCodeSchema = z.object({
   description: z.string().optional(),
   isActive: z.boolean().optional().default(true),
   isDefault: z.boolean().optional().default(false),
+});
+
+// 🆕 Schémas pour les factures de vente (Sales Invoices)
+export const salesInvoiceLineSchema = z.object({
+  description: z.string().min(1, "La description est requise"),
+  quantity: z.number().min(0.01, "La quantité doit être positive"),
+  unitPrice: z.number().min(0, "Le prix unitaire doit être positif"),
+  amount: z.number().min(0, "Le montant doit être positif"),
+  
+  // Taxes
+  taxCodeId: z.string().optional(),
+  taxRate: z.number().min(0).max(1).optional(),
+  taxAmount: z.number().min(0).optional(),
+  totalAmount: z.number().min(0, "Le total de la ligne doit être positif"),
+  
+  // Project Tracking
+  projectId: z.string().min(1, "Le projet est obligatoire"),
+  activityId: z.string().optional(),
+  subActivityId: z.string().optional(),
+  
+  // 🆕 Revenue Classification
+  revenueType: z.enum(["CONTRACTUAL", "ADDITIONAL"], {
+    errorMap: () => ({ message: "Le type de revenu est obligatoire" }),
+  }),
+  revenueGroup: z.enum(["CONSTRUCTION", "SERVICES", "EQUIPMENT", "OTHER"], {
+    errorMap: () => ({ message: "Le groupe de revenu est obligatoire" }),
+  }),
+  
+  // GL Account
+  revenueAccountId: z.string().min(1, "Le compte GL de revenu est obligatoire"),
+  
+  sortOrder: z.number().default(0),
+});
+
+export const salesInvoiceSchema = z.object({
+  // Invoice Details
+  number: z.string().min(1, "Le numéro de facture est OBLIGATOIRE"),
+  status: z.enum(["DRAFT", "PENDING_APPROVAL", "APPROVED", "POSTED", "PAID", "CANCELLED", "OVERDUE"]).default("DRAFT"),
+  
+  // Dates (conformité NCECF)
+  date: z.string().min(1, "La date de facture (comptable) est obligatoire"),
+  entryDate: z.string().optional(), // Auto-generated
+  dueDate: z.string().optional(),
+  
+  // Parties
+  customerId: z.string().min(1, "Le client est obligatoire"),
+  projectId: z.string().min(1, "Le projet/contrat est OBLIGATOIRE"),
+  
+  // References
+  ref: z.string().optional(),
+  contractNumber: z.string().optional(), // Numéro de contrat
+  
+  // Retenue contractuelle
+  withholdingPercent: z.number().min(0).max(100).optional(),
+  withholdingAmount: z.number().min(0).optional(),
+  
+  // Financial
+  subtotal: z.number().min(0, "Le sous-total doit être positif"),
+  taxAmount: z.number().min(0, "Le montant des taxes doit être positif"),
+  total: z.number().min(0.01, "Le montant total doit être supérieur à 0"),
+  paidAmount: z.number().min(0).default(0),
+  currency: z.string().default("CAD"),
+  
+  // Detailed Taxes
+  gstAmount: z.number().min(0).optional(),
+  qstAmount: z.number().min(0).optional(),
+  hstAmount: z.number().min(0).optional(),
+  otherTaxes: z.number().min(0).optional(),
+  
+  // Calculated amounts
+  amountBeforeTax: z.number().min(0).optional(),
+  totalWithholding: z.number().min(0).optional(),
+  balanceDue: z.number().min(0).optional(),
+  
+  // Payment Terms
+  paymentTerms: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  discountPercent: z.number().min(0).max(100).optional(),
+  discountAmount: z.number().min(0).optional(),
+  
+  // Workflow
+  approvalStatus: z.enum(["PENDING", "APPROVED", "REJECTED"]).default("PENDING"),
+  department: z.string().optional(),
+  attachmentUrl: z.string().url("URL de pièce jointe invalide").optional().or(z.literal("")),
+  
+  // Notes
+  notes: z.string().optional(),
+  internalNotes: z.string().optional(),
+  
+  // Lines
+  lines: z.array(salesInvoiceLineSchema).min(1, "Au moins une ligne est requise"),
 });
 
 // Schéma pour les transferts de coûts

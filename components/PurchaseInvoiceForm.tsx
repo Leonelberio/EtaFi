@@ -56,19 +56,19 @@ const invoiceLineSchema = z.object({
 });
 
 const purchaseInvoiceSchema = z.object({
-  number: z.string().min(1, "Invoice number is required"),
+  number: z.string().min(1, "Le numéro de facture du fournisseur est OBLIGATOIRE"),
   status: z
     .enum(["DRAFT", "SENT", "PAID", "CANCELLED", "OVERDUE"])
     .default("DRAFT"),
-  date: z.string().min(1, "Date is required"),
+  date: z.string().min(1, "La date de facture est obligatoire"),
   dueDate: z.string().optional(),
   ref: z.string().optional(),
   poNumber: z.string().optional(),
-  vendorId: z.string().min(1, "Vendor is required for purchase invoices"),
-  projectId: z.string().optional(),
+  vendorId: z.string().min(1, "Le fournisseur est obligatoire"),
+  projectId: z.string().min(1, "Le projet est OBLIGATOIRE pour une facture d'achat"), // Rendre projet obligatoire
   subtotal: z.number().min(0, "Subtotal must be positive"),
   taxAmount: z.number().min(0, "Tax amount must be positive"),
-  total: z.number().min(0, "Total must be positive"),
+  total: z.number().min(0.01, "Le montant total doit être supérieur à 0"), // Minimum 0.01
   paidAmount: z.number().min(0).default(0),
   currency: z.string().default("CAD"),
   paymentTerms: z.string().optional(),
@@ -78,7 +78,7 @@ const purchaseInvoiceSchema = z.object({
   internalNotes: z.string().optional(),
   lines: z
     .array(invoiceLineSchema)
-    .min(1, "At least one line item is required"),
+    .min(1, "Au moins une ligne est requise"),
 });
 
 type PurchaseInvoiceFormData = z.infer<typeof purchaseInvoiceSchema>;
@@ -424,15 +424,23 @@ export function PurchaseInvoiceForm({ invoiceId }: PurchaseInvoiceFormProps) {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="number">Numéro de facture *</Label>
+              <Label htmlFor="number" className="flex items-center gap-2">
+                Numéro de facture fournisseur * 
+                <Badge variant="outline" className="text-xs font-normal">
+                  Obligatoire
+                </Badge>
+              </Label>
               <Input
                 id="number"
                 {...register("number")}
-                placeholder="FAC-2024-001"
-                className="bg-white"
+                placeholder="Ex: FAC-FOURNISSEUR-2024-001"
+                className="bg-white border-2 border-blue-200 focus:border-blue-500"
               />
+              <p className="text-xs text-gray-600">
+                ⚠️ Saisissez le numéro exact de la facture du fournisseur
+              </p>
               {errors.number && (
-                <p className="text-sm text-red-600">{errors.number.message}</p>
+                <p className="text-sm text-red-600 font-semibold">{errors.number.message}</p>
               )}
             </div>
 
@@ -544,16 +552,20 @@ export function PurchaseInvoiceForm({ invoiceId }: PurchaseInvoiceFormProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <Label htmlFor="projectId">Projet</Label>
+            <Label htmlFor="projectId" className="flex items-center gap-2">
+              Projet *
+              <Badge variant="destructive" className="text-xs font-normal">
+                Obligatoire
+              </Badge>
+            </Label>
             <Select
               value={watch("projectId")}
               onValueChange={(value) => setValue("projectId", value)}
             >
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Sélectionner un projet (optionnel)" />
+              <SelectTrigger className="bg-white border-2 border-orange-200 focus:border-orange-500">
+                <SelectValue placeholder="⚠️ Sélectionner un projet (OBLIGATOIRE)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun projet</SelectItem>
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.code} - {project.name}
@@ -561,6 +573,12 @@ export function PurchaseInvoiceForm({ invoiceId }: PurchaseInvoiceFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-gray-600">
+              📌 Bonne pratique : Toute facture d'achat doit être liée à un projet pour un suivi comptable précis
+            </p>
+            {errors.projectId && (
+              <p className="text-sm text-red-600 font-semibold">{errors.projectId.message}</p>
+            )}
           </div>
         </CardContent>
       </Card>

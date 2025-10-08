@@ -62,6 +62,13 @@ export default async function ProjectDetailPage({
           email: true,
         },
       },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
       activities: {
         select: {
           id: true,
@@ -209,6 +216,12 @@ export default async function ProjectDetailPage({
                 <p className="text-sm text-muted-foreground">Client</p>
                 <p className="text-sm font-medium">
                   {project.client?.name || "Not assigned"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Créé par</p>
+                <p className="text-sm font-medium">
+                  {project.createdBy?.name || "Unknown"}
                 </p>
               </div>
             </div>

@@ -1,18 +1,12 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// import type { Metadata } from "next";
 import "./globals.css";
 import { auth } from "@/auth";
 import { Toaster } from "@/components/ui/toaster";
 import ClientProviders from "@/components/providers/client-providers";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-inter",
-  display: "swap",
-});
+// Removed next/font import for compatibility with current Next version
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Système de Comptabilité Multi-Organisations",
   description:
     "Plateforme moderne de comptabilité multi-tenant avec gestion des factures, codes de taxe et génération automatique des écritures comptables",
@@ -28,7 +22,7 @@ export default async function RootLayout({
   const session = await auth();
 
   return (
-    <html lang="fr" className={`${inter.variable} antialiased`}>
+    <html lang="fr" className={`antialiased`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -40,7 +34,7 @@ export default async function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className={`${inter.className} font-sans`}>
+      <body className={`font-sans`}>
         <ClientProviders session={session}>
           <div className="min-h-screen bg-gray-50">{children}</div>
           <Toaster />

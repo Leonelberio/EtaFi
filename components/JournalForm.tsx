@@ -48,6 +48,13 @@ interface Activity {
   projectId: string;
 }
 
+interface SubActivity {
+  id: string;
+  code: string;
+  name: string;
+  activityId: string;
+}
+
 interface JournalFormProps {
   journal?: any;
   isEditing?: boolean;
@@ -58,6 +65,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
   const [chartAccounts, setChartAccounts] = useState<ChartAccount[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [subActivities, setSubActivities] = useState<SubActivity[]>([]);
   const router = useRouter();
 
   const form = useForm<JournalFormData>({
@@ -139,6 +147,29 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
     loadData();
   }, []);
 
+  // Load sub-activities when activity changes
+  const loadSubActivities = async (activityId: string) => {
+    if (!activityId) {
+      setSubActivities([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/activities/${activityId}/sub-activities`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setSubActivities(Array.isArray(data) ? data : []);
+      } else {
+        setSubActivities([]);
+      }
+    } catch (error) {
+      console.error("Error loading sub-activities:", error);
+      setSubActivities([]);
+    }
+  };
+
   // Calculate totals
   const watchedLines = form.watch("lines");
   const totalDebits = watchedLines.reduce(
@@ -172,13 +203,13 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
       }
 
       toast.success(
-        `Journal ${isEditing ? "updated" : "created"} successfully`
+        `Écriture de journal ${isEditing ? "modifiée" : "créée"} avec succès`
       );
       router.push("/dashboard/journals");
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
+        error instanceof Error ? error.message : "Une erreur s'est produite"
       );
     } finally {
       setIsLoading(false);
@@ -226,7 +257,9 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calculator className="h-5 w-5" />
-          {isEditing ? "Edit Journal Entry" : "New Journal Entry"}
+          {isEditing
+            ? "Modifier l'écriture de journal"
+            : "Nouvelle écriture de journal"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -234,7 +267,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
           {/* Header Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="journalType">Journal Type *</Label>
+              <Label htmlFor="journalType">Type de journal *</Label>
               <Select
                 onValueChange={(value) =>
                   form.setValue("journalType", value as any)
@@ -242,15 +275,15 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                 value={form.watch("journalType")}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select journal type" />
+                  <SelectValue placeholder="Sélectionner le type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="GENERAL">General Journal</SelectItem>
-                  <SelectItem value="PURCHASE">Purchase Journal</SelectItem>
-                  <SelectItem value="SALES">Sales Journal</SelectItem>
-                  <SelectItem value="CASH_RECEIPTS">Cash Receipts</SelectItem>
+                  <SelectItem value="GENERAL">Journal général</SelectItem>
+                  <SelectItem value="PURCHASE">Journal des achats</SelectItem>
+                  <SelectItem value="SALES">Journal des ventes</SelectItem>
+                  <SelectItem value="CASH_RECEIPTS">Encaissements</SelectItem>
                   <SelectItem value="CASH_DISBURSEMENTS">
-                    Cash Disbursements
+                    Décaissements
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -262,7 +295,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="entryDate">Entry Date *</Label>
+              <Label htmlFor="entryDate">Date d'écriture *</Label>
               <Input
                 id="entryDate"
                 type="date"
@@ -277,7 +310,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reference">Reference</Label>
+              <Label htmlFor="reference">Référence</Label>
               <Input
                 id="reference"
                 {...form.register("reference")}
@@ -287,11 +320,13 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Balance Check</Label>
+              <Label className="text-sm font-medium">
+                Vérification d'équilibre
+              </Label>
               <div
                 className={`p-2 rounded text-sm ${isBalanced ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
               >
-                {isBalanced ? "✓ Balanced" : "⚠ Not Balanced"}
+                {isBalanced ? "✓ Équilibré" : "⚠ Non équilibré"}
               </div>
             </div>
           </div>
@@ -301,7 +336,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
             <Textarea
               id="description"
               {...form.register("description")}
-              placeholder="Journal entry description"
+              placeholder="Description de l'écriture de journal"
               className="bg-white"
               rows={2}
             />
@@ -315,7 +350,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
           {/* Journal Lines */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Journal Lines</h3>
+              <h3 className="text-lg font-semibold">Lignes d'écriture</h3>
               <Button
                 type="button"
                 onClick={addLine}
@@ -323,7 +358,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                 size="sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Line
+                Ajouter une ligne
               </Button>
             </div>
 
@@ -345,7 +380,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                     className="grid grid-cols-12 gap-2 p-4 border rounded-lg bg-gray-50"
                   >
                     <div className="col-span-3">
-                      <Label className="text-xs">Account *</Label>
+                      <Label className="text-xs">Compte *</Label>
                       <Select
                         onValueChange={(value) =>
                           form.setValue(`lines.${index}.accountId`, value)
@@ -353,7 +388,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                         value={form.watch(`lines.${index}.accountId`)}
                       >
                         <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Select account" />
+                          <SelectValue placeholder="Sélectionner" />
                         </SelectTrigger>
                         <SelectContent>
                           {Array.isArray(chartAccounts) &&
@@ -370,13 +405,13 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                       <Label className="text-xs">Description *</Label>
                       <Input
                         {...form.register(`lines.${index}.description`)}
-                        placeholder="Line description"
+                        placeholder="Description de la ligne"
                         className="h-8 text-xs bg-white"
                       />
                     </div>
 
                     <div className="col-span-2">
-                      <Label className="text-xs">Debit</Label>
+                      <Label className="text-xs">Débit</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -390,7 +425,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                     </div>
 
                     <div className="col-span-2">
-                      <Label className="text-xs">Credit</Label>
+                      <Label className="text-xs">Crédit</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -404,7 +439,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                     </div>
 
                     <div className="col-span-2">
-                      <Label className="text-xs">Project</Label>
+                      <Label className="text-xs">Projet</Label>
                       <Select
                         onValueChange={(value) =>
                           form.setValue(
@@ -416,10 +451,10 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                         disabled={!showCostFields}
                       >
                         <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Optional" />
+                          <SelectValue placeholder="Optionnel" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="NONE">No Project</SelectItem>
+                          <SelectItem value="NONE">Aucun projet</SelectItem>
                           {Array.isArray(projects) &&
                             projects.map((project) => (
                               <SelectItem key={project.id} value={project.id}>
@@ -448,23 +483,38 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                     {showCostFields && (
                       <>
                         <div className="col-span-3">
-                          <Label className="text-xs">Activity</Label>
+                          <Label className="text-xs">Activité</Label>
                           <Select
-                            onValueChange={(value) =>
+                            onValueChange={(value) => {
+                              const activityId =
+                                value === "NONE" ? undefined : value;
                               form.setValue(
                                 `lines.${index}.activityId`,
-                                value === "NONE" ? undefined : value
-                              )
-                            }
+                                activityId
+                              );
+                              // Reset sub-activity when activity changes
+                              form.setValue(
+                                `lines.${index}.subActivityId`,
+                                undefined
+                              );
+                              // Load sub-activities for selected activity
+                              if (activityId) {
+                                loadSubActivities(activityId);
+                              } else {
+                                setSubActivities([]);
+                              }
+                            }}
                             value={
                               form.watch(`lines.${index}.activityId`) || "NONE"
                             }
                           >
                             <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Optional" />
+                              <SelectValue placeholder="Optionnel" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="NONE">No Activity</SelectItem>
+                              <SelectItem value="NONE">
+                                Aucune activité
+                              </SelectItem>
                               {Array.isArray(activities) &&
                                 activities.map((activity) => (
                                   <SelectItem
@@ -479,7 +529,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                         </div>
 
                         <div className="col-span-3">
-                          <Label className="text-xs">Sub-Activity</Label>
+                          <Label className="text-xs">Sous-activité</Label>
                           <Select
                             onValueChange={(value) =>
                               form.setValue(
@@ -491,21 +541,30 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                               form.watch(`lines.${index}.subActivityId`) ||
                               "NONE"
                             }
+                            disabled={!form.watch(`lines.${index}.activityId`)}
                           >
                             <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Optional" />
+                              <SelectValue placeholder="Sélectionner activité d'abord" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="NONE">
-                                No Sub-Activity
+                                Aucune sous-activité
                               </SelectItem>
-                              {/* Sub-activities will be loaded based on selected activity */}
+                              {Array.isArray(subActivities) &&
+                                subActivities.map((subActivity) => (
+                                  <SelectItem
+                                    key={subActivity.id}
+                                    value={subActivity.id}
+                                  >
+                                    {subActivity.code} - {subActivity.name}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         </div>
 
                         <div className="col-span-3">
-                          <Label className="text-xs">Cost Type</Label>
+                          <Label className="text-xs">Type de coût</Label>
                           <Select
                             onValueChange={(value) =>
                               form.setValue(
@@ -516,7 +575,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                             value={form.watch(`lines.${index}.costType`) || ""}
                           >
                             <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Select type" />
+                              <SelectValue placeholder="Sélectionner" />
                             </SelectTrigger>
                             <SelectContent>
                               {COST_TYPE_OPTIONS.map((option) => (
@@ -532,7 +591,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                         </div>
 
                         <div className="col-span-3">
-                          <Label className="text-xs">Cost Category</Label>
+                          <Label className="text-xs">Catégorie de coût</Label>
                           <Select
                             onValueChange={(value) =>
                               form.setValue(
@@ -545,7 +604,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
                             }
                           >
                             <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Select category" />
+                              <SelectValue placeholder="Sélectionner" />
                             </SelectTrigger>
                             <SelectContent>
                               {COST_CATEGORY_OPTIONS.map((option) => (
@@ -569,15 +628,15 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
             {/* Totals */}
             <div className="grid grid-cols-2 gap-4 p-4 bg-gray-100 rounded-lg">
               <div className="text-right">
-                <p className="text-sm font-medium">Total Debits:</p>
+                <p className="text-sm font-medium">Total débits :</p>
                 <p className="text-lg font-bold">
-                  ${Number(totalDebits || 0).toFixed(2)}
+                  {Number(totalDebits || 0).toFixed(2)} $
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium">Total Credits:</p>
+                <p className="text-sm font-medium">Total crédits :</p>
                 <p className="text-lg font-bold">
-                  ${Number(totalCredits || 0).toFixed(2)}
+                  {Number(totalCredits || 0).toFixed(2)} $
                 </p>
               </div>
             </div>
@@ -597,8 +656,8 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
               className="bg-primary-950 hover:bg-primary-900 text-white"
             >
               {isLoading
-                ? "Saving..."
-                : `${isEditing ? "Update" : "Create"} Journal Entry`}
+                ? "Enregistrement..."
+                : `${isEditing ? "Modifier" : "Créer"} l'écriture`}
             </Button>
             <Button
               type="button"
@@ -606,7 +665,7 @@ export function JournalForm({ journal, isEditing = false }: JournalFormProps) {
               onClick={() => router.back()}
               className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
-              Cancel
+              Annuler
             </Button>
           </div>
         </form>

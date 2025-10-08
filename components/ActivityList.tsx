@@ -385,13 +385,8 @@ export function ActivityList({ projectId, projectName }: ActivityListProps) {
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           {activity.createdBy ? (
-                            <div>
-                              <div className="font-medium">
-                                {activity.createdBy.name}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {activity.createdBy.email}
-                              </div>
+                            <div className="font-medium">
+                              {activity.createdBy.name}
                             </div>
                           ) : (
                             <span className="text-gray-400">—</span>

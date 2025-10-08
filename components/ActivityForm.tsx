@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { activitySchema, type ActivityInput } from "@/lib/validations";
+import { useUnsavedChanges } from "@/lib/contexts/unsaved-changes-context";
 import { MultiGroupSelector } from "@/components/MultiGroupSelector";
 import {
   ArrowLeft,
@@ -98,10 +99,25 @@ const COST_GROUPS = [
 
 interface SubActivity {
   id: string;
+  code?: string;
   name: string;
   description: string;
-  estimatedHours: number;
-  estimatedCost: number;
+  estimatedHours?: number;
+  estimatedCost?: number;
+  costType?: "FIXED" | "VARIABLE";
+  costCategory?: "CONTRACTUAL" | "CLIENT_EXTRA" | "SUBCONTRACTOR_EXTRA";
+  // Cost group budgets
+  budgetM?: number;
+  budgetS?: number;
+  budgetD?: number;
+  budgetE?: number;
+  budgetMOD?: number;
+  budgetMODHours?: number;
+  createdBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 interface ActivityFormProps {
@@ -122,6 +138,11 @@ interface ActivityFormProps {
     costType?: "FIXED" | "VARIABLE";
     costCategory?: "CONTRACTUAL" | "CLIENT_EXTRA" | "SUBCONTRACTOR_EXTRA";
     isActive: boolean;
+    createdBy?: {
+      id: string;
+      name: string;
+      email: string;
+    };
   };
   isEditing?: boolean;
 }
@@ -132,6 +153,7 @@ export function ActivityForm({
   isEditing = false,
 }: ActivityFormProps) {
   const router = useRouter();
+  const { setHasUnsavedChanges, hasUnsavedChanges } = useUnsavedChanges();
   const [isLoading, setIsLoading] = useState(false);
   const [useDetailedBudget, setUseDetailedBudget] = useState(false);
   const [useMultiGroups, setUseMultiGroups] = useState(false);
@@ -141,8 +163,16 @@ export function ActivityForm({
     id: "",
     name: "",
     description: "",
-    estimatedHours: 0,
-    estimatedCost: 0,
+    estimatedHours: undefined,
+    estimatedCost: undefined,
+    costType: "FIXED",
+    costCategory: "CONTRACTUAL",
+    budgetM: 0,
+    budgetS: 0,
+    budgetD: 0,
+    budgetE: 0,
+    budgetMOD: 0,
+    budgetMODHours: 0,
   });
   const [costGroups, setCostGroups] = useState<any[]>([]);
 
@@ -166,62 +196,37 @@ export function ActivityForm({
     },
   });
 
-  // 🆕 Data loss prevention
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [showExitDialog, setShowExitDialog] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
-    null
-  );
+  // 🆕 Data loss prevention using global context
   const initialFormData = useRef<string>("");
 
-  // Track form changes
+  // Track form changes (including sub-activities)
   useEffect(() => {
     const subscription = form.watch((value) => {
       const currentData = JSON.stringify(value);
       if (initialFormData.current === "") {
         initialFormData.current = currentData;
       }
-      setHasUnsavedChanges(currentData !== initialFormData.current);
+      const hasFormChanges = currentData !== initialFormData.current;
+      setHasUnsavedChanges(hasFormChanges);
     });
     return () => subscription.unsubscribe();
-  }, [form]);
+  }, [form, setHasUnsavedChanges]);
 
-  // Warn before leaving page with unsaved changes
+  // Track sub-activities changes
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
-        e.preventDefault();
-        e.returnValue =
-          "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter cette page ?";
-        return "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter cette page ?";
-      }
-    };
+    const initialSubs = (activity && (activity as any).subActivities) || [];
+    const initialSubActivities = JSON.stringify(initialSubs);
+    const currentSubActivities = JSON.stringify(subActivities);
+    const hasSubActivityChanges = initialSubActivities !== currentSubActivities;
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [hasUnsavedChanges]);
+    if (hasSubActivityChanges) {
+      setHasUnsavedChanges(true);
+    }
+  }, [subActivities, setHasUnsavedChanges]);
 
-  // Handle navigation with confirmation
+  // Handle navigation (now handled by global context)
   const handleNavigation = (path: string) => {
-    if (hasUnsavedChanges) {
-      setPendingNavigation(path);
-      setShowExitDialog(true);
-    } else {
-      router.push(path);
-    }
-  };
-
-  const confirmExit = () => {
-    setShowExitDialog(false);
-    if (pendingNavigation) {
-      router.push(pendingNavigation);
-      setPendingNavigation(null);
-    }
-  };
-
-  const cancelExit = () => {
-    setShowExitDialog(false);
-    setPendingNavigation(null);
+    router.push(path);
   };
 
   // Watch budget values for calculations
@@ -296,12 +301,24 @@ export function ActivityForm({
             const activityData = await activityResponse.json();
             if (activityData.subActivities) {
               setSubActivities(
-                activityData.subActivities.map((sub: any) => ({
+                activityData.subActivities.map((sub: any, index: number) => ({
                   id: sub.id,
+                  code:
+                    sub.code ||
+                    `${activityData.code}-${String(index + 1).padStart(2, "0")}`,
                   name: sub.name,
                   description: sub.description || "",
-                  estimatedHours: sub.estimatedHours || 0,
-                  estimatedCost: sub.budgetAmount || 0,
+                  estimatedHours: sub.estimatedHours || undefined,
+                  estimatedCost: sub.budgetAmount || undefined,
+                  costType: sub.costType || "FIXED",
+                  costCategory: sub.costCategory || "CONTRACTUAL",
+                  budgetM: sub.budgetM || 0,
+                  budgetS: sub.budgetS || 0,
+                  budgetD: sub.budgetD || 0,
+                  budgetE: sub.budgetE || 0,
+                  budgetMOD: sub.budgetMOD || 0,
+                  budgetMODHours: sub.budgetMODHours || 0,
+                  createdBy: sub.createdBy,
                 }))
               );
             }
@@ -317,27 +334,140 @@ export function ActivityForm({
 
   const addSubActivity = () => {
     if (newSubActivity.name.trim()) {
-      const subActivity = {
+      const nextIndex = subActivities.length + 1;
+      const activityCode = activity?.code || form.getValues("code");
+      const code = activityCode
+        ? `${activityCode}-${String(nextIndex).padStart(2, "0")}`
+        : undefined;
+
+      const subActivity: SubActivity = {
         ...newSubActivity,
         id: `sub-${Date.now()}`,
+        code,
       };
       setSubActivities((prev) => [...prev, subActivity]);
       setNewSubActivity({
         id: "",
         name: "",
         description: "",
-        estimatedHours: 0,
-        estimatedCost: 0,
+        estimatedHours: undefined,
+        estimatedCost: undefined,
+        costType: "FIXED",
+        costCategory: "CONTRACTUAL",
+        budgetM: 0,
+        budgetS: 0,
+        budgetD: 0,
+        budgetE: 0,
+        budgetMOD: 0,
+        budgetMODHours: 0,
       });
     }
   };
 
   const removeSubActivity = (id: string) => {
-    setSubActivities((prev) => prev.filter((sub) => sub.id !== id));
+    setSubActivities((prev) => {
+      const filtered = prev.filter((sub) => sub.id !== id);
+      const activityCode = activity?.code || form.getValues("code");
+      return filtered.map((sub, index) => ({
+        ...sub,
+        code: activityCode
+          ? `${activityCode}-${String(index + 1).padStart(2, "0")}`
+          : undefined,
+      }));
+    });
+  };
+
+  // Validation: Calculate total sub-activity budgets
+  const calculateSubActivityTotals = () => {
+    return subActivities.reduce(
+      (totals, sub) => ({
+        total: totals.total + (sub.estimatedCost || 0),
+        budgetM: totals.budgetM + (sub.budgetM || 0),
+        budgetS: totals.budgetS + (sub.budgetS || 0),
+        budgetD: totals.budgetD + (sub.budgetD || 0),
+        budgetE: totals.budgetE + (sub.budgetE || 0),
+        budgetMOD: totals.budgetMOD + (sub.budgetMOD || 0),
+      }),
+      { total: 0, budgetM: 0, budgetS: 0, budgetD: 0, budgetE: 0, budgetMOD: 0 }
+    );
+  };
+
+  // Validation: Check if sub-activities budgets match activity budget
+  const validateSubActivityBudgets = (): {
+    isValid: boolean;
+    message?: string;
+  } => {
+    if (subActivities.length === 0) {
+      return { isValid: true };
+    }
+
+    const activityBudget = parseFloat(
+      String(form.getValues("budgetAmount") || 0)
+    );
+    const activityBudgetM = parseFloat(String(form.getValues("budgetM") || 0));
+    const activityBudgetS = parseFloat(String(form.getValues("budgetS") || 0));
+    const activityBudgetD = parseFloat(String(form.getValues("budgetD") || 0));
+    const activityBudgetE = parseFloat(String(form.getValues("budgetE") || 0));
+    const activityBudgetMOD = parseFloat(
+      String(form.getValues("budgetMOD") || 0)
+    );
+
+    const subTotals = calculateSubActivityTotals();
+
+    // Check total budget
+    if (Math.abs(subTotals.total - activityBudget) > 0.01) {
+      return {
+        isValid: false,
+        message: `Le budget total des sous-activités (${subTotals.total.toFixed(2)} $) doit égaler le budget de l'activité (${activityBudget.toFixed(2)} $)`,
+      };
+    }
+
+    // Check cost group budgets if using detailed budgets
+    if (useDetailedBudget) {
+      if (Math.abs(subTotals.budgetM - activityBudgetM) > 0.01) {
+        return {
+          isValid: false,
+          message: `Le budget M des sous-activités (${subTotals.budgetM.toFixed(2)} $) doit égaler le budget M de l'activité (${activityBudgetM.toFixed(2)} $)`,
+        };
+      }
+      if (Math.abs(subTotals.budgetS - activityBudgetS) > 0.01) {
+        return {
+          isValid: false,
+          message: `Le budget S des sous-activités (${subTotals.budgetS.toFixed(2)} $) doit égaler le budget S de l'activité (${activityBudgetS.toFixed(2)} $)`,
+        };
+      }
+      if (Math.abs(subTotals.budgetD - activityBudgetD) > 0.01) {
+        return {
+          isValid: false,
+          message: `Le budget D des sous-activités (${subTotals.budgetD.toFixed(2)} $) doit égaler le budget D de l'activité (${activityBudgetD.toFixed(2)} $)`,
+        };
+      }
+      if (Math.abs(subTotals.budgetE - activityBudgetE) > 0.01) {
+        return {
+          isValid: false,
+          message: `Le budget E des sous-activités (${subTotals.budgetE.toFixed(2)} $) doit égaler le budget E de l'activité (${activityBudgetE.toFixed(2)} $)`,
+        };
+      }
+      if (Math.abs(subTotals.budgetMOD - activityBudgetMOD) > 0.01) {
+        return {
+          isValid: false,
+          message: `Le budget MOD des sous-activités (${subTotals.budgetMOD.toFixed(2)} $) doit égaler le budget MOD de l'activité (${activityBudgetMOD.toFixed(2)} $)`,
+        };
+      }
+    }
+
+    return { isValid: true };
   };
 
   const onSubmit = async (data: ActivityInput) => {
     try {
+      // Validate sub-activity budgets before submitting
+      const validation = validateSubActivityBudgets();
+      if (!validation.isValid) {
+        toast.error(validation.message);
+        return;
+      }
+
       setIsLoading(true);
 
       const url = isEditing
@@ -353,6 +483,14 @@ export function ActivityForm({
           description: sub.description,
           estimatedHours: sub.estimatedHours,
           estimatedCost: sub.estimatedCost,
+          costType: sub.costType,
+          costCategory: sub.costCategory,
+          budgetM: sub.budgetM || 0,
+          budgetS: sub.budgetS || 0,
+          budgetD: sub.budgetD || 0,
+          budgetE: sub.budgetE || 0,
+          budgetMOD: sub.budgetMOD || 0,
+          budgetMODHours: sub.budgetMODHours || 0,
         })),
       };
 
@@ -420,9 +558,9 @@ export function ActivityForm({
               {hasUnsavedChanges && (
                 <Badge
                   variant="outline"
-                  className="bg-yellow-50 text-yellow-700 border-yellow-200"
+                  className="bg-red-50 text-red-700 border-red-200 animate-pulse"
                 >
-                  Modifications non sauvegardées
+                  ⚠️ Modifications non sauvegardées
                 </Badge>
               )}
             </div>
@@ -443,6 +581,16 @@ export function ActivityForm({
             <CardDescription>
               Configure the activity with budget breakdown by cost groups
             </CardDescription>
+            {activity?.createdBy && (
+              <div className="mt-3 pt-3 border-t">
+                <p className="text-sm text-gray-600">
+                  Créé par:{" "}
+                  <span className="font-medium text-gray-900">
+                    {activity.createdBy.name}
+                  </span>
+                </p>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -835,11 +983,14 @@ export function ActivityForm({
                       id="subActivityHours"
                       type="number"
                       placeholder="0"
-                      value={newSubActivity.estimatedHours}
+                      value={newSubActivity.estimatedHours ?? ""}
                       onChange={(e) =>
                         setNewSubActivity((prev) => ({
                           ...prev,
-                          estimatedHours: parseFloat(e.target.value) || 0,
+                          estimatedHours:
+                            e.target.value === ""
+                              ? undefined
+                              : parseFloat(e.target.value),
                         }))
                       }
                     />
@@ -867,16 +1018,193 @@ export function ActivityForm({
                       id="subActivityCost"
                       type="number"
                       placeholder="0.00"
-                      value={newSubActivity.estimatedCost}
+                      value={newSubActivity.estimatedCost ?? ""}
                       onChange={(e) =>
                         setNewSubActivity((prev) => ({
                           ...prev,
-                          estimatedCost: parseFloat(e.target.value) || 0,
+                          estimatedCost:
+                            e.target.value === ""
+                              ? undefined
+                              : parseFloat(e.target.value),
                         }))
                       }
                     />
                   </div>
                 </div>
+
+                {/* Cost Type and Category for Sub-Activities */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subActivityCostType">Type de Coût</Label>
+                    <Select
+                      value={newSubActivity.costType || "FIXED"}
+                      onValueChange={(value) =>
+                        setNewSubActivity((prev) => ({
+                          ...prev,
+                          costType: value as "FIXED" | "VARIABLE",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner le type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="FIXED">Coût Fixe</SelectItem>
+                        <SelectItem value="VARIABLE">Coût Variable</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subActivityCostCategory">
+                      Catégorie de Coût
+                    </Label>
+                    <Select
+                      value={newSubActivity.costCategory || "CONTRACTUAL"}
+                      onValueChange={(value) =>
+                        setNewSubActivity((prev) => ({
+                          ...prev,
+                          costCategory: value as
+                            | "CONTRACTUAL"
+                            | "CLIENT_EXTRA"
+                            | "SUBCONTRACTOR_EXTRA",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner la catégorie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CONTRACTUAL">Contractuel</SelectItem>
+                        <SelectItem value="CLIENT_EXTRA">
+                          Supplémentaire Rechargeable Client
+                        </SelectItem>
+                        <SelectItem value="SUBCONTRACTOR_EXTRA">
+                          Coût Supp. Rechargeable Sous-traitant
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Cost Group Budgets for Sub-Activity */}
+                {useDetailedBudget && (
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-medium text-gray-700">
+                      Budgets par Groupe de Coûts
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="subBudgetM" className="text-xs">
+                          Groupe M ($)
+                        </Label>
+                        <Input
+                          id="subBudgetM"
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={newSubActivity.budgetM || ""}
+                          onChange={(e) =>
+                            setNewSubActivity((prev) => ({
+                              ...prev,
+                              budgetM:
+                                e.target.value === ""
+                                  ? 0
+                                  : parseFloat(e.target.value),
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="subBudgetS" className="text-xs">
+                          Groupe S ($)
+                        </Label>
+                        <Input
+                          id="subBudgetS"
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={newSubActivity.budgetS || ""}
+                          onChange={(e) =>
+                            setNewSubActivity((prev) => ({
+                              ...prev,
+                              budgetS:
+                                e.target.value === ""
+                                  ? 0
+                                  : parseFloat(e.target.value),
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="subBudgetD" className="text-xs">
+                          Groupe D ($)
+                        </Label>
+                        <Input
+                          id="subBudgetD"
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={newSubActivity.budgetD || ""}
+                          onChange={(e) =>
+                            setNewSubActivity((prev) => ({
+                              ...prev,
+                              budgetD:
+                                e.target.value === ""
+                                  ? 0
+                                  : parseFloat(e.target.value),
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="subBudgetE" className="text-xs">
+                          Groupe E ($)
+                        </Label>
+                        <Input
+                          id="subBudgetE"
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={newSubActivity.budgetE || ""}
+                          onChange={(e) =>
+                            setNewSubActivity((prev) => ({
+                              ...prev,
+                              budgetE:
+                                e.target.value === ""
+                                  ? 0
+                                  : parseFloat(e.target.value),
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="subBudgetMOD" className="text-xs">
+                          Groupe MOD ($)
+                        </Label>
+                        <Input
+                          id="subBudgetMOD"
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={newSubActivity.budgetMOD || ""}
+                          onChange={(e) =>
+                            setNewSubActivity((prev) => ({
+                              ...prev,
+                              budgetMOD:
+                                e.target.value === ""
+                                  ? 0
+                                  : parseFloat(e.target.value),
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-amber-600">
+                      ⚠️ La somme des budgets de groupes des sous-activités doit
+                      égaler les budgets de groupes de l'activité
+                    </p>
+                  </div>
+                )}
 
                 <Button
                   type="button"
@@ -898,17 +1226,77 @@ export function ActivityForm({
                           className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                         >
                           <div className="flex-1">
-                            <p className="font-medium">{subActivity.name}</p>
+                            <p className="font-medium">
+                              {subActivity.code ? (
+                                <span className="text-gray-500 mr-2">
+                                  {subActivity.code}
+                                </span>
+                              ) : null}
+                              {subActivity.name}
+                            </p>
                             <p className="text-sm text-gray-600">
                               {subActivity.description}
                             </p>
                             <p className="text-sm text-gray-500">
-                              {subActivity.estimatedHours}h -{" "}
-                              {new Intl.NumberFormat("fr-CA", {
-                                style: "currency",
-                                currency: "CAD",
-                              }).format(subActivity.estimatedCost)}
+                              {subActivity.estimatedHours
+                                ? `${subActivity.estimatedHours}h`
+                                : "Pas d'heures"}{" "}
+                              -{" "}
+                              {subActivity.estimatedCost
+                                ? new Intl.NumberFormat("fr-CA", {
+                                    style: "currency",
+                                    currency: "CAD",
+                                  }).format(subActivity.estimatedCost)
+                                : "Pas de coût"}
                             </p>
+                            {useDetailedBudget && (
+                              <div className="flex gap-1 mt-1 text-xs text-gray-500">
+                                {subActivity.budgetM ? (
+                                  <span className="bg-blue-50 px-2 py-0.5 rounded">
+                                    M: {subActivity.budgetM}$
+                                  </span>
+                                ) : null}
+                                {subActivity.budgetS ? (
+                                  <span className="bg-purple-50 px-2 py-0.5 rounded">
+                                    S: {subActivity.budgetS}$
+                                  </span>
+                                ) : null}
+                                {subActivity.budgetD ? (
+                                  <span className="bg-amber-50 px-2 py-0.5 rounded">
+                                    D: {subActivity.budgetD}$
+                                  </span>
+                                ) : null}
+                                {subActivity.budgetE ? (
+                                  <span className="bg-green-50 px-2 py-0.5 rounded">
+                                    E: {subActivity.budgetE}$
+                                  </span>
+                                ) : null}
+                                {subActivity.budgetMOD ? (
+                                  <span className="bg-red-50 px-2 py-0.5 rounded">
+                                    MOD: {subActivity.budgetMOD}$
+                                  </span>
+                                ) : null}
+                              </div>
+                            )}
+                            <div className="flex gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {subActivity.costType === "FIXED"
+                                  ? "Coût Fixe"
+                                  : "Coût Variable"}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {subActivity.costCategory === "CONTRACTUAL"
+                                  ? "Contractuel"
+                                  : subActivity.costCategory === "CLIENT_EXTRA"
+                                    ? "Supp. Client"
+                                    : "Supp. Sous-traitant"}
+                              </Badge>
+                            </div>
+                            {subActivity.createdBy && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Créé par: {subActivity.createdBy.name}
+                              </p>
+                            )}
                           </div>
                           <Button
                             type="button"
@@ -921,6 +1309,119 @@ export function ActivityForm({
                         </div>
                       ))}
                     </div>
+
+                    {/* Budget Summary */}
+                    {useDetailedBudget && (
+                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 className="text-sm font-semibold text-blue-900 mb-2">
+                          Résumé des Budgets
+                        </h4>
+                        {(() => {
+                          const subTotals = calculateSubActivityTotals();
+                          const activityBudget = parseFloat(
+                            String(form.getValues("budgetAmount") || 0)
+                          );
+                          const activityBudgetM = parseFloat(
+                            String(form.getValues("budgetM") || 0)
+                          );
+                          const activityBudgetS = parseFloat(
+                            String(form.getValues("budgetS") || 0)
+                          );
+                          const activityBudgetD = parseFloat(
+                            String(form.getValues("budgetD") || 0)
+                          );
+                          const activityBudgetE = parseFloat(
+                            String(form.getValues("budgetE") || 0)
+                          );
+                          const activityBudgetMOD = parseFloat(
+                            String(form.getValues("budgetMOD") || 0)
+                          );
+
+                          const budgetMatches =
+                            Math.abs(subTotals.total - activityBudget) < 0.01;
+                          const mMatches =
+                            Math.abs(subTotals.budgetM - activityBudgetM) <
+                            0.01;
+                          const sMatches =
+                            Math.abs(subTotals.budgetS - activityBudgetS) <
+                            0.01;
+                          const dMatches =
+                            Math.abs(subTotals.budgetD - activityBudgetD) <
+                            0.01;
+                          const eMatches =
+                            Math.abs(subTotals.budgetE - activityBudgetE) <
+                            0.01;
+                          const modMatches =
+                            Math.abs(subTotals.budgetMOD - activityBudgetMOD) <
+                            0.01;
+
+                          return (
+                            <div className="space-y-2 text-sm">
+                              <div
+                                className={`flex justify-between ${budgetMatches ? "text-green-700" : "text-red-700 font-semibold"}`}
+                              >
+                                <span>Budget Total:</span>
+                                <span>
+                                  {subTotals.total.toFixed(2)}$ /{" "}
+                                  {activityBudget.toFixed(2)}${" "}
+                                  {budgetMatches ? "✓" : "✗"}
+                                </span>
+                              </div>
+                              <div
+                                className={`flex justify-between ${mMatches ? "text-green-700" : "text-red-700"}`}
+                              >
+                                <span>Groupe M:</span>
+                                <span>
+                                  {subTotals.budgetM.toFixed(2)}$ /{" "}
+                                  {activityBudgetM.toFixed(2)}${" "}
+                                  {mMatches ? "✓" : "✗"}
+                                </span>
+                              </div>
+                              <div
+                                className={`flex justify-between ${sMatches ? "text-green-700" : "text-red-700"}`}
+                              >
+                                <span>Groupe S:</span>
+                                <span>
+                                  {subTotals.budgetS.toFixed(2)}$ /{" "}
+                                  {activityBudgetS.toFixed(2)}${" "}
+                                  {sMatches ? "✓" : "✗"}
+                                </span>
+                              </div>
+                              <div
+                                className={`flex justify-between ${dMatches ? "text-green-700" : "text-red-700"}`}
+                              >
+                                <span>Groupe D:</span>
+                                <span>
+                                  {subTotals.budgetD.toFixed(2)}$ /{" "}
+                                  {activityBudgetD.toFixed(2)}${" "}
+                                  {dMatches ? "✓" : "✗"}
+                                </span>
+                              </div>
+                              <div
+                                className={`flex justify-between ${eMatches ? "text-green-700" : "text-red-700"}`}
+                              >
+                                <span>Groupe E:</span>
+                                <span>
+                                  {subTotals.budgetE.toFixed(2)}$ /{" "}
+                                  {activityBudgetE.toFixed(2)}${" "}
+                                  {eMatches ? "✓" : "✗"}
+                                </span>
+                              </div>
+                              <div
+                                className={`flex justify-between ${modMatches ? "text-green-700" : "text-red-700"}`}
+                              >
+                                <span>Groupe MOD:</span>
+                                <span>
+                                  {subTotals.budgetMOD.toFixed(2)}$ /{" "}
+                                  {activityBudgetMOD.toFixed(2)}${" "}
+                                  {modMatches ? "✓" : "✗"}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1005,29 +1506,6 @@ export function ActivityForm({
           </CardContent>
         </Card>
       </div>
-
-      {/* Confirmation Dialog */}
-      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Modifications non sauvegardées</AlertDialogTitle>
-            <AlertDialogDescription>
-              Vous avez des modifications non sauvegardées. Si vous quittez
-              maintenant, toutes vos modifications seront perdues. Voulez-vous
-              vraiment quitter cette page ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelExit}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmExit}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Quitter sans sauvegarder
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

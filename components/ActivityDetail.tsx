@@ -378,16 +378,11 @@ export function ActivityDetail({ activity, projectId }: ActivityDetailProps) {
             {activity.createdBy && (
               <div>
                 <label className="text-sm font-medium text-gray-500">
-                  Created By
+                  Créé par
                 </label>
                 <div className="mt-1 flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <p className="font-medium">{activity.createdBy.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {activity.createdBy.email}
-                    </p>
-                  </div>
+                  <p className="font-medium">{activity.createdBy.name}</p>
                 </div>
               </div>
             )}

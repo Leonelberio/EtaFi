@@ -54,6 +54,7 @@ model User {
   // Invoice relations
   createdInvoices  Invoice[] @relation("InvoiceCreator")
   approvedInvoices Invoice[] @relation("InvoiceApprover")
+  postedInvoices   Invoice[] @relation("InvoicePoster")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -202,9 +203,14 @@ model Project {
   currency             String    @default("CAD")
   startDate            DateTime?
   endDate              DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  createdById          String?
+
+  // 🆕 Facturation
+  invoicePrefix     String? @default("INV") // Préfixe pour numéros de factures (ex: code projet)
+  lastInvoiceNumber Int     @default(0) // Dernier numéro de facture généré
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   client       Customer?    @relation(fields: [clientId], references: [id])
@@ -251,6 +257,9 @@ model Activity {
   costToDate     Decimal? @default(0) @db.Decimal(15, 2)
   isActive       Boolean  @default(true)
   sortOrder      Int      @default(0)
+
+  // 🆕 Activité de facturation par défaut
+  isBillingDefault Boolean @default(false) // Activité utilisée par défaut pour la facturation de vente
 
   // 5-group budget breakdown
   budgetM   Decimal? @default(0) @db.Decimal(15, 2) // Matériel
@@ -478,24 +487,36 @@ model Customer {
 }
 
 model Vendor {
-  id               String   @id @default(cuid())
+  id               String  @id @default(cuid())
   organizationId   String
+  code             String // Code unique personnalisable (ex: OA11)
   name             String
   email            String?
   phone            String?
   address          String?
   city             String?
   postalCode       String?
-  country          String?  @default("Canada")
+  country          String? @default("Canada")
   payableAccountId String? // Link to Chart of Accounts
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+
+  // 🆕 Nouveaux champs pour gestion fiscale et coûts
+  withholdingRate  Decimal? @db.Decimal(5, 2) // Taux de retenue (ex: 10.50%)
+  taxable          Boolean  @default(true) // Autoriser les taxes ou non
+  taxExempt        Boolean  @default(false) // Exempté de taxes
+  taxNumber        String? // Numéro de taxe du fournisseur (TPS/TVQ)
+  gstNumber        String? // Numéro TPS
+  qstNumber        String? // Numéro TVQ
+  defaultCostGroup String? // Groupe de coût par défaut (M, S, D, E, MOD)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   payableAccount ChartAccount? @relation("VendorPayableAccount", fields: [payableAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   invoices       Invoice[]
   journalLines   JournalLine[]
 
+  @@unique([organizationId, code]) // Code unique par organisation
   @@unique([organizationId, name])
   @@index([organizationId])
 }
@@ -880,15 +901,19 @@ model Invoice {
   organizationId String
 
   // Invoice Details
-  number  String // Invoice number (auto-generated or manual)
-  type    String // SALES, PURCHASE
-  status  String    @default("DRAFT") // DRAFT, SENT, PAID, CANCELLED, OVERDUE
-  date    DateTime
-  dueDate DateTime?
+  number String // Invoice number (vendor invoice number for purchases)
+  type   String // SALES, PURCHASE
+  status String @default("DRAFT") // DRAFT, PENDING_APPROVAL, APPROVED, POSTED, PAID, CANCELLED
+
+  // 🆕 Dates pour factures d'achat (conformité NCECF)
+  date       DateTime // Date comptable (date au Grand Livre)
+  actualDate DateTime? // Date réelle imprimée par le fournisseur
+  entryDate  DateTime  @default(now()) // Date d'entrée système (non modifiable)
+  dueDate    DateTime? // Date d'échéance de paiement
 
   // References
   ref      String? // External reference
-  poNumber String? // Purchase Order number
+  poNumber String? // Purchase Order number (nombre illimité de caractères)
 
   // Parties
   customerId String?
@@ -902,19 +927,41 @@ model Invoice {
   paidAmount Decimal @default(0) @db.Decimal(15, 2)
   currency   String  @default("CAD")
 
+  // 🆕 Retenue (pour construction)
+  withholdingPercent Decimal? @db.Decimal(5, 2) // % de retenue
+  withholdingAmount  Decimal? @db.Decimal(15, 2) // Montant de retenue fixe
+
+  // 🆕 Taxes détaillées
+  gstAmount  Decimal? @default(0) @db.Decimal(15, 2) // TPS
+  qstAmount  Decimal? @default(0) @db.Decimal(15, 2) // TVQ
+  hstAmount  Decimal? @default(0) @db.Decimal(15, 2) // TVH
+  otherTaxes Decimal? @default(0) @db.Decimal(15, 2) // Autres taxes
+
+  // 🆕 Montants calculés
+  amountBeforeTax  Decimal? @default(0) @db.Decimal(15, 2) // Sous-total avant taxes
+  totalWithholding Decimal? @default(0) @db.Decimal(15, 2) // Total retenues
+  balanceDue       Decimal? @default(0) @db.Decimal(15, 2) // Solde à payer
+
   // Payment Terms
   paymentTerms    String?
+  paymentMethod   String? // Chèque, virement, carte
   discountPercent Decimal? @db.Decimal(5, 2)
   discountAmount  Decimal? @db.Decimal(15, 2)
 
+  // 🆕 Pièces jointes et workflow
+  attachmentUrl  String? // URL du PDF/image de la facture
+  department     String? // Centre de coût / Département
+  approvalStatus String? @default("PENDING") // PENDING, APPROVED, REJECTED
+
   // Metadata
-  notes         String?
-  internalNotes String?
+  notes         String? @db.Text
+  internalNotes String? @db.Text
   isActive      Boolean @default(true)
 
   // Audit trail
   createdBy  String?
   approvedBy String?
+  postedBy   String? // Qui a comptabilisé
   postedAt   DateTime?
   paidAt     DateTime?
 
@@ -933,6 +980,7 @@ model Invoice {
   // User relations
   creator  User? @relation("InvoiceCreator", fields: [createdBy], references: [id])
   approver User? @relation("InvoiceApprover", fields: [approvedBy], references: [id])
+  poster   User? @relation("InvoicePoster", fields: [postedBy], references: [id])
 
   @@unique([organizationId, number])
   @@index([organizationId])
@@ -968,8 +1016,12 @@ model InvoiceLine {
   activityId    String?
   subActivityId String?
 
-  // Cost Category (5-Group System)
+  // Cost Category (5-Group System) - Pour achats
   costCategory String? // M, S, D, E, MOD
+
+  // 🆕 Revenue Classification - Pour ventes
+  revenueType String? // CONTRACTUAL (Revenus contractuels) ou ADDITIONAL (Revenus supplémentaires)
+  revenueGroup String? // Revenue Construction, Revenue Services, Revenue Equipment, Divers
 
   // GL Account mapping (for automatic journal entry generation)
   revenueAccountId String? // Which GL account to credit for revenue
@@ -994,6 +1046,8 @@ model InvoiceLine {
   @@index([activityId])
   @@index([subActivityId])
   @@index([costCategory])
+  @@index([revenueType])
+  @@index([revenueGroup])
   @@index([sortOrder])
 }
 

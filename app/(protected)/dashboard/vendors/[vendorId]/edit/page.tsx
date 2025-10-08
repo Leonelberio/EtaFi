@@ -67,6 +67,13 @@ export default async function EditVendorPage({ params }: EditVendorPageProps) {
             postalCode: vendor.postalCode || undefined,
             country: vendor.country || undefined,
             payableAccountId: vendor.payableAccountId || "",
+            withholdingRate: vendor.withholdingRate ? Number(vendor.withholdingRate) : undefined,
+            taxable: vendor.taxable ?? true,
+            taxExempt: vendor.taxExempt ?? false,
+            taxNumber: vendor.taxNumber || undefined,
+            gstNumber: vendor.gstNumber || undefined,
+            qstNumber: vendor.qstNumber || undefined,
+            defaultCostGroup: vendor.defaultCostGroup || undefined,
           }}
           isEditing={true}
         />

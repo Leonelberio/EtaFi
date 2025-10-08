@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
       organizationId: orgId,
       ...(search && {
         OR: [
+          { code: { contains: search, mode: "insensitive" as const } },
           { name: { contains: search, mode: "insensitive" as const } },
           { email: { contains: search, mode: "insensitive" as const } },
         ],
@@ -69,6 +70,21 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const validatedData = vendorSchema.parse(body);
+
+    // Vérifier si le code existe déjà pour cette organisation
+    const existingVendor = await db.vendor.findFirst({
+      where: {
+        organizationId: orgId,
+        code: validatedData.code,
+      },
+    });
+
+    if (existingVendor) {
+      return NextResponse.json(
+        { error: "Un fournisseur avec ce code existe déjà" },
+        { status: 400 }
+      );
+    }
 
     const vendor = await db.vendor.create({
       data: {

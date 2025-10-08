@@ -31,6 +31,8 @@ import {
   Download,
   Search,
   Calendar,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -274,6 +276,50 @@ export function GrandLivre() {
     }).format(amount);
   };
 
+  const handleExportBalanceSheet = () => {
+    if (!balanceSheetData) {
+      toast.error("Aucune donnée à exporter");
+      return;
+    }
+
+    if (!balanceSheetData.isBalanced) {
+      toast.error(
+        "❌ Export impossible : Le bilan n'est pas équilibré. Veuillez corriger vos écritures avant d'exporter.",
+        {
+          duration: 5000,
+          description:
+            "Les états financiers doivent toujours être équilibrés selon les normes NCECF.",
+        }
+      );
+      return;
+    }
+
+    toast.success("✅ Bilan équilibré - Export autorisé");
+    // TODO: Implémenter la logique d'export (PDF/Excel)
+  };
+
+  const handleExportTrialBalance = () => {
+    if (!trialBalanceData) {
+      toast.error("Aucune donnée à exporter");
+      return;
+    }
+
+    if (!trialBalanceData.isBalanced) {
+      toast.error(
+        "❌ Export impossible : La balance de vérification n'est pas équilibrée.",
+        {
+          duration: 5000,
+          description:
+            "Veuillez corriger vos écritures pour que les débits égalent les crédits.",
+        }
+      );
+      return;
+    }
+
+    toast.success("✅ Balance de vérification équilibrée - Export autorisé");
+    // TODO: Implémenter la logique d'export (PDF/Excel)
+  };
+
   const getAccountTypeColor = (type: string) => {
     const colors: Record<string, string> = {
       ASSET: "bg-blue-100 text-blue-800",
@@ -496,10 +542,28 @@ export function GrandLivre() {
         <TabsContent value="trial_balance" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calculator className="h-5 w-5" />
-                Balance de Vérification
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Calculator className="h-5 w-5" />
+                  Balance de Vérification
+                </CardTitle>
+                <Button
+                  onClick={handleExportTrialBalance}
+                  variant="outline"
+                  size="sm"
+                  disabled={!trialBalanceData || !trialBalanceData.isBalanced}
+                  className={
+                    trialBalanceData && !trialBalanceData.isBalanced
+                      ? "border-red-300 text-red-600 hover:bg-red-50"
+                      : ""
+                  }
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {trialBalanceData && !trialBalanceData.isBalanced
+                    ? "Export bloqué"
+                    : "Exporter"}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {trialBalanceData ? (
@@ -543,6 +607,54 @@ export function GrandLivre() {
                       </Badge>
                     </div>
                   </div>
+
+                  {/* Balance Status Alert */}
+                  {trialBalanceData.isBalanced ? (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold text-green-900">
+                            ✅ BALANCE DE VÉRIFICATION ÉQUILIBRÉE
+                          </h4>
+                          <p className="text-sm text-green-800 mt-1">
+                            Les débits correspondent exactement aux crédits. Cet
+                            état est conforme aux normes NCECF.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold text-red-900">
+                            ⚠️ ÉTAT FINANCIER NON ÉQUILIBRÉ
+                          </h4>
+                          <p className="text-sm text-red-800 mt-1">
+                            La balance de vérification n'est pas équilibrée. Les
+                            débits ne correspondent pas aux crédits.
+                          </p>
+                          <p className="text-sm text-red-800 mt-2">
+                            <strong>Différence :</strong>{" "}
+                            {formatCurrency(
+                              Math.abs(
+                                trialBalanceData.totalDebits -
+                                  trialBalanceData.totalCredits
+                              )
+                            )}
+                          </p>
+                          <p className="text-xs text-red-700 mt-2">
+                            Veuillez vérifier et corriger vos écritures de
+                            journal avant de générer des rapports officiels. Cet
+                            état ne peut pas être utilisé pour des états
+                            financiers conformes NCECF.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Trial Balance Table */}
                   <Table>
@@ -696,10 +808,28 @@ export function GrandLivre() {
         <TabsContent value="balance_sheet" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Bilan
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Bilan
+                </CardTitle>
+                <Button
+                  onClick={handleExportBalanceSheet}
+                  variant="outline"
+                  size="sm"
+                  disabled={!balanceSheetData || !balanceSheetData.isBalanced}
+                  className={
+                    balanceSheetData && !balanceSheetData.isBalanced
+                      ? "border-red-300 text-red-600 hover:bg-red-50"
+                      : ""
+                  }
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {balanceSheetData && !balanceSheetData.isBalanced
+                    ? "Export bloqué"
+                    : "Exporter"}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {balanceSheetData ? (
@@ -815,7 +945,93 @@ export function GrandLivre() {
                           : "⚠ Non équilibré"}
                       </Badge>
                     </div>
+                    <div className="mt-2 text-sm text-gray-600">
+                      <div className="flex justify-between">
+                        <span>Actifs :</span>
+                        <span className="font-medium">
+                          {formatCurrency(balanceSheetData.totalAssets)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Passifs + Capitaux propres :</span>
+                        <span className="font-medium">
+                          {formatCurrency(
+                            balanceSheetData.totalLiabilities +
+                              balanceSheetData.totalEquity
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t pt-1 mt-1">
+                        <span>Différence :</span>
+                        <span
+                          className={`font-bold ${balanceSheetData.isBalanced ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {formatCurrency(
+                            Math.abs(
+                              balanceSheetData.totalAssets -
+                                (balanceSheetData.totalLiabilities +
+                                  balanceSheetData.totalEquity)
+                            )
+                          )}
+                        </span>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Balance Status Alert */}
+                  {balanceSheetData.isBalanced ? (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold text-green-900">
+                            ✅ BILAN ÉQUILIBRÉ
+                          </h4>
+                          <p className="text-sm text-green-800 mt-1">
+                            L'équation comptable fondamentale est respectée :{" "}
+                            <strong>Actifs = Passifs + Capitaux propres</strong>
+                          </p>
+                          <p className="text-sm text-green-800 mt-1">
+                            Ce bilan est conforme aux normes NCECF et peut être
+                            utilisé pour les états financiers officiels.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold text-red-900">
+                            ⚠️ BILAN NON ÉQUILIBRÉ - ERREUR COMPTABLE CRITIQUE
+                          </h4>
+                          <p className="text-sm text-red-800 mt-1">
+                            Le bilan n'est pas équilibré. L'équation comptable
+                            fondamentale n'est pas respectée :
+                            <br />
+                            <strong>Actifs = Passifs + Capitaux propres</strong>
+                          </p>
+                          <p className="text-sm text-red-800 mt-2">
+                            <strong>Différence :</strong>{" "}
+                            {formatCurrency(
+                              Math.abs(
+                                balanceSheetData.totalAssets -
+                                  (balanceSheetData.totalLiabilities +
+                                    balanceSheetData.totalEquity)
+                              )
+                            )}
+                          </p>
+                          <p className="text-xs text-red-700 mt-2">
+                            ⛔ Ce bilan ne peut PAS être utilisé pour des états
+                            financiers officiels. Il ne respecte pas les normes
+                            NCECF. Veuillez corriger vos écritures de journal
+                            immédiatement.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">
